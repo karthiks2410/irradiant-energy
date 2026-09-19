@@ -1,10 +1,5 @@
 {
   "mcpServers": {
-    "github": {
-      "type": "http",
-      "url": "https://api.githubcopilot.com/mcp",
-      "headers": { "Authorization": "Bearer ${GITHUB_PAT}" }
-    },
     "vercel": {
       "type": "http",
       "url": "https://mcp.vercel.com"
