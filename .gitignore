@@ -42,3 +42,6 @@ next-env.d.ts
 
 # allow the template, still ignore real env files
 !.env.example
+
+# local browser-automation artifacts (Playwright MCP snapshots)
+/.playwright-mcp/
