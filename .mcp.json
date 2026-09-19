@@ -13,10 +13,6 @@
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?read_only=true&features=docs,account,database,debugging,development,functions"
     },
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"]
-    },
     "filesystem": {
       "command": "npx",
       "args": [
