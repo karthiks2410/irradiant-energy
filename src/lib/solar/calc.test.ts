@@ -273,7 +273,7 @@ describe("assumptions and constants", () => {
       expect(c.id).toMatch(/^[a-z0-9-]+$/);
       expect(c.source.length).toBeGreaterThan(10);
       expect(c.effectiveFrom).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-      expect(["official", "to-confirm", "assumption"]).toContain(c.status);
+      expect(["official", "to-confirm", "assumption", "owner-accepted"]).toContain(c.status);
     }
   });
 
