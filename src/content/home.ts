@@ -95,8 +95,9 @@ const hero: HeroCopy & { slides: readonly HeroSlide[] } = {
 const audiencePaths: { copy: SectionCopy; items: readonly AudiencePath[] } = {
   copy: {
     eyebrow: "Homes. Communities. Business.",
-    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (UX heading + place qualifier). Bengaluru
-    // is VERIFIED-LIVE (content-inventory F-40); 16-seo-deep-dive H3 prescribes it here.
+    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (UX heading + place qualifier). Karnataka is
+    // owner-stated (2026-09-20): the business installs across the state, not only in Bengaluru,
+    // where it is registered. The old site named only the city, which under-claimed the coverage.
     title: "Solar for your home, your society or your business in Karnataka.",
     source: "eyebrow brand PDF p.5 · title proposed",
     status: "proposed",

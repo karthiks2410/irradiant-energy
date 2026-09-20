@@ -94,7 +94,10 @@ export function LeadForm({ startedAt }: { startedAt: number }) {
               })}
             </ul>
           )}
-          <ContactFallbacks />
+          {/* On a delivery failure the action hands back a WhatsApp link carrying the reference,
+              so the visitor can rescue an enquiry nothing else is holding. On a validation error
+              there is no reference yet and the plain link is right. */}
+          <ContactFallbacks whatsappHref={state.ok === false ? state.whatsappHref : undefined} />
         </div>
       )}
 

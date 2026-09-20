@@ -114,7 +114,10 @@ export default function TermsPage() {
       </p>
 
       <h2>Governing law</h2>
-      {/* Counsel to confirm the forum clause; "courts at Bengaluru" follows docs/discovery/18 §10.1. */}
+      {/* Counsel to confirm the forum clause; "courts at Bengaluru" follows docs/discovery/18 §10.1.
+          This one stays Bengaluru deliberately even though the business now describes itself as
+          serving Karnataka: a forum clause names the court with jurisdiction over the registered
+          office, not the area the company sells into. */}
       <p>
         These terms are governed by the law of India, and the courts at Bengaluru, Karnataka deal with any dispute
         about them.

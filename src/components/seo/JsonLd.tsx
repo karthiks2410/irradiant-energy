@@ -75,7 +75,9 @@ function siteGraph(): JsonLd {
         parentOrganization: { "@id": organizationId },
         url: homeUrl,
         image: absoluteUrl(socialImage.openGraphPath),
-        areaServed: { "@type": "City", name: "Bengaluru" },
+        // Owner-stated (2026-09-20): the business installs throughout Karnataka, not only in the
+        // city it is registered in. `address` below still gives the Anekal base.
+        areaServed: { "@type": "State", name: "Karnataka" },
         ...contact,
       },
       {

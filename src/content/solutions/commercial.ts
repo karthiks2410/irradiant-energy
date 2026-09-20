@@ -22,21 +22,21 @@ export const commercialSegment: Segment = {
   label: nav.label,
   description: nav.description ?? "",
 
-  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (place qualifier only). Bengaluru is a
-  // VERIFIED-LIVE fact (content-inventory F-40) and 16-seo-deep-dive H3 prescribes it; the
-  // rest of the wording is the legacy copy.
+  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (place qualifier only). Karnataka is owner-stated (2026-09-20): the business installs throughout the state, not
+  // only in Bengaluru, where it is registered. The old site said Bengaluru everywhere, which
+  // under-claimed the coverage.
   meta: {
-    title: "Rooftop solar for businesses in Bengaluru",
+    title: "Rooftop solar for businesses in Karnataka",
     // "accelerated depreciation benefits" trimmed (N-12); see held.
     description:
-      "Solar for Bengaluru businesses of every shape and size — shops, offices, factories and warehouses. Predictable energy costs and a single team handling design, install, and after-sales.",
+      "Solar for Karnataka businesses of every shape and size — shops, offices, factories and warehouses. Predictable energy costs and a single team handling design, install, and after-sales.",
     source: "P-SC-1 · 03 §6.1 · place qualifier proposed (F-40 · 16 §H3)",
     status: "proposed",
   },
 
   hero: {
-    eyebrow: "For businesses in Bengaluru",
-    title: "Solar for your business in Bengaluru — predictable energy costs, lower bills.",
+    eyebrow: "For businesses across Karnataka",
+    title: "Solar for your business in Karnataka — predictable energy costs, lower bills.",
     lead: "Shops, offices, schools, factories, warehouses. We design for your roof, your load curve, and your tariff.",
     cta: ctas.primary,
     secondaryCta: ctas.secondary,

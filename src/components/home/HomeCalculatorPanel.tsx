@@ -28,9 +28,10 @@ import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { enIn, flagNotes, parseSegment } from "@/components/quote/copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "@/components/quote/FieldRow";
 import { ChevronDownIcon, SelectField, StatTile, TextField } from "@/components/ui";
-import { billBounds, buildEstimate } from "@/lib/solar/calc";
-import { SEGMENTS, SEGMENT_LABELS, type Segment } from "@/lib/solar/constants";
+import { buildEstimate } from "@/lib/solar/calc";
+import { SEGMENTS, SEGMENT_LABELS } from "@/lib/solar/constants";
 import { TickerNumber } from "@/components/motion/TickerNumber";
+import { useHomeEstimate } from "./HomeEstimateProvider";
 import { formatInr } from "@/lib/solar/format";
 
 /** The visitor may type a city, a PIN code or both; only a well-formed PIN reaches the engine. */
@@ -75,11 +76,11 @@ export type HomeCalculatorPanelProps = {
 };
 
 export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclaimer, className = "" }: HomeCalculatorPanelProps) {
-  const [segment, setSegment] = useState<Segment>("home");
-  const [location, setLocation] = useState("");
+  // Segment, bill and PIN come from the page-level provider, so the hero's estimate entry and
+  // this panel are working on the same numbers rather than two copies of them.
+  const { segment, setSegment, bill, setBill, location, setLocation } = useHomeEstimate();
   /** The error waits for the visitor to leave the field: an empty form is not a mistake yet. */
   const [locationTouched, setLocationTouched] = useState(false);
-  const [bill, setBill] = useState(() => String(billBounds("home").default));
   const [roofArea, setRoofArea] = useState("");
   const [houses, setHouses] = useState("");
 
@@ -99,22 +100,14 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
     [segment, pincode, bill, roofArea, houses],
   );
 
-  /** Bill ranges differ per segment, so the bill restarts at the new segment's typical value. */
-  const changeSegment = (event: ChangeEvent<HTMLSelectElement>) => {
-    const next = parseSegment(event.target.value);
-    setSegment(next);
-    setBill(String(billBounds(next).default));
-  };
+  // The provider resets the bill to the new segment's typical value; see HomeEstimateProvider.
+  const changeSegment = (event: ChangeEvent<HTMLSelectElement>) => setSegment(parseSegment(event.target.value));
 
   const payback = estimate?.paybackYears ?? null;
   const tiles: Tile[] = estimate
     ? [
-        { label: results.size, value: ticker(estimate.systemKwp, (n) => n.toFixed(1)), unit: "kWp" },
-        {
-          label: results.generation,
-          value: ticker(estimate.annualGenerationKwh, (n) => enIn.format(Math.round(n))),
-          unit: "kWh",
-        },
+        // Money and payback first, as on /get-quote: the two figures a visitor came for should
+        // not be third and fourth.
         {
           label: results.savings,
           value: ticker(estimate.projection.cumulativeSavingsInr, (n) => formatInr(Math.round(n))),
@@ -122,15 +115,21 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
         },
         {
           label: results.payback,
-          // Payback can be genuinely unavailable, and an em dash is not a number to spring to.
+          // Payback can be genuinely unavailable, and an em dash is not a number to count to.
           value: payback === null ? "—" : ticker(payback, (n) => n.toFixed(1)),
           unit: payback === null ? undefined : "years",
           note: estimate.subsidyInr > 0 ? "After the estimated subsidy" : undefined,
         },
+        { label: results.size, value: ticker(estimate.systemKwp, (n) => n.toFixed(1)), unit: "kWp" },
+        {
+          label: results.generation,
+          value: ticker(estimate.annualGenerationKwh, (n) => enIn.format(Math.round(n))),
+          unit: "kWh",
+        },
       ]
     : // Placeholders, so the panel keeps its shape while it waits for a PIN code and nothing
       // reads as a figure: no value, and no "(estimated)" label on an empty tile.
-      [results.size, results.generation, results.savings, results.payback].map((label) => ({ label, value: "—" }));
+      [results.savings, results.payback, results.size, results.generation].map((label) => ({ label, value: "—" }));
 
   return (
     <div className={`p-[22px] md:p-6 ${className}`}>
@@ -158,7 +157,7 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
             inputMode="text"
             autoComplete="postal-code"
             maxLength={48}
-            placeholder="Bengaluru 560001"
+            placeholder="e.g. 560001"
             value={location}
             onChange={(event) => setLocation(event.target.value)}
             onBlur={() => setLocationTouched(true)}
@@ -219,7 +218,7 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
 
       {/* Polite, so the figures are announced once the visitor stops typing rather than per keystroke. */}
       <div aria-live="polite" className="mt-3">
-        <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
           {tiles.map((tile) => (
             <StatTile
               as="li"
@@ -229,6 +228,10 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
               unit={tile.unit}
               note={tile.note}
               estimated={estimate !== null}
+              // The block's own heading already says estimate and the disclaimer says it again;
+              // repeating it on every tile reads as doubt rather than candour. The dashed rule
+              // under each figure is the brand's mark for a modelled number (brand PDF p.31).
+              labelEstimated={false}
             />
           ))}
         </ul>

@@ -5,10 +5,14 @@
  * question (which closes the copyright exposure raised in docs/discovery/13-asset-audit.md and
  * the production audit). They may be shown as our installations.
  *
- * Originals: HEIC from the owner's phone, 4:3. They carry an EXIF rotation tag, so the stored
- * buffer is landscape while a browser renders them portrait. The rotation is baked in during
- * conversion (sharp `.rotate()` with metadata stripped), so the width/height below are exactly
- * what the browser paints — next/image needs that to be true or it reserves the wrong space.
+ * Originals: 5712x4284 HEIC from the owner's phone. They carry an EXIF rotation tag, so the
+ * stored buffer is landscape while a browser renders them portrait. The rotation is baked in
+ * during conversion, so the width/height below are exactly what the browser paints — next/image
+ * needs that to be true or it reserves the wrong space.
+ *
+ * Exported at 2600px wide. The first pass used 1800, which is less than a 1440px laptop needs at
+ * device-pixel-ratio 2 for a full-bleed hero (about 2880), so the hero was being upscaled on
+ * every retina screen. These are source files, not what ships: next/image resizes per viewport.
  *
  * Every frame is portrait and every landscape slot crops it, so each entry carries its own
  * `focal` (`object-position`). A centred crop lands on bare panel texture in most of these
@@ -42,16 +46,16 @@ export interface ProjectImage {
 export const projectImages = {
   duskSkyline: {
     src: "/images/projects/ie-2095.webp",
-    width: 1800,
-    height: 2400,
-    alt: "Rooftop solar panels catching the last light at dusk, with the Bengaluru skyline and a dramatic cloudscape behind them.",
-    subject: "Rooftop array at dusk over the Bengaluru skyline",
+    width: 2600,
+    height: 3467,
+    alt: "Rooftop solar panels catching the last light at dusk, with a low skyline and a dramatic cloudscape behind them.",
+    subject: "Rooftop array at dusk over a low skyline",
     focal: "center 58%",
   },
   metalRoofArray: {
     src: "/images/projects/ie-2151.webp",
-    width: 1800,
-    height: 2400,
+    width: 2600,
+    height: 3467,
     alt: "A solar array laid across a metal industrial roof, with open green land beyond the boundary wall.",
     subject: "Rooftop array on a metal roof",
     // The array in this frame begins 43% down, so 30% left a strip of construction mesh and
@@ -60,16 +64,16 @@ export const projectImages = {
   },
   palmRooftop: {
     src: "/images/projects/ie-2006.webp",
-    width: 1800,
-    height: 2400,
+    width: 2600,
+    height: 3467,
     alt: "Rooftop solar panels on a home, framed by coconut palms and neighbouring houses under a blue sky.",
     subject: "Home rooftop array among coconut palms",
     focal: "center 38%",
   },
   industrialRoofArray: {
     src: "/images/projects/ie-2159.webp",
-    width: 1800,
-    height: 2400,
+    width: 2600,
+    height: 3467,
     alt: "A solar array laid across a metal industrial roof, with a transmission tower, tree line and open land beyond.",
     subject: "Industrial metal-roof array beside the grid connection",
     focal: "center 38%",
@@ -79,8 +83,8 @@ export const projectImages = {
   },
   hillsideArray: {
     src: "/images/projects/ie-2032.webp",
-    width: 2000,
-    height: 2667,
+    width: 2600,
+    height: 3467,
     alt: "Solar panels angled across a rooftop, with a wooded hillside and palms rising behind.",
     subject: "Rooftop array against a wooded hillside",
     // Only the top 24% of this frame is anything but panel, so 30% rendered bare glass. This is
@@ -89,24 +93,24 @@ export const projectImages = {
   },
   roadsideArray: {
     src: "/images/projects/ie-2140.webp",
-    width: 1800,
-    height: 2400,
+    width: 2600,
+    height: 3467,
     alt: "Rooftop solar panels beside power lines, with open country and a eucalyptus stand behind.",
     subject: "Rooftop array beside the incoming grid connection",
     focal: "center 32%",
   },
   terraceArray: {
     src: "/images/projects/ie-2100.webp",
-    width: 1800,
-    height: 2400,
+    width: 2600,
+    height: 3467,
     alt: "Solar panels covering a terrace roof, with neighbouring rooftops stretching to the horizon.",
     subject: "Terrace array over a dense neighbourhood",
     focal: "center 42%",
   },
   installerAtWork: {
     src: "/images/projects/ie-2134.webp",
-    width: 1800,
-    height: 2400,
+    width: 2600,
+    height: 3467,
     // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (alt). It describes only what is in the
     // frame: the previous wording said he was "steadying" the panel, which infers what he is
     // doing from a still. "One of our installers" is the owner's own statement that this is our

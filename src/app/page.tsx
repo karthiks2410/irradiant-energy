@@ -5,6 +5,7 @@ import { FinalCtaBand } from "@/components/home/FinalCtaBand";
 import { HomeFaqBand } from "@/components/home/HomeFaqBand";
 import { HomeHero } from "@/components/home/HomeHero";
 import { BrandRail } from "@/components/home/BrandRail";
+import { HomeEstimateProvider } from "@/components/home/HomeEstimateProvider";
 import { ProjectsBand } from "@/components/home/ProjectsBand";
 import { SystemBand } from "@/components/home/SystemBand";
 import { WhyBand } from "@/components/home/WhyBand";
@@ -15,7 +16,7 @@ import { pageMetadata } from "@/lib/seo";
 // root segment), so the title stays short enough that the brand suffix is not what a search
 // result truncates; the long phrase is the description.
 export const metadata = pageMetadata({
-  title: "Rooftop solar in Bengaluru",
+  title: "Rooftop solar across Karnataka",
   description: site.description,
   path: "/",
 });
@@ -25,7 +26,7 @@ export const metadata = pageMetadata({
 // paints itself dark and the closing band below is dark.
 export default function HomePage() {
   return (
-    <>
+    <HomeEstimateProvider>
       <HomeHero />
       <AudiencePathsBand />
       <AboutBand />
@@ -36,6 +37,6 @@ export default function HomePage() {
       <ProjectsBand />
       <HomeFaqBand />
       <FinalCtaBand />
-    </>
+    </HomeEstimateProvider>
   );
 }

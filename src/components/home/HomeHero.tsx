@@ -1,4 +1,5 @@
-import { ButtonLink } from "@/components/ui";
+import { ArrowRightIcon } from "@/components/ui";
+import { HeroEstimate } from "./HeroEstimate";
 import { homePage } from "@/content/home";
 import { HeroBackdrop } from "./HeroBackdrop";
 
@@ -31,10 +32,18 @@ const { hero } = homePage;
  * starts high on a phone: the Solar Yellow eyebrow measured 2.2–2.7:1 there against the
  * brightest sky in the template photographs, on every slide and at both Ken Burns scales.
  * (Lighthouse scores 100 because axe marks text over a background image "incomplete", not a
- * failure.) The phone ramp is therefore nearly flat — roughly 0.92 → 0.85 → 0.72 — which
- * holds the whole copy column above 0.80 once the top wash is composited in, and puts the
- * eyebrow above 4.5:1. Re-measure all slides when the TODO(photography) placeholders are
- * replaced.
+ * failure.) The phone ramp is therefore nearly flat — 0.90 → 0.81 → 0.67 — which holds the
+ * whole copy column high enough once the top wash is composited in.
+ *
+ * Those numbers were 0.92 → 0.85 → 0.72 against the template placeholders. Re-measured against
+ * the owner's real photographs (2026-09-20) they had more room than they needed: the array was
+ * reading as a flat teal wash on a phone, on a page selling solar. Lightening the ramp by two to
+ * five points costs almost nothing — the worst sample moved from 5.13:1 to 5.01:1 against a
+ * 4.5:1 floor — and lets the panels read as panels. Going a further four points reached 4.61:1,
+ * which clears the floor but leaves no margin for a brighter photograph, so it was backed off.
+ *
+ * Re-measure all slides at both Ken Burns scales whenever the photography changes:
+ * `node .qa/hero-contrast.mjs` against a production build does it.
  */
 export function HomeHero() {
   return (
@@ -59,27 +68,30 @@ export function HomeHero() {
                 opacity across the copy column and falling away over the photo's subject. */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 z-10 bg-linear-to-t from-teal-900/92 via-teal-900/85 to-teal-900/72 md:bg-linear-to-r md:via-62% md:via-teal-900/78 md:to-teal-900/5"
+              className="pointer-events-none absolute inset-0 z-10 bg-linear-to-t from-teal-900/90 via-teal-900/81 to-teal-900/67 md:bg-linear-to-r md:via-62% md:via-teal-900/76 md:to-teal-900/5"
             />
           </>
         }
         actions={
-          /* Prototype pills: 54px tall and fully rounded. The height sits on a stretch wrapper
-             rather than on ButtonLink, whose own min-h-11 would race it in the stylesheet. */
-          <div className="mt-7 flex flex-wrap gap-3">
-            <span className="flex min-h-[3.375rem]">
-              <ButtonLink href={hero.cta.href} variant="light">
-                {hero.cta.label}
-              </ButtonLink>
-            </span>
+          /*
+           * The estimate itself, rather than two pills pointing at it. The old pair sent both
+           * "Get a free estimate" and "Request a site consultation" to the same destination, and
+           * the header repeats the first one in the same viewport — three controls, one place.
+           * The form does the job the buttons were only advertising; the consultation link stays
+           * as the quieter second path for someone not ready to type numbers.
+           */
+          <>
+            <HeroEstimate />
             {hero.secondaryCta && (
-              <span className="flex min-h-[3.375rem]">
-                <ButtonLink href={hero.secondaryCta.href} variant="outline-light">
-                  {hero.secondaryCta.label}
-                </ButtonLink>
-              </span>
+              <a
+                href={hero.secondaryCta.href}
+                className="group mt-5 inline-flex min-h-11 items-center gap-2 text-ui font-semibold text-white underline-offset-4 transition-colors duration-200 hover:underline"
+              >
+                {hero.secondaryCta.label}
+                <ArrowRightIcon className="size-4 transition-transform duration-200 ease-controlled group-hover:translate-x-0.5" />
+              </a>
             )}
-          </div>
+          </>
         }
       />
     </section>

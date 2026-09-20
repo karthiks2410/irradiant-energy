@@ -127,7 +127,10 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
   });
   if (!alertResult.ok) {
     logLeadEvent("error", "lead_alert_failed", { ...logFields, ...alertResult.error });
-    return { ok: false, error: ERROR_SEND, values };
+    // Nothing durable holds this enquiry, so the only way it survives is if the visitor carries
+    // it to us. The WhatsApp link is pre-filled with their reference, which is the same one the
+    // email would have quoted, so a rescued enquiry can still be matched up.
+    return { ok: false, error: ERROR_SEND, whatsappHref: customerWhatsappHref(reference), values };
   }
   logLeadEvent("info", "lead_alert_sent", logFields);
 
@@ -161,16 +164,47 @@ interface SendRequest {
 
 type SendResult = { ok: true } | { ok: false; error: { errorName: string; errorStatus: number | null } };
 
-/** Wraps the SDK so callers only ever see an error name and status, never the raw object. */
+/**
+ * Statuses worth trying again: the request was fine and the far end was briefly not. A 4xx that
+ * is not 408 or 429 means the request itself is wrong, and repeating it only wastes the visitor's
+ * time. A thrown error carries no status and is almost always a network blip, so it retries too.
+ */
+function worthRetrying(status: number | null): boolean {
+  if (status === null) return true;
+  if (status === 408 || status === 429) return true;
+  return status >= 500;
+}
+
+/** Attempts, and the wait before each retry. Short, because someone is watching a spinner. */
+const SEND_RETRY_DELAYS_MS = [400, 1200];
+
+/**
+ * Wraps the SDK so callers only ever see an error name and status, never the raw object.
+ *
+ * It retries a transient failure twice before giving up. A dropped connection or a moment of
+ * provider trouble used to lose the enquiry outright: the lead log is deliberately PII-free
+ * (lib/leads/log.ts), so nothing anywhere holds the name, number or message once the send fails.
+ * Every attempt reuses the same idempotency key, so a retry after a response we never saw cannot
+ * deliver the mail twice.
+ */
 async function send(resend: Resend, request: SendRequest): Promise<SendResult> {
   const { idempotencyKey, ...payload } = request;
-  try {
-    const { error } = await resend.emails.send(payload, { idempotencyKey });
-    if (error) return { ok: false, error: { errorName: error.name, errorStatus: error.statusCode } };
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: { errorName: err instanceof Error ? err.name : "unknown", errorStatus: null } };
+  let last: SendResult = { ok: false, error: { errorName: "not-attempted", errorStatus: null } };
+
+  for (let attempt = 0; attempt <= SEND_RETRY_DELAYS_MS.length; attempt++) {
+    if (attempt > 0) {
+      await new Promise((resolve) => setTimeout(resolve, SEND_RETRY_DELAYS_MS[attempt - 1]));
+    }
+    try {
+      const { error } = await resend.emails.send(payload, { idempotencyKey });
+      if (!error) return { ok: true };
+      last = { ok: false, error: { errorName: error.name, errorStatus: error.statusCode } };
+    } catch (err) {
+      last = { ok: false, error: { errorName: err instanceof Error ? err.name : "unknown", errorStatus: null } };
+    }
+    if (last.ok || !worthRetrying(last.error.errorStatus)) break;
   }
+  return last;
 }
 
 /** Human-readable reference such as IE-7K3QX2; random, so it reveals nothing about volume. */

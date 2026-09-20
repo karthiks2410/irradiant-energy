@@ -34,6 +34,13 @@ export type LeadActionState =
       ok: false;
       /** Form-level message; shown in an alert region. */
       error: string;
+      /**
+       * Set only when the enquiry was valid and we could not deliver it. Nothing durable holds
+       * the lead at that point — the lead log is deliberately PII-free — so this carries the
+       * reference into WhatsApp and lets the visitor finish the contact themselves rather than
+       * meeting a dead end.
+       */
+      whatsappHref?: string;
       fieldErrors?: LeadFieldErrors;
       values?: LeadFormValues;
     };

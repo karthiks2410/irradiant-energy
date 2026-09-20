@@ -20,21 +20,21 @@ export const homeSegment: Segment = {
   label: nav.label,
   description: nav.description ?? "",
 
-  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (place qualifier only). Bengaluru is a
-  // VERIFIED-LIVE fact (content-inventory F-40) and 16-seo-deep-dive H3 prescribes it; the
-  // rest of the wording is the legacy copy. The shorter title also fits the SERP width.
+  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (place qualifier only). Karnataka is owner-stated (2026-09-20): the business installs throughout the state, not
+  // only in Bengaluru, where it is registered. The old site said Bengaluru everywhere, which
+  // under-claimed the coverage.
   meta: {
-    title: "Rooftop solar for homes in Bengaluru",
+    title: "Rooftop solar for homes in Karnataka",
     // "and lifetime after-sales" trimmed (N-44); see held.
     description:
-      "Rooftop solar designed for your home in Bengaluru. Free site visit, transparent quote, end-to-end installation. See which on-grid, off-grid, or hybrid system fits you.",
+      "Rooftop solar designed for your home in Karnataka. Free site visit, transparent quote, end-to-end installation. See which on-grid, off-grid, or hybrid system fits you.",
     source: "P-SH-1 · 03 §4.1 · place qualifier proposed (F-40 · 16 §H3)",
     status: "proposed",
   },
 
   hero: {
-    eyebrow: "For homeowners in Bengaluru",
-    title: "Solar for your home in Bengaluru — designed end-to-end.",
+    eyebrow: "For homeowners across Karnataka",
+    title: "Solar for your home in Karnataka — designed end-to-end.",
     lead: "From the first site visit to the last installation screw, we handle it. You see the savings every month on your bill.",
     cta: ctas.primary,
     secondaryCta: ctas.secondary,

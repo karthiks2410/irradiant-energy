@@ -20,20 +20,20 @@ export const housingSocietySegment: Segment = {
   label: nav.label,
   description: nav.description ?? "",
 
-  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (place qualifier only). Bengaluru is a
-  // VERIFIED-LIVE fact (content-inventory F-40) and 16-seo-deep-dive H3 prescribes it; the
-  // rest of the wording is the legacy copy.
+  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (place qualifier only). Karnataka is owner-stated (2026-09-20): the business installs throughout the state, not
+  // only in Bengaluru, where it is registered. The old site said Bengaluru everywhere, which
+  // under-claimed the coverage.
   meta: {
-    title: "Rooftop solar for housing societies in Bengaluru",
+    title: "Rooftop solar for housing societies in Karnataka",
     description:
-      "Solar for apartments, gated communities, and RWA-managed buildings in Bengaluru. Lower society maintenance, predictable energy costs, and a single point of contact end-to-end.",
+      "Solar for apartments, gated communities, and RWA-managed buildings across Karnataka. Lower society maintenance, predictable energy costs, and a single point of contact end-to-end.",
     source: "P-SS-1 · 03 §5.1 · place qualifier proposed (F-40 · 16 §H3)",
     status: "proposed",
   },
 
   hero: {
-    eyebrow: "For Bengaluru RWAs and society committees",
-    title: "Cut your society's common-area electricity bill in Bengaluru — together.",
+    eyebrow: "For Karnataka RWAs and society committees",
+    title: "Cut your society's common-area electricity bill in Karnataka — together.",
     // "— solar covers it all" trimmed (CL-27); see held.
     lead: "Lifts, pumps, lobby, parking lights. Lower society maintenance for every flat.",
     cta: ctas.primary,

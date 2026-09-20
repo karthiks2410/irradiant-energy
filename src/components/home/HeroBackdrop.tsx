@@ -180,8 +180,11 @@ export function HeroBackdrop({ slides, overlay, actions }: HeroBackdropProps) {
             rotation changes nothing but pixels. */}
         <div className="grid max-w-[690px] pt-[calc(var(--header-h)+4.5rem)] md:pt-[calc(var(--header-h)+5.25rem)] [@media(max-height:720px)]:pt-[calc(var(--header-h)+2rem)] [@media(max-height:720px)]:pb-16">
           {/* The sizer: every scene, laid out and measured, shown to nobody. It carries no
-              heading and no landmark, so it adds nothing for assistive technology to find. */}
-          <div aria-hidden="true" className="invisible col-start-1 row-start-1 grid">
+              heading and no landmark, so it adds nothing for assistive technology to find, and
+              it is `inert` because `actions` now contains a real form — `visibility: hidden`
+              already takes those inputs out of the tab order, but inert says so outright and
+              covers pointer events too. */}
+          <div aria-hidden="true" inert className="invisible col-start-1 row-start-1 grid">
             {slides.map((slide) => (
               <div key={slide.title} className="col-start-1 row-start-1">
                 <Eyebrow tone="signal" className="mb-4">

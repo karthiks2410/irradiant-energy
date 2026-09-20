@@ -175,6 +175,44 @@ test.describe("the estimate counts to its new value", () => {
   });
 });
 
+test.describe("the hero starts the estimate", () => {
+  test("the hero form seeds the calculator and lands on real figures", async ({ page }) => {
+    test.slow();
+    await page.goto("/", { waitUntil: "networkidle" });
+    await dismissConsent(page);
+
+    // `.last()` because the hero reserves its tallest scene with a hidden, inert copy of the
+    // same markup; the live form is the second one in the DOM.
+    const form = page.locator("form").filter({ has: page.getByRole("button", { name: /see my estimate/i }) }).last();
+    await form.getByLabel(/monthly electricity bill/i).fill("9000");
+    await form.getByLabel(/pin code/i).fill("562106");
+    await form.getByRole("button", { name: /see my estimate/i }).click();
+
+    await expect(page).toHaveURL(/#calculator/);
+
+    const tiles = page.locator("#calculator li");
+    await expect(tiles.first()).toBeVisible();
+    // The bill typed in the hero must be the bill the calculator used, so the figures are the
+    // visitor's own rather than the default.
+    await expect
+      .poll(async () => (await page.locator("#calculator").innerText()).includes("—"), { timeout: 8_000 })
+      .toBe(false);
+    const shown = await page.locator("#calculator").innerText();
+    expect(shown, "the calculator is still showing its empty state").toMatch(/₹[\d,]{5,}/);
+  });
+
+  test("it asks for a PIN rather than jumping to an empty calculator", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+    await dismissConsent(page);
+
+    const form = page.locator("form").filter({ has: page.getByRole("button", { name: /see my estimate/i }) }).last();
+    await form.getByRole("button", { name: /see my estimate/i }).click();
+
+    await expect(form.getByRole("alert")).toBeVisible();
+    expect(page.url(), "it navigated without an estimate to show").not.toContain("#calculator");
+  });
+});
+
 test.describe("consent", () => {
   test("refusing loads nothing and the answer can be reopened", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });

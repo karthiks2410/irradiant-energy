@@ -40,7 +40,7 @@ export const site = {
   legacyName: "Irradiant Energie",
   tagline: "Energy Made Intelligent", // brand PDF p.5
   description:
-    "Rooftop solar for homes, housing societies and businesses in Bengaluru — designed, installed and supported by Irradiant Energy.",
+    "Rooftop solar for homes, housing societies and businesses across Karnataka — designed, installed and supported by Irradiant Energy.",
 
   contact: {
     // Both numbers confirmed by the owner on 2026-09-19. Primary = the WhatsApp line used on the old site.

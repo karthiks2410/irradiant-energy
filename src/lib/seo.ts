@@ -8,7 +8,7 @@ import { siteUrl } from "@/lib/env";
  * Usage in a page.tsx (Server Component):
  *
  *   export const metadata = pageMetadata({
- *     title: "Rooftop solar for homes in Bengaluru", // ≤ 60 chars; " | Irradiant Energy" is appended
+ *     title: "Rooftop solar for homes in Karnataka", // ≤ 60 chars; " | Irradiant Energy" is appended
  *     description: "…",                              // 120–155 chars, plain text
  *     path: "/solutions/solar/home",                 // this page's own route
  *   });
