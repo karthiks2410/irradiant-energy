@@ -3,11 +3,15 @@
  *
  * Status legend (see docs/content-inventory.md):
  * - "verified-live": carried over from the live legacy site.
+ * - "owner-confirmed": confirmed by the owner in writing (date in the comment beside the fact).
  * - "to-confirm": carried over but awaiting owner confirmation (decisions.md D-009).
  * - null value: not known yet; the UI shows a placeholder in preview and hides it in production.
  */
 
-export type FactStatus = "verified-live" | "to-confirm";
+export type FactStatus = "verified-live" | "owner-confirmed" | "to-confirm";
+
+/** True for facts that may be shown as verified (on the site, in JSON-LD, in emails). */
+export const isConfirmed = (status: FactStatus) => status !== "to-confirm";
 
 export interface Fact<T> {
   value: T;
@@ -22,16 +26,17 @@ export const site = {
     "Rooftop solar for homes, housing societies and businesses in Bengaluru — designed, installed and supported by Irradiant Energy.",
 
   contact: {
+    // Both numbers confirmed by the owner on 2026-09-19. Primary = the WhatsApp line used on the old site.
     phonePrimary: {
       value: { display: "+91 98457 94343", tel: "+919845794343" },
-      status: "to-confirm",
+      status: "owner-confirmed",
     } satisfies Fact<{ display: string; tel: string }>,
     phoneSecondary: {
       value: { display: "+91 98456 94343", tel: "+919845694343" },
-      status: "to-confirm",
+      status: "owner-confirmed",
     } satisfies Fact<{ display: string; tel: string }>,
     email: { value: "info@irradiantenergie.com", status: "verified-live" } satisfies Fact<string>,
-    whatsapp: { value: "919845794343", status: "to-confirm" } satisfies Fact<string>,
+    whatsapp: { value: "919845794343", status: "owner-confirmed" } satisfies Fact<string>,
     address: {
       value: {
         lines: ["7/241, Gopi Layout, Attibele Main Road", "Anekal, Bengaluru, Karnataka 562106"],
@@ -40,9 +45,10 @@ export const site = {
         postalCode: "562106",
         country: "IN",
       },
-      status: "to-confirm",
+      status: "owner-confirmed", // confirmed by the owner on 2026-09-19
     },
-    hours: null as string | null,
+    // Owner instruction (2026-09-19): the business is reachable at all times and business hours
+    // must NOT be shown anywhere on the site — no hours line, no "24/7" or "always available" claim.
   },
 
   legal: {

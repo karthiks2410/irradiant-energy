@@ -1,0 +1,119 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { Eyebrow, Section } from "@/components/ui";
+import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
+import { getLegalPage } from "@/content/legal";
+import type { LegalPage } from "@/content/types";
+import { site } from "@/content/site";
+import { showPlaceholders } from "@/lib/env";
+
+/**
+ * Shared shell for the three legal pages: breadcrumb, title, draft banner, prose column and the
+ * contact block every notice has to end with. The pages supply only their body.
+ */
+
+/** legalPages is a fixed list, so a missing slug is a build-time mistake, not a runtime branch. */
+function requireLegalPage(slug: LegalPage["slug"]): LegalPage {
+  const page = getLegalPage(slug);
+  if (!page) throw new Error(`No legal page registered for "${slug}" in src/content/legal.ts`);
+  return page;
+}
+
+/**
+ * Typographic rules for hand-written legal copy. There is no typography plugin, so the element
+ * styles are applied from here and the pages stay plain HTML.
+ */
+const prose = [
+  "max-w-prose text-body text-ink-2",
+  "[&>h2]:mt-12 [&>h2]:font-display [&>h2]:text-h3 [&>h2]:font-bold [&>h2]:text-carbon [&>h2:first-child]:mt-0",
+  "[&>h3]:mt-8 [&>h3]:font-display [&>h3]:text-h4 [&>h3]:font-semibold [&>h3]:text-carbon",
+  "[&>p]:mt-4",
+  "[&>ul]:mt-4 [&>ul]:space-y-2 [&>ul]:pl-5 [&>ul]:list-disc",
+  "[&>ol]:mt-4 [&>ol]:space-y-2 [&>ol]:pl-5 [&>ol]:list-decimal",
+  "[&_li]:marker:text-green-700",
+  "[&_strong]:font-semibold [&_strong]:text-carbon",
+  "[&_a]:font-medium [&_a]:text-green-700 [&_a]:underline [&_a]:underline-offset-2",
+  "[&_a:hover]:text-teal-900",
+].join(" ");
+
+type LegalPageShellProps = {
+  slug: LegalPage["slug"];
+  /** One-sentence summary under the title. Plain English, no legal effect. */
+  summary: string;
+  children: ReactNode;
+};
+
+export function LegalPageShell({ slug, summary, children }: LegalPageShellProps) {
+  const page = requireLegalPage(slug);
+  const path = `/${page.slug}` as const;
+
+  return (
+    <>
+      <BreadcrumbJsonLd items={[{ name: page.title, path }]} />
+
+      <Section surface="canvas" aria-labelledby="legal-heading">
+        <nav aria-label="Breadcrumb" className="text-small text-grey-600">
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              <Link href="/" className="underline underline-offset-2 hover:text-teal-900">
+                Home
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" className="text-ink-2">
+              {page.title}
+            </li>
+          </ol>
+        </nav>
+
+        <div className="mt-10 max-w-prose">
+          <Eyebrow>Legal</Eyebrow>
+          <h1 id="legal-heading" className="mt-4 font-display text-h2 font-extrabold text-carbon">
+            {page.title}
+          </h1>
+          <p className="mt-5 text-lead text-ink-2">{summary}</p>
+          <p className="mt-6 font-mono text-label text-grey-600 uppercase">
+            Draft version · Effective date to be confirmed
+          </p>
+        </div>
+
+        {/* Solar Yellow attention strip (report §6.4): fill, never text, and only outside production. */}
+        {showPlaceholders && (
+          <p className="mt-8 max-w-prose border-l-4 border-yellow-400 py-1 pl-4 text-small text-ink-2">
+            <PlaceholderTag>Draft — pending legal review</PlaceholderTag> Written by the build team as a starting
+            point for counsel. It has not been reviewed by a lawyer, and the facts still to be supplied are tagged in
+            place.
+          </p>
+        )}
+
+        <div className={`mt-12 ${prose}`}>{children}</div>
+
+        <div className="mt-16 max-w-prose border-t border-mist pt-8">
+          <h2 className="font-display text-h4 font-semibold text-carbon">Questions about this page</h2>
+          <p className="mt-3 text-body text-ink-2">
+            Write to{" "}
+            <a
+              href={`mailto:${site.contact.email.value}`}
+              className="font-medium text-green-700 underline underline-offset-2 hover:text-teal-900"
+            >
+              {site.contact.email.value}
+            </a>{" "}
+            or call{" "}
+            <a
+              href={`tel:${site.contact.phonePrimary.value.tel}`}
+              className="font-medium text-green-700 underline underline-offset-2 hover:text-teal-900"
+            >
+              {site.contact.phonePrimary.value.display}
+            </a>
+            . For a privacy request or a complaint, use the{" "}
+            <Link href="/contact#grievance" className="font-medium text-green-700 underline underline-offset-2 hover:text-teal-900">
+              grievance and privacy contact
+            </Link>{" "}
+            on our contact page.
+          </p>
+        </div>
+      </Section>
+    </>
+  );
+}

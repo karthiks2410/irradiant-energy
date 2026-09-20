@@ -11,7 +11,10 @@ export function SiteHeader() {
   return (
     <HeaderShell>
       <div className="container-page flex h-full items-center justify-between gap-6">
-        <Link href="/" aria-label="Irradiant Energy — home" className="shrink-0">
+        {/* No aria-label here: <LogoLockup> is role="img" with its own name, so the link is named
+            "Irradiant Energy", which matches the visible wordmark. An extra label would override the
+            content and no longer match what users see (axe label-content-name-mismatch). */}
+        <Link href="/" className="shrink-0">
           <LogoLockup className="h-[42px] w-auto lg:h-12" />
         </Link>
 
@@ -26,9 +29,13 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <ButtonLink href={primaryCta.href} className="hidden sm:inline-flex">
-            {primaryCta.label}
-          </ButtonLink>
+          {/* The wrapper carries the display utility, not the pill: ButtonLink's own
+              `inline-flex` is emitted after `.hidden` in the Tailwind stylesheet, so a
+              `hidden` passed through className loses the cascade and the CTA stays on
+              screen at phone widths — pushing the menu button out of the viewport. */}
+          <span className="hidden sm:inline-flex">
+            <ButtonLink href={primaryCta.href}>{primaryCta.label}</ButtonLink>
+          </span>
           <MobileMenu />
         </div>
       </div>

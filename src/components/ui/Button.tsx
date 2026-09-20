@@ -8,6 +8,11 @@ import type { ComponentProps, ReactNode } from "react";
  * - light:   carbon label on white, for dark/photo surfaces
  * - outline: teal-900 outline + label on light surfaces
  * - outline-light: white outline + label on dark surfaces
+ *
+ * `className` is appended after the base classes, but Tailwind resolves conflicts by the order
+ * rules appear in the stylesheet, not in the attribute — and `.inline-flex` is emitted after
+ * `.hidden`. A display utility passed here therefore loses to the base `inline-flex`: put
+ * `hidden`/`sm:block` on a wrapper element instead (see SiteHeader.tsx).
  */
 type Variant = "primary" | "light" | "outline" | "outline-light";
 

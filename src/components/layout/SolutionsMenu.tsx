@@ -13,7 +13,13 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
   const pathname = usePathname();
   const active = group.items.some((item) => pathname.startsWith(item.href));
 
-  useEffect(() => setOpen(false), [pathname]);
+  // Close on navigation. Adjusting during render rather than in an effect avoids the
+  // cascading re-render React warns about, and closes before the new route paints.
+  const [renderedPath, setRenderedPath] = useState(pathname);
+  if (renderedPath !== pathname) {
+    setRenderedPath(pathname);
+    setOpen(false);
+  }
 
   useEffect(() => {
     if (!open) return;

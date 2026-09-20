@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { primaryCta, site, solutions, whatsappLink } from "@/content/site";
+import { isConfirmed, primaryCta, site, solutions, whatsappLink } from "@/content/site";
 import { showPlaceholders } from "@/lib/env";
 import { LogoLockup } from "@/components/brand/Logo";
 
@@ -80,8 +80,8 @@ export function SiteFooter() {
             <li>
               <a href={`tel:${contact.phoneSecondary.value.tel}`} className="hover:text-white">
                 {contact.phoneSecondary.value.display}
-              </a>{" "}
-              <Placeholder>confirm second line</Placeholder>
+              </a>
+              {!isConfirmed(contact.phoneSecondary.status) && <Placeholder>confirm second line</Placeholder>}
             </li>
             <li>
               <a href={`mailto:${contact.email.value}`} className="hover:text-white">
@@ -100,7 +100,6 @@ export function SiteFooter() {
                 </span>
               ))}
             </li>
-            <li>{contact.hours ?? <Placeholder>business hours</Placeholder>}</li>
           </ul>
         </address>
       </div>

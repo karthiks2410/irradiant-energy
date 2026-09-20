@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Inter, Manrope } from "next/font/google";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { site } from "@/content/site";
 import { allowIndexing, siteUrl } from "@/lib/env";
 import "./globals.css";
@@ -49,6 +51,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <SiteFooter />
+        <SmoothScroll />
+        <JsonLd />
       </body>
     </html>
   );

@@ -48,6 +48,11 @@
   --text-display: clamp(2.5rem, 1.2rem + 5.2vw, 6rem);
   --text-display--line-height: 1.05;
   --text-display--letter-spacing: -0.015em;
+  /* Page title for inner pages: one step below the home hero's display size (design-system.md §3.3). */
+  --text-h1: clamp(2.25rem, 1.634rem + 2.629vw, 4.5rem);
+  --text-h1--line-height: 1.08;
+  --text-h1--letter-spacing: -0.015em;
+  --text-h1--font-weight: 800;
   --text-h2: clamp(1.75rem, 1.25rem + 1.6vw, 2.75rem);
   --text-h2--line-height: 1.12;
   --text-h2--letter-spacing: -0.01em;

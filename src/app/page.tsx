@@ -1,23 +1,38 @@
-import { ButtonLink } from "@/components/ui/Button";
-import { primaryCta } from "@/content/site";
+import { AboutBand } from "@/components/home/AboutBand";
+import { AudiencePathsBand } from "@/components/home/AudiencePathsBand";
+import { CalculatorTeaser } from "@/components/home/CalculatorTeaser";
+import { FinalCtaBand } from "@/components/home/FinalCtaBand";
+import { HomeFaqBand } from "@/components/home/HomeFaqBand";
+import { HomeHero } from "@/components/home/HomeHero";
+import { ProjectsBand } from "@/components/home/ProjectsBand";
+import { SystemBand } from "@/components/home/SystemBand";
+import { WhyBand } from "@/components/home/WhyBand";
+import { site } from "@/content/site";
+import { pageMetadata } from "@/lib/seo";
 
-// Temporary shell page; replaced by the home build.
-export default function Home() {
+// pageMetadata appends " | Irradiant Energy" (the layout's title.template does not reach the
+// root segment), so the title stays short enough that the brand suffix is not what a search
+// result truncates; the long phrase is the description.
+export const metadata = pageMetadata({
+  title: "Rooftop solar in Bengaluru",
+  description: site.description,
+  path: "/",
+});
+
+// Surfaces alternate canvas → white → dark for rhythm (report §6.9); the projects band
+// drops out in production, which leaves the FAQ's white between the two dark bands.
+export default function HomePage() {
   return (
-    <section data-surface="dark" className="-mt-(--header-h) bg-teal-900 pt-(--header-h) text-white">
-      <div className="container-page section-y">
-        <p className="font-mono text-eyebrow font-medium uppercase">Intelligent energy systems</p>
-        <h1 className="mt-4 max-w-4xl font-display text-display font-extrabold">Powering smarter futures.</h1>
-        <p className="mt-6 max-w-2xl text-lead text-white/85">
-          Reliable solar systems for homes, businesses, agriculture and communities—designed to perform with clarity
-          and long-term value.
-        </p>
-        <div className="mt-8">
-          <ButtonLink href={primaryCta.href} variant="light">
-            {primaryCta.label}
-          </ButtonLink>
-        </div>
-      </div>
-    </section>
+    <>
+      <HomeHero />
+      <AudiencePathsBand />
+      <AboutBand />
+      <SystemBand />
+      <WhyBand />
+      <CalculatorTeaser />
+      <ProjectsBand />
+      <HomeFaqBand />
+      <FinalCtaBand />
+    </>
   );
 }
