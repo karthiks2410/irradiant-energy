@@ -5,6 +5,7 @@ import { EstimateControls } from "@/components/quote/EstimateControls";
 import { EstimateProvider } from "@/components/quote/EstimateProvider";
 import { EstimateResults } from "@/components/quote/EstimateResults";
 import { LeadForm } from "@/components/quote/LeadForm";
+import { mailConfigured } from "@/lib/env.server";
 import { MobileSummaryBar } from "@/components/quote/MobileSummaryBar";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { Accent, Card, Eyebrow, Section, SectionHeading } from "@/components/ui";
@@ -123,7 +124,7 @@ export default async function GetQuotePage({
             lead="Your estimate travels with your details, so we can pick up exactly where you left off."
           />
           <div className="mt-10">
-            <LeadForm startedAt={startedAt} />
+            <LeadForm startedAt={startedAt} canSend={mailConfigured} />
           </div>
         </div>
 

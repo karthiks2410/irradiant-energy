@@ -41,6 +41,8 @@ export type LeadActionState =
        * meeting a dead end.
        */
       whatsappHref?: string;
+      /** Present alongside `whatsappHref`: the reference to quote when they get in touch. */
+      reference?: string;
       fieldErrors?: LeadFieldErrors;
       values?: LeadFormValues;
     };

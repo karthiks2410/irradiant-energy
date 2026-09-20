@@ -36,7 +36,7 @@ const errorAnchors: Record<string, { id: string; label: string }> = {
   monthlyBill: { id: "estimate-bill", label: "Monthly electricity bill" },
 };
 
-export function LeadForm({ startedAt }: { startedAt: number }) {
+export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: boolean }) {
   const { segment, monthlyBill, estimate, roofArea } = useEstimate();
   const [state, formAction] = useActionState(submitLead, initialLeadState);
   const noticeRef = useRef<HTMLDivElement>(null);
@@ -94,9 +94,17 @@ export function LeadForm({ startedAt }: { startedAt: number }) {
               })}
             </ul>
           )}
-          {/* On a delivery failure the action hands back a WhatsApp link carrying the reference,
-              so the visitor can rescue an enquiry nothing else is holding. On a validation error
-              there is no reference yet and the plain link is right. */}
+          {/* On a delivery failure the action hands back the reference the email would have
+              quoted and a WhatsApp link carrying it, so the visitor can rescue an enquiry
+              nothing else is holding. On a validation error there is neither, and the plain
+              link is right. */}
+          {state.ok === false && state.reference && (
+            <p className="mt-2 text-small text-ink-2">
+              Your reference is{" "}
+              <span className="font-mono font-medium text-carbon tabular-nums">{state.reference}</span>. Quote it and
+              we can pick up from your details.
+            </p>
+          )}
           <ContactFallbacks whatsappHref={state.ok === false ? state.whatsappHref : undefined} />
         </div>
       )}
@@ -214,21 +222,34 @@ export function LeadForm({ startedAt }: { startedAt: number }) {
         </p>
       )}
 
-      <SubmitButton />
+      <SubmitButton canSend={canSend} />
     </form>
   );
 }
 
-function SubmitButton() {
+/**
+ * `canSend` is false while the site has no working mail — the domain is on registrar hold, so
+ * Resend cannot be verified. Only the button is disabled: everything above it still works, and
+ * the calculator is a different component entirely, so the figures are unaffected.
+ */
+function SubmitButton({ canSend }: { canSend: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <Button type="submit" arrow disabled={pending}>
-        {pending ? "Sending…" : "Send my request"}
-      </Button>
-      <p role="status" className="sr-only">
-        {pending ? "Sending your request" : ""}
-      </p>
+    <div className="grid gap-2">
+      <div className="flex flex-wrap items-center gap-4">
+        <Button type="submit" arrow disabled={pending || !canSend}>
+          {pending ? "Sending…" : "Send my request"}
+        </Button>
+        <p role="status" className="sr-only">
+          {pending ? "Sending your request" : ""}
+        </p>
+      </div>
+      {!canSend && (
+        <p className="text-small text-ink-2">
+          Sending is switched off until our email domain is verified. The figures above are live —
+          use WhatsApp or the phone number below to send them to us.
+        </p>
+      )}
     </div>
   );
 }

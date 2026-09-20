@@ -4,16 +4,17 @@
  * Server-only: nothing here is `NEXT_PUBLIC_`, so this module must be imported only from
  * server code (it is imported by the lead action). `src/lib/env.ts` stays client-safe.
  *
- * The lead pipeline has no store yet (architecture.md OD-4), so the sales alert *is* the
- * record of a lead. A Production deployment missing one of these variables would therefore
- * drop every enquiry silently, one `{ok:false}` at a time. `next.config.ts` imports this
- * module, so the check runs during `next build`: a Production build without mail credentials
- * fails, the bad deployment never goes live, and the previous one keeps serving. A running
- * deployment is never taken down by this — the action keeps its call-or-WhatsApp fallback.
+ * This used to fail a Production build when mail was not configured, so that a deployment which
+ * could not capture a lead never went live. It no longer does (owner decision, 2026-09-20):
+ * Resend cannot send until irradiantenergy.in is verified with it and the domain is on registrar
+ * hold, so the guard was keeping the whole site off production over a facility that could not
+ * work yet.
+ *
+ * `leadEmailEnv` is null when it is not configured, and `mailConfigured` below is what the quote
+ * page reads to disable its form rather than let someone fill in a form that cannot be sent.
  */
 
 import { z } from "zod";
-import { isProduction } from "./env";
 
 const leadEmailEnvSchema = z.object({
   /** Resend API key. Secret; set per environment (D-012), never committed. */
@@ -41,16 +42,8 @@ function parseLeadEmailEnv() {
  */
 const result = parseLeadEmailEnv();
 
-if (isProduction && !result.success) {
-  // Names the variable and what is wrong with it: this message is read once, by whoever is
-  // looking at a red Vercel build at the moment they least want a puzzle.
-  const problems = result.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`);
-  throw new Error(
-    `Invalid server environment for the lead pipeline — ${problems.join("; ")}. ` +
-      "Set RESEND_API_KEY, EMAIL_FROM and LEAD_EMAIL on the Vercel project (Production); " +
-      "see .env.example and decisions.md D-012.",
-  );
-}
-
-/** Mail configuration, or `null` when it is not set up (never in Production; see above). */
+/** Mail configuration, or `null` when it is not set up. */
 export const leadEmailEnv: LeadEmailEnv | null = result.success ? result.data : null;
+
+/** Whether the quote form can actually deliver. Read by the page to enable or disable it. */
+export const mailConfigured = result.success;

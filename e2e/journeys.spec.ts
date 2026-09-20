@@ -78,35 +78,40 @@ test.describe("estimator", () => {
   // "nothing was posted" — it is that an empty post is rejected, says why, and sends no mail.
   // (The action parses the form before it ever looks at the mail credentials, so an invalid
   // submission cannot reach Resend.)
-  test("an empty lead submission is rejected with field errors", async ({ page }) => {
-    // It waits out a deliberate 3.5s and then makes a server round-trip, against other workers.
+  // Sending is switched off while the email domain is unverified, so this covers both states:
+  // with it off the button must be disabled and say why, and with it on an empty submission must
+  // be rejected rather than reaching anyone.
+  test("an empty submission cannot reach anyone", async ({ page }) => {
     test.slow();
     await page.goto("/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
 
-    // The form has a 3s minimum fill time to catch bots that post instantly. Submitting
-    // before it elapses returns the bot message and no field errors, so wait it out —
-    // otherwise this test measures the honeypot rather than validation.
-    await page.waitForTimeout(3_500);
-
-    const submit = page.getByRole("button", { name: /send|submit|request/i }).last();
+    const submit = page.getByRole("button", { name: /send my request/i });
     await submit.scrollIntoViewIfNeeded();
+
+    if (await submit.isDisabled()) {
+      await expect(page.getByText(/sending is switched off/i)).toBeVisible();
+      // The calculator is a different component and must be unaffected by this.
+      await expect
+        .poll(async () => /₹[\d,]{5,}/.test(await page.locator("main").innerText()), { timeout: 8_000 })
+        .toBe(true);
+      return;
+    }
+
+    // The form has a 3s minimum fill time to catch bots that post instantly.
+    await page.waitForTimeout(3_500);
     await submit.click();
 
     const alert = page.getByRole("alert");
     await expect(alert.first(), "an empty form produced no error").toBeVisible({ timeout: 10_000 });
     await expect(page.locator("body")).not.toContainText(/thank you|we.{0,3}ll be in touch/i);
 
-    // Three guards can legitimately answer an empty submission: validation, the bot-speed check
-    // and the per-IP rate limiter. Both Playwright projects submit within the limiter's window,
-    // so which one answers is not deterministic — and a tripped limiter is the limiter working.
-    // The invariant asserted above is the one that always holds: it never succeeds. The field
-    // marking is asserted only when validation is demonstrably the guard that answered, which
-    // its own message states.
+    // Three guards can legitimately answer: validation, the bot-speed check and the per-IP rate
+    // limiter. Field marking is asserted only when validation's own message says it answered.
     const said = await alert.first().innerText();
     if (said.includes("Please check the highlighted fields")) {
       const invalid = await page.locator("[aria-invalid='true']").count();
-      expect(invalid, "validation answered but marked no field aria-invalid").toBeGreaterThan(0);
+      expect(invalid, `no field was marked aria-invalid; the form said: ${said}`).toBeGreaterThan(0);
     }
   });
 });

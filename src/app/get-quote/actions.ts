@@ -78,8 +78,10 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
     return { ok: false, error: ERROR_RATE_LIMITED, values };
   }
 
-  // A Production build cannot ship without a key (lib/env.server.ts, imported by
-  // next.config.ts), so this only ever fires locally or on an unconfigured Preview. The
+  // Production can now ship without a key (owner decision, 2026-09-20: Resend cannot send until
+  // the domain is verified, and the domain is on registrar hold). So this path is live, not just
+  // a local convenience, and it has to leave the visitor somewhere rather than nowhere: it hands
+  // back the same reference the email would have quoted and a WhatsApp link carrying it. The
   // developer hint is keyed on NODE_ENV, not VERCEL_ENV, so a Preview visitor — Preview is a
   // production build — never sees an internal instruction.
   const apiKey = process.env.RESEND_API_KEY;
@@ -91,6 +93,8 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
         process.env.NODE_ENV === "production"
           ? ERROR_SEND
           : "Email is not configured: set RESEND_API_KEY in .env.local (see .env.example).",
+      whatsappHref: customerWhatsappHref(reference),
+      reference,
       values,
     };
   }
@@ -130,7 +134,7 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
     // Nothing durable holds this enquiry, so the only way it survives is if the visitor carries
     // it to us. The WhatsApp link is pre-filled with their reference, which is the same one the
     // email would have quoted, so a rescued enquiry can still be matched up.
-    return { ok: false, error: ERROR_SEND, whatsappHref: customerWhatsappHref(reference), values };
+    return { ok: false, error: ERROR_SEND, whatsappHref: customerWhatsappHref(reference), reference, values };
   }
   logLeadEvent("info", "lead_alert_sent", logFields);
 
