@@ -66,10 +66,10 @@ export function MobileSummaryBar({ targetId }: { targetId: string }) {
       <div className="container-page flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
         <div className="min-w-0">
           {estimate === null ? (
-            // No PIN code yet, so there is no estimate to summarise (owner review round 2, point 8).
+            // Only reachable if the bill itself is unusable; the PIN no longer gates anything.
             <>
               <p className="text-ui font-medium text-white">Your estimate</p>
-              <p className="text-small text-on-dark-muted">Add your PIN code to see it</p>
+              <p className="text-small text-on-dark-muted">Set your monthly bill to see it</p>
             </>
           ) : (
             <>

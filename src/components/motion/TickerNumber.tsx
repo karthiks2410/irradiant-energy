@@ -1,7 +1,7 @@
 "use client";
 
 import { LazyMotion, animate, domAnimation, m, useMotionValue, useReducedMotion, useTransform } from "motion/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { EASE_OUT_EXPO, TICKER_DURATION } from "./tokens";
 
 type TickerNumberProps = {
@@ -17,6 +17,9 @@ type TickerNumberProps = {
   countUpOnMount?: boolean;
   className?: string;
 };
+
+/** Never fires: the snapshot only has to differ between the server and the client. */
+const neverChanges = () => () => {};
 
 /**
  * A figure that travels to its new value instead of cutting to it.
@@ -42,9 +45,19 @@ type TickerNumberProps = {
  * - Under prefers-reduced-motion the figure is set outright and nothing animates.
  *
  * Always give it `tabular-nums` (StatTile does) or the text reflows on every frame.
+ *
+ * It renders as plain text until it has hydrated. A motion value handed to `m.span` as a child
+ * does not serialise to the same markup on the server as it produces in the browser, so once the
+ * estimate started server-rendering — which it does now the PIN no longer gates it — this tree
+ * was failing hydration and being thrown away and rebuilt on every page load.
  */
 export function TickerNumber({ value, format, countUpOnMount = false, className = "" }: TickerNumberProps) {
   const reduced = useReducedMotion();
+  const hydrated = useSyncExternalStore(
+    neverChanges,
+    () => true,
+    () => false,
+  );
   const settled = format(value);
 
   // `format` is written inline at every call site, so its identity changes on every render.
@@ -72,11 +85,11 @@ export function TickerNumber({ value, format, countUpOnMount = false, className 
     return () => controls.stop();
   }, [value, reduced, countUpOnMount, motionValue]);
 
-  // No motion wanted, or the preference is not known yet: the figure is simply text. Driving
-  // the span from the motion value here would leave the old number on screen for a frame,
-  // because the jump above only runs after paint — a flicker, which is the one thing a
-  // reduced-motion visitor asked not to have.
-  if (reduced !== false) return <span className={className}>{settled}</span>;
+  // Before hydration, or when no motion is wanted, the figure is simply text. Two reasons:
+  // the server and the browser must agree on the markup, and driving the span from the motion
+  // value under a reduced-motion preference would leave the old number on screen for a frame,
+  // because the jump above only runs after paint.
+  if (!hydrated || reduced !== false) return <span className={className}>{settled}</span>;
 
   return (
     <LazyMotion features={domAnimation} strict>

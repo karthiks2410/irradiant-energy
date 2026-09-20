@@ -41,9 +41,7 @@ const PINCODE_RE = /(?:^|\D)([1-9][0-9]{5})(?!\d)/;
  * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Validation and empty-state microcopy: it describes
  * what the calculator does, and makes no claim about solar, tariffs or the business.
  */
-const REQUIRED_MARK = "(required)";
 const PINCODE_ERROR = "Enter a 6-digit PIN code, for example 560001.";
-const PINCODE_PROMPT = "Enter your PIN code above to see your estimate — it decides which tariffs the figures use.";
 
 const segmentOptions = SEGMENTS.map((value) => ({ value, label: SEGMENT_LABELS[value] }));
 
@@ -88,15 +86,15 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
 
   const estimate = useMemo(
     () =>
-      pincode === undefined
-        ? null
-        : buildEstimate({
-            segment,
-            pincode,
-            monthlyBillInr: positive(bill),
-            roofAreaSqft: positive(roofArea),
-            houses: segment === "housing-society" ? positive(houses) : undefined,
-          }),
+      buildEstimate({
+        segment,
+        // Optional: it narrows the tariff note rather than changing a figure. A half-typed one
+        // is withheld so the engine does not resolve the wrong band.
+        pincode,
+        monthlyBillInr: positive(bill),
+        roofAreaSqft: positive(roofArea),
+        houses: segment === "housing-society" ? positive(houses) : undefined,
+      }),
     [segment, pincode, bill, roofArea, houses],
   );
 
@@ -150,7 +148,8 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
             className={fieldCell}
             id="home-calc-location"
             name="home-calc-location"
-            label={`${fields.location.label} ${REQUIRED_MARK}`}
+            label={fields.location.label}
+            optional
             hint={fields.location.hint}
             required
             type="text"
@@ -236,18 +235,14 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
           ))}
         </ul>
 
-        {estimate === null ? (
-          <p className="mt-4 text-small text-ink-2">{PINCODE_PROMPT}</p>
-        ) : (
-          estimate.flags.length > 0 && (
-            <ul className="mt-4 grid gap-2">
-              {estimate.flags.map((flag) => (
-                <li key={flag} className="text-small text-ink-2">
-                  {flagNotes[flag]}
-                </li>
-              ))}
-            </ul>
-          )
+        {estimate !== null && estimate.flags.length > 0 && (
+          <ul className="mt-4 grid gap-2">
+            {estimate.flags.map((flag) => (
+              <li key={flag} className="text-small text-ink-2">
+                {flagNotes[flag]}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 

@@ -116,7 +116,7 @@ test.describe("the estimate counts to its new value", () => {
   async function sampleWhileChanging(page: import("@playwright/test").Page) {
     await page.goto("/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
-    await page.getByLabel(/pin code/i).first().fill("562106");
+    // No PIN: the figures are there from the bill alone.
     await expect(page.getByText(/annual savings/i).first()).toBeVisible();
 
     const shown = () =>
@@ -185,7 +185,6 @@ test.describe("the hero starts the estimate", () => {
     // same markup; the live form is the second one in the DOM.
     const form = page.locator("form").filter({ has: page.getByRole("button", { name: /see my estimate/i }) }).last();
     await form.getByLabel(/monthly electricity bill/i).fill("9000");
-    await form.getByLabel(/pin code/i).fill("562106");
     await form.getByRole("button", { name: /see my estimate/i }).click();
 
     await expect(page).toHaveURL(/#calculator/);
@@ -201,15 +200,41 @@ test.describe("the hero starts the estimate", () => {
     expect(shown, "the calculator is still showing its empty state").toMatch(/₹[\d,]{5,}/);
   });
 
-  test("it asks for a PIN rather than jumping to an empty calculator", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
+});
+
+test.describe("the estimate does not wait for a PIN code", () => {
+  // The PIN used to gate the figures on the grounds that it decided the tariffs. It does not:
+  // every tariff and yield constant is statewide, so it only narrows the caveat. Both
+  // calculators must behave the same way about it.
+  for (const [where, path] of [
+    ["the calculator page", "/get-quote"],
+    ["the home page band", "/#calculator"],
+  ] as const) {
+    test(`${where} shows figures from the bill alone, and names the tariff it assumed`, async ({ page }) => {
+      await page.goto(path, { waitUntil: "networkidle" });
+      await dismissConsent(page);
+
+      const scope = page.locator(path.includes("#") ? "#calculator" : "main");
+      await expect
+        .poll(async () => /₹[\d,]{5,}/.test(await scope.innerText()), { timeout: 8_000 })
+        .toBe(true);
+
+      // Untouched, it must say which tariffs it used rather than leaving that unsaid.
+      await expect(scope.getByText(/Karnataka \(BESCOM\) tariffs/i).first()).toBeVisible();
+    });
+  }
+
+  test("a Bengaluru PIN removes the assumption, a Mysuru one changes it", async ({ page }) => {
+    test.slow();
+    await page.goto("/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
+    const main = page.locator("main");
 
-    const form = page.locator("form").filter({ has: page.getByRole("button", { name: /see my estimate/i }) }).last();
-    await form.getByRole("button", { name: /see my estimate/i }).click();
+    await page.getByLabel(/pin code/i).first().fill("562106");
+    await expect(main.getByText(/Karnataka \(BESCOM\) tariffs/i)).toHaveCount(0);
 
-    await expect(form.getByRole("alert")).toBeVisible();
-    expect(page.url(), "it navigated without an estimate to show").not.toContain("#calculator");
+    await page.getByLabel(/pin code/i).first().fill("570001");
+    await expect(main.getByText(/may be served by another supplier/i).first()).toBeVisible();
   });
 });
 

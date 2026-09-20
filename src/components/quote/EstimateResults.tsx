@@ -7,8 +7,9 @@
  * Every tile is marked `estimated` (brand PDF p.31): these are modelled numbers, never measured
  * ones, and the assumptions they rest on are one disclosure away.
  *
- * Until the required PIN code is in (owner review round 2, point 8) there is no estimate: the
- * tiles stand empty, unlabelled as estimates, with a prompt in their place.
+ * The figures do not wait for a PIN code. It changes none of them — see EstimateProvider — so
+ * the bill alone produces a complete estimate, and the tiles carry a note saying which tariffs
+ * were assumed until a PIN narrows it.
  */
 
 import { TickerNumber } from "@/components/motion/TickerNumber";
@@ -34,9 +35,6 @@ interface Tile {
 const ticker = (value: number, format: (n: number) => string) => (
   <TickerNumber value={value} format={format} />
 );
-
-/** PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Empty-state microcopy; it makes no claim. */
-const PINCODE_PROMPT = "Add your PIN code to see your estimate — it decides which tariffs the figures use.";
 
 const waitingTiles: Tile[] = ["Annual savings", "Payback", "System size", "Annual generation"].map((label) => ({
   label,
@@ -107,18 +105,14 @@ export function EstimateResults() {
           ))}
         </ul>
 
-        {estimate === null ? (
-          <p className="mt-4 text-small text-white/80">{PINCODE_PROMPT}</p>
-        ) : (
-          estimate.flags.length > 0 && (
-            <ul className="mt-4 grid gap-2">
-              {estimate.flags.map((flag) => (
-                <li key={flag} className="text-small text-white/80">
-                  {flagNotes[flag]}
-                </li>
-              ))}
-            </ul>
-          )
+        {estimate !== null && estimate.flags.length > 0 && (
+          <ul className="mt-4 grid gap-2">
+            {estimate.flags.map((flag) => (
+              <li key={flag} className="text-small text-white/80">
+                {flagNotes[flag]}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 

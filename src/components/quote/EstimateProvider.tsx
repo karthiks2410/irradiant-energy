@@ -5,9 +5,21 @@
  * summary bar and the lead form's hidden fields read it. It wraps server-rendered children, so
  * all the page copy still comes from page.tsx and only the interactive parts hydrate.
  *
- * The PIN code is required (owner review round 2, point 8): it decides which tariffs the engine
- * applies, so until a valid one is present `estimate` is null and the page shows a prompt rather
- * than a Karnataka (BESCOM) estimate for a visitor who may be nowhere near Karnataka.
+ * The PIN code is optional, and the figures do not wait for it.
+ *
+ * It used to gate them, on the stated grounds that it "decides which tariffs the engine applies".
+ * It does not. Every tariff and yield constant the engine holds is statewide, so at the same bill
+ * a 560001, a 570001, a 110001 and no PIN at all return the same 3.50 kWp, 5,749 kWh, ₹37,800 and
+ * 3.5-year payback — only the caveat in `flags` differs. The gate was therefore withholding a
+ * complete, correct estimate behind a field that changed nothing (owner decision, 2026-09-20,
+ * reversing owner review round 2 point 8).
+ *
+ * What the PIN still does is narrow the disclosure: with one, the estimate can say whether BESCOM
+ * actually serves that band; without one it says plainly that Karnataka (BESCOM) tariffs were
+ * assumed. That is a refinement, not a precondition.
+ *
+ * If per-ESCOM tariffs or regional yields are ever added, the PIN starts changing the numbers and
+ * this decision has to be revisited.
  */
 
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
@@ -25,7 +37,7 @@ interface EstimateContextValue {
   setSegment: (segment: Segment) => void;
   monthlyBill: number;
   setMonthlyBill: (value: number) => void;
-  /** Raw digits as typed; only a complete, valid PIN code reaches the engine. */
+  /** Raw digits as typed; only a complete, valid PIN code reaches the engine. Optional. */
   pincode: string;
   setPincode: (value: string) => void;
   /** Called when the field is left, so an untouched empty field is not reported as an error. */
@@ -33,7 +45,7 @@ interface EstimateContextValue {
   pincodeError?: string;
   roofArea: string;
   setRoofArea: (value: string) => void;
-  /** null until the PIN code is valid: no PIN, no figures. */
+  /** Always present: the bill alone is enough. Null only if the bill itself is unusable. */
   estimate: Estimate | null;
 }
 
@@ -69,14 +81,14 @@ export function EstimateProvider({
 
   const estimate = useMemo(
     () =>
-      pincodeComplete
-        ? buildEstimate({
-            segment,
-            monthlyBillInr: monthlyBill,
-            pincode,
-            roofAreaSqft: roofAreaSqft > 0 ? roofAreaSqft : undefined,
-          })
-        : null,
+      buildEstimate({
+        segment,
+        monthlyBillInr: monthlyBill,
+        // A half-typed PIN is not a location: it would resolve to the wrong band and claim a
+        // precision that is not there, so only a complete one is handed over.
+        pincode: pincodeComplete ? pincode : undefined,
+        roofAreaSqft: roofAreaSqft > 0 ? roofAreaSqft : undefined,
+      }),
     [segment, monthlyBill, pincode, pincodeComplete, roofAreaSqft],
   );
 

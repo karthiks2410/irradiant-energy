@@ -355,7 +355,9 @@ const calculator: {
   ],
   fields: {
     segment: { label: "Customer type" },
-    location: { label: "City / PIN code", hint: "The PIN code decides which tariffs the estimate uses." },
+    // The hint no longer claims the PIN decides the tariffs, because it does not: every tariff
+    // and yield constant is statewide, so it only narrows which supplier the note names.
+    location: { label: "City / PIN code", hint: "Confirms which supplier serves you." },
     bill: { label: "Monthly electricity bill (₹)", hint: "A typical month, before any solar." },
     tariff: { label: "Average tariff (₹ / unit)", hint: "Leave it blank to use the tariff listed under the assumptions." },
     roof: { label: "Available roof area (sq. ft.)", hint: "Leave it blank if there is no practical limit." },

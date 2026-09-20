@@ -4,7 +4,7 @@
  * Step 1 inputs. Deliberately not a <form>: nothing is submitted here, the figures update as
  * the visitor types and the values travel to step 2 as hidden fields.
  *
- * The PIN code is required (owner review round 2, point 8) — it decides which tariffs the
+ * The PIN code is optional: it narrows the tariff disclosure rather than changing any figure
  * estimate uses — and the pair of text fields sits in a <FieldRow> so the two inputs stay level
  * however their helper text wraps, and however long the PIN code's error message is.
  */
@@ -65,8 +65,8 @@ export function EstimateControls() {
           className={fieldCell}
           id="estimate-pincode"
           name="estimate-pincode"
-          label="PIN code (required)"
-          required
+          label="PIN code"
+          optional
           type="text"
           inputMode="numeric"
           autoComplete="postal-code"
@@ -75,7 +75,7 @@ export function EstimateControls() {
           onChange={(event) => setPincode(digits(event.target.value, 6))}
           onBlur={touchPincode}
           error={pincodeError}
-          hint="Tells us which tariffs to use."
+          hint="Confirms which supplier serves you."
         />
         <TextField
           className={fieldCell}
