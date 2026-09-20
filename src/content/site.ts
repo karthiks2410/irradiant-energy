@@ -35,7 +35,9 @@ export const site = {
       value: { display: "+91 98456 94343", tel: "+919845694343" },
       status: "owner-confirmed",
     } satisfies Fact<{ display: string; tel: string }>,
-    email: { value: "info@irradiantenergie.com", status: "verified-live" } satisfies Fact<string>,
+    // contact@ for public enquiries, admin@ for administration, leads@ for form submissions —
+    // all aliases on one inbox, so mail can be filtered by purpose (owner, 2026-09-20).
+    email: { value: "contact@irradiantenergy.in", status: "owner-confirmed" } satisfies Fact<string>,
     whatsapp: { value: "919845794343", status: "owner-confirmed" } satisfies Fact<string>,
     address: {
       value: {
@@ -52,16 +54,15 @@ export const site = {
   },
 
   legal: {
-    entityName: null as string | null,
+    // Owner-confirmed 2026-09-20.
+    entityName: "Irradiant Energy Innovations Private Limited" as string | null,
     gstin: null as string | null,
     cin: null as string | null,
-    grievanceOfficer: null as { name: string; email: string } | null,
+    grievanceOfficer: { name: "Keerthi Raj", email: "admin@irradiantenergy.in" } as { name: string; email: string } | null,
   },
 
-  social: [
-    { label: "Instagram", href: "https://www.instagram.com/irradiantenergie" },
-    { label: "LinkedIn", href: "https://in.linkedin.com/company/irradiant-energie" },
-  ],
+  /** New profiles are being created; the old business's accounts are deliberately not linked. */
+  social: [] as { label: string; href: string }[],
 } as const;
 
 export const whatsappLink = (text?: string) =>

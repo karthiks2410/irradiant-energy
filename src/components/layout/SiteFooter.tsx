@@ -47,6 +47,7 @@ export function SiteFooter() {
         <div className="lg:col-span-4">
           <LogoLockup className="h-12 w-auto" />
           <p className="mt-6 max-w-sm text-white/80">{site.description}</p>
+          {site.social.length > 0 && (
           <ul className="mt-6 flex gap-2">
             {site.social.map((s) => (
               <li key={s.href}>
@@ -61,6 +62,7 @@ export function SiteFooter() {
               </li>
             ))}
           </ul>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-5">

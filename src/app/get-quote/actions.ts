@@ -32,8 +32,8 @@ const ERROR_TOO_FAST = "That was quick. Please check your details and submit aga
 const ERROR_INVALID = "Please check the highlighted fields.";
 
 // Sender and lead inbox fall back to the addresses in decisions.md D-009; they are not secrets.
-const EMAIL_FROM = process.env.EMAIL_FROM || "do-not-reply@irradiantenergie.com";
-const LEAD_EMAIL = process.env.LEAD_EMAIL || "leads@irradiantenergie.com";
+const EMAIL_FROM = process.env.EMAIL_FROM || "do-not-reply@irradiantenergy.in";
+const LEAD_EMAIL = process.env.LEAD_EMAIL || "leads@irradiantenergy.in";
 
 export async function submitLead(_prev: LeadActionState, formData: FormData): Promise<LeadActionState> {
   const values = echoValues(formData);
