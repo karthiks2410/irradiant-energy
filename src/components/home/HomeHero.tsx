@@ -23,9 +23,18 @@ const { hero } = homePage;
  *
  * The scrim is two Deep Teal photo layers, which report §6.10 allows where it rules out
  * decorative gradients. The prototype used a single overlay that thins to 18% opacity
- * halfway across, leaving its white copy well under 4.5:1; these layers instead hold a
- * combined 0.82–0.88 across the copy column, so the lead measures above 8:1 against the
- * brightest sky in the template photographs, and stay light over the subject on the right.
+ * halfway across, leaving its white copy well under 4.5:1.
+ *
+ * From md the copy scrim runs left-to-right and holds a combined 0.82–0.88 across the copy
+ * column, staying light over the subject on the right. Below md it runs bottom-to-top, and a
+ * bottom-weighted ramp had faded to about 0.44 by the time it reached the copy block, which
+ * starts high on a phone: the Solar Yellow eyebrow measured 2.2–2.7:1 there against the
+ * brightest sky in the template photographs, on every slide and at both Ken Burns scales.
+ * (Lighthouse scores 100 because axe marks text over a background image "incomplete", not a
+ * failure.) The phone ramp is therefore nearly flat — roughly 0.92 → 0.85 → 0.72 — which
+ * holds the whole copy column above 0.80 once the top wash is composited in, and puts the
+ * eyebrow above 4.5:1. Re-measure all slides when the TODO(photography) placeholders are
+ * replaced.
  */
 export function HomeHero() {
   return (
@@ -45,11 +54,12 @@ export function HomeHero() {
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 z-10 bg-linear-to-b from-teal-975/70 via-22% via-teal-900/8 to-teal-900/20"
             />
-            {/* Copy scrim: bottom-weighted on phones, left-weighted from md, holding roughly
-                0.78 opacity across the copy column and falling away over the photo's subject. */}
+            {/* Copy scrim: near-flat on phones (the copy block sits high, so a bottom-weighted
+                ramp left the eyebrow under 4.5:1), left-weighted from md, holding roughly 0.78
+                opacity across the copy column and falling away over the photo's subject. */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 z-10 bg-linear-to-t from-teal-900/92 via-teal-900/70 to-transparent md:bg-linear-to-r md:via-62% md:via-teal-900/78 md:to-teal-900/5"
+              className="pointer-events-none absolute inset-0 z-10 bg-linear-to-t from-teal-900/92 via-teal-900/85 to-teal-900/72 md:bg-linear-to-r md:via-62% md:via-teal-900/78 md:to-teal-900/5"
             />
           </>
         }

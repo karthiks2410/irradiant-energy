@@ -40,8 +40,8 @@ const audiencePath = (slug: AudiencePath["slug"], tile: string): AudiencePath =>
 };
 
 /**
- * One scene of the rotating home hero. The four scenes are transcribed verbatim from the
- * English `hero` array of the owner's HTML prototype (D-009); only the photo pairing is ours.
+ * One scene of the rotating home hero. The scenes are transcribed verbatim from the English
+ * `hero` array of the owner's HTML prototype (D-009); only the photo pairing is ours.
  */
 export interface HeroSlide {
   eyebrow: string;
@@ -54,15 +54,18 @@ export interface HeroSlide {
 }
 
 /**
- * Scene → photo pairing. The prototype had four photographs; `public/images/template/`
- * carries three, so the agriculture scene borrows the commercial rooftop (never adjacent to
- * its other use in the loop). TODO(photography): a farm/irrigation shot replaces it.
+ * Scene → photo pairing. The prototype rotated four scenes; only the two that describe a
+ * live offering render (D-009: v1 is rooftop solar for homes, societies and businesses).
+ * The city-scale and agriculture scenes advertised services the business does not offer and
+ * are held below (`proto:hero:slides`); the agriculture scene also had no photograph of its
+ * own and reused the commercial rooftop.
  */
 const heroScenes = [
   {
     eyebrow: "Intelligent energy systems",
     title: "Powering smarter futures.",
-    lead: "Reliable solar systems for homes, businesses, agriculture and communities—designed to perform with clarity and long-term value.",
+    // "agriculture" removed from the prototype line: it is not an offering (D-009); see held.
+    lead: "Reliable solar systems for homes, businesses and communities—designed to perform with clarity and long-term value.",
     chips: ["Site-based design", "Clear system economics", "Long-term support"],
     image: templateImages.heroHomeFamily,
   },
@@ -72,20 +75,6 @@ const heroScenes = [
     lead: "Create more efficient and future-ready energy infrastructure for campuses, facilities and commercial sites.",
     chips: ["Scalable deployment", "Visible sustainability", "Performance-focused design"],
     image: templateImages.heroCommercialRooftop,
-  },
-  {
-    eyebrow: "City-scale clean energy",
-    title: "Cleaner ecosystems. Smarter communities.",
-    lead: "Bring clean-energy thinking to urban development, projects and institutions with a premium visual language.",
-    chips: ["Community impact", "Future-ready planning", "Long-term reliability"],
-    image: templateImages.heroCityCampus,
-  },
-  {
-    eyebrow: "Agriculture energy solutions",
-    title: "Solar power for productive land.",
-    lead: "Support irrigation, farm operations and rural resilience with dependable solar systems made for practical conditions.",
-    chips: ["Farm-ready planning", "Clean pumping support", "Built for reliability"],
-    image: templateImages.heroCommercialRooftop, // Reused: no agriculture photo exists yet (see owner_todos).
   },
 ] as const satisfies readonly HeroSlide[];
 
@@ -99,15 +88,16 @@ const hero: HeroCopy & { slides: readonly HeroSlide[] } = {
   slides: heroScenes,
   cta: estimate,
   secondaryCta: requestConsultation,
-  source: "prototype hero[0]–hero[3] · brand PDF p.24 (campaign line)",
+  source: "prototype hero[0]–hero[1] · brand PDF p.24 (campaign line)",
   status: "owner-approved-template",
 };
 
 const audiencePaths: { copy: SectionCopy; items: readonly AudiencePath[] } = {
   copy: {
     eyebrow: "Homes. Communities. Business.",
-    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (UX heading).
-    title: "Solar for your home, your society or your business.",
+    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (UX heading + place qualifier). Bengaluru
+    // is VERIFIED-LIVE (content-inventory F-40); 16-seo-deep-dive H3 prescribes it here.
+    title: "Solar for your home, your society or your business in Bengaluru.",
     source: "eyebrow brand PDF p.5 · title proposed",
     status: "proposed",
   },
@@ -129,18 +119,20 @@ const about: {
   copy: {
     eyebrow: "About us",
     title: "An energy partner built around real-world performance.",
-    lead: "Irradiant Energy designs, installs and supports intelligent solar systems for homes, projects, agriculture and modern business environments.",
+    // "agriculture" removed from the prototype line: it is not an offering (D-009); see held.
+    lead: "Irradiant Energy designs, installs and supports intelligent solar systems for homes, housing societies and modern business environments.",
     source: "prototype about",
     status: "owner-approved-template",
   },
   capEyebrow: "About Irradiant",
   caption: "Solar that thinks beyond installation.",
-  tags: ["Homes", "Projects", "Agriculture", "Business"],
+  // "Agriculture" removed: not an offering in v1 (D-009); see held.
+  tags: ["Homes", "Societies", "Projects", "Business"],
   points: [
     { label: "Approach", value: "Understand · Design · Deliver · Support" },
     { label: "Promise", value: "Clear advice and long-term value" },
     { label: "Focus", value: "Performance, trust and practicality" },
-    { label: "Fit", value: "Homes, projects, farms and facilities" },
+    { label: "Fit", value: "Homes, societies, projects and facilities" },
   ],
   cta: { label: "About Irradiant", href: "/about", source: "prototype about.capEyebrow", status: "owner-approved-template" },
 };
@@ -223,7 +215,8 @@ const why: { copy: SectionCopy; cards: readonly Feature[] } = {
 const projects: { copy: SectionCopy; items: readonly Project[]; placeholderSubjects: readonly string[] } = {
   copy: {
     eyebrow: "Featured projects",
-    title: "Projects for homes, agriculture and commercial energy.",
+    // "agriculture" removed: not an offering in v1 (D-009); see held.
+    title: "Projects for homes, societies and commercial energy.",
     source: "prototype projects",
     status: "owner-approved-template",
   },
@@ -319,10 +312,10 @@ const held: readonly HeldItem[] = [
   },
   {
     id: "proto:hero:slides",
-    where: "hero (the prototype rotated four slides; v1 is a static hero)",
-    text: "Commercial clean energy / Engineered systems for modern business. / Create more efficient and future-ready energy infrastructure for campuses, facilities and commercial sites. · City-scale clean energy / Cleaner ecosystems. Smarter communities. / Bring clean-energy thinking to urban development, projects and institutions with a premium visual language. · Agriculture energy solutions / Solar power for productive land. / Support irrigation, farm operations and rural resilience with dependable solar systems made for practical conditions.",
-    reason: "City-scale and agriculture are not offerings today; a carousel needs pause controls and hides LCP content. The commercial slide is spare positioning copy if a business hero is wanted.",
-    ref: "prototype hero[1..3] · report §5.5, §7.2 K",
+    where: "hero (the prototype rotated four slides; v1 rotates only the two that describe a live offering)",
+    text: "City-scale clean energy / Cleaner ecosystems. Smarter communities. / Bring clean-energy thinking to urban development, projects and institutions with a premium visual language. · Agriculture energy solutions / Solar power for productive land. / Support irrigation, farm operations and rural resilience with dependable solar systems made for practical conditions. · \"agriculture\" / \"Agriculture\" / \"farms\" in hero[0], the about lead, the about tags and the featured-projects heading.",
+    reason: "City-scale and agriculture are not offerings today, and the agriculture scene had no photograph of its own. The commercial slide renders (it is a live offering); the carousel has pause and dot controls and the first scene is in the server HTML. Restore agriculture only with an owner-confirmed offering and its own photography.",
+    ref: "prototype hero[2..3] · D-009 · report §5.5, §7.2 K",
   },
   {
     id: "proto:system:lead",

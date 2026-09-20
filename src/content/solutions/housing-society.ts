@@ -20,23 +20,26 @@ export const housingSocietySegment: Segment = {
   label: nav.label,
   description: nav.description ?? "",
 
+  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (place qualifier only). Bengaluru is a
+  // VERIFIED-LIVE fact (content-inventory F-40) and 16-seo-deep-dive H3 prescribes it; the
+  // rest of the wording is the legacy copy.
   meta: {
-    title: "Housing Society Solar — Cut Common-Area Electricity Bills",
+    title: "Rooftop solar for housing societies in Bengaluru",
     description:
-      "Solar for apartments, gated communities, and RWA-managed buildings. Lower society maintenance, predictable energy costs, and a single point of contact end-to-end.",
-    source: "P-SS-1 · 03 §5.1",
-    status: "verified-live",
+      "Solar for apartments, gated communities, and RWA-managed buildings in Bengaluru. Lower society maintenance, predictable energy costs, and a single point of contact end-to-end.",
+    source: "P-SS-1 · 03 §5.1 · place qualifier proposed (F-40 · 16 §H3)",
+    status: "proposed",
   },
 
   hero: {
-    eyebrow: "For RWAs and society committees",
-    title: "Cut the society's common-area electricity bill — together.",
+    eyebrow: "For Bengaluru RWAs and society committees",
+    title: "Cut your society's common-area electricity bill in Bengaluru — together.",
     // "— solar covers it all" trimmed (CL-27); see held.
     lead: "Lifts, pumps, lobby, parking lights. Lower society maintenance for every flat.",
     cta: ctas.primary,
     secondaryCta: ctas.secondary,
-    source: "P-SS-2 · OLD solutions-data.ts:113-118",
-    status: "verified-live",
+    source: "P-SS-2 · OLD solutions-data.ts:113-118 · place qualifier proposed (F-40 · 16 §H3)",
+    status: "proposed",
   },
 
   whoItsFor: {
@@ -196,8 +199,9 @@ export const housingSocietySegment: Segment = {
           {
             id: "S-3",
             q: "How do we apply for the subsidy?",
-            // The "credited within 30 days" sentence is trimmed (N-06); see held.
-            a: "We handle the entire application — society registration on the National Portal (pmsuryaghar.gov.in), document submission, technical feasibility check, vendor empanelment, and post-installation claim filing. The society only needs to provide standard paperwork (registration certificate, electricity bill, AGM resolution, building approval).\n\nYou don't chase a single form.",
+            // The "credited within 30 days" sentence (N-06) and ", vendor empanelment" (CL-02)
+            // are trimmed; see held.
+            a: "We handle the entire application — society registration on the National Portal (pmsuryaghar.gov.in), document submission, technical feasibility check, and post-installation claim filing. The society only needs to provide standard paperwork (registration certificate, electricity bill, AGM resolution, building approval).\n\nYou don't chase a single form.",
             source: "S-3 · F-53 · F-64 · 03 §5.6",
             status: "verified-live",
           },
@@ -340,6 +344,13 @@ export const housingSocietySegment: Segment = {
       text: "• Empanelled vendors with verified credentials (we are listed there). / • Concessional bank loans at lower interest rates for societies opting for EMI. / We handle every step of this for our society customers.",
       reason: "Vendor empanelment needs the National Portal registration ID and state; the loan line is financing content; the closing sentence implies empanelment. Every scheme statement still needs a current-source check by counsel.",
       ref: "CL-02 · F-64 · report §7.4",
+    },
+    {
+      id: "S-3:empanelment",
+      where: "faq › S-3 (phrase trimmed from the subsidy-application answer)",
+      text: "…document submission, technical feasibility check, vendor empanelment, and post-installation claim filing…",
+      reason: "Listing vendor empanelment among the steps we handle is an empanelment claim about Irradiant, which is exactly what S-8:trims removed elsewhere on this page. It renders only once the owner supplies the National Portal registration ID and DISCOM and that is recorded in docs/decisions.md. S-8's neutral statement of the scheme requirement (\"install via an empanelled vendor\") is unaffected: it describes the scheme, not us.",
+      ref: "CL-02 · D-009 · content-inventory §6",
     },
     {
       id: "S-9:trims",

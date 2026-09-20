@@ -8,10 +8,12 @@ import { closingCta, segmentNoun } from "@/content/solutions";
 import { primaryCta } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";
 
+// PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (place qualifier). Bengaluru is VERIFIED-LIVE
+// (content-inventory F-40); docs/discovery/16-seo-deep-dive.md H3 prescribes it on this page.
 export const metadata = pageMetadata({
-  title: "Solar solutions",
+  title: "Solar solutions in Bengaluru",
   description:
-    "Rooftop solar for homes, housing societies and businesses. Choose your audience to see who it is for, how the work runs and which system fits.",
+    "Rooftop solar for homes, housing societies and businesses in Bengaluru. Choose your audience to see who it is for, how the work runs and which system fits.",
   path: "/solutions",
 });
 

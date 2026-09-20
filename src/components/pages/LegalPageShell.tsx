@@ -37,6 +37,16 @@ const prose = [
   "[&_a:hover]:text-teal-900",
 ].join(" ");
 
+/** "14 May 2027" — en-IN, fixed to UTC so the server and the client render the same string. */
+function formatEffectiveDate(iso: string): string {
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${iso}T00:00:00Z`));
+}
+
 type LegalPageShellProps = {
   slug: LegalPage["slug"];
   /** One-sentence summary under the title. Plain English, no legal effect. */
@@ -73,8 +83,13 @@ export function LegalPageShell({ slug, summary, children }: LegalPageShellProps)
             {page.title}
           </h1>
           <p className="mt-5 text-lead text-ink-2">{summary}</p>
+          {/* Each notice's body points the reader here for its version and effective date, so
+              this line has to follow `status`: a draft says so, an approved notice prints both.
+              types.ts makes an approved page without them a compile error. */}
           <p className="mt-6 font-mono text-label text-grey-600 uppercase">
-            Draft version · Effective date to be confirmed
+            {page.status === "approved"
+              ? `Version ${page.version} · Effective ${formatEffectiveDate(page.effectiveFrom)}`
+              : "Draft version · Effective date to be confirmed"}
           </p>
         </div>
 

@@ -30,11 +30,28 @@ export interface EngineConstant<T> {
   readonly label: string;
   readonly value: T;
   readonly unit?: string;
+  /**
+   * Internal provenance: where the figure came from and what is still owed on it. Written for
+   * the repo and the owner review, never rendered to a visitor.
+   */
   readonly source: string;
+  /**
+   * Customer-facing provenance, printed under the figure in the calculator's assumptions
+   * panel. Official constants cite the primary source; unverified ones say plainly that the
+   * figure is indicative and confirmed at the site visit. Never names the legacy engine, never
+   * says "to be confirmed", never carries an instruction to the owner. Defaults to `source`,
+   * so anything without its own citation must be safe to show.
+   */
+  readonly citation?: string;
   /** ISO date the value took effect (or the date of the document it was read from). */
   readonly effectiveFrom: string;
   readonly status: ConstantStatus;
   readonly note?: string;
+}
+
+/** The string the calculator prints under a figure: the customer-facing one where it exists. */
+export function citationFor(constant: EngineConstant<unknown>): string {
+  return constant.citation ?? constant.source;
 }
 
 /** Bump when a formula or constant changes; the lead alert carries it so past figures stay explainable. */
@@ -114,6 +131,7 @@ export const BESCOM_DOMESTIC_SLABS = {
   ] as readonly TariffSlab[],
   unit: "INR per kWh",
   source: "KERC tariff order for FY 2025-26, as recorded in the legacy site engine (not re-verified against kerc.gov.in)",
+  citation: "Indicative BESCOM LT-2(a) energy charges; your actual tariff is read from your bill at the site visit",
   effectiveFrom: "2025-04-01",
   status: "to-confirm",
   note: "Energy charges only. Owner to supply the current official schedule, including fixed charges and taxes.",
@@ -130,6 +148,7 @@ export const DEFAULT_NON_DOMESTIC_TARIFF = {
   value: 8,
   unit: "INR per kWh",
   source: "Modelling assumption (the design prototype's default tariff input); owner to replace with the applicable BESCOM category tariff",
+  citation: "Indicative average tariff; society and business connections are priced on your own BESCOM category and bill",
   effectiveFrom: "2026-09-19",
   status: "assumption",
 } as const satisfies EngineConstant<number>;
@@ -141,6 +160,7 @@ export const SPECIFIC_YIELD = {
   value: 4.5 * 365,
   unit: "kWh per kWp per year",
   source: "Legacy site engine planning figure (about 5.0–5.5 peak sun hours a day, derated for soiling, temperature and inverter losses)",
+  citation: "Planning figure for Karnataka (about 5.0–5.5 peak sun hours a day, derated for soiling, temperature and inverter losses); your roof is modelled at the site visit",
   effectiveFrom: "2026-02-01",
   status: "to-confirm",
   note: "Owner to confirm the figure used in proposals.",
@@ -157,6 +177,7 @@ export const OFFSET_CAP = {
   value: 0.9,
   unit: "share",
   source: "Modelling assumption",
+  citation: "Modelling assumption",
   effectiveFrom: "2026-09-19",
   status: "assumption",
 } as const satisfies EngineConstant<number>;
@@ -168,6 +189,7 @@ export const INSTALL_COST_PER_KWP = {
   value: 60_000,
   unit: "INR per kWp",
   source: "Legacy site engine benchmark (residential); applied to every segment until the owner supplies per-segment pricing",
+  citation: "Indicative benchmark for a standard rooftop installation; your price comes from the site survey and the written proposal",
   effectiveFrom: "2026-02-01",
   status: "to-confirm",
 } as const satisfies EngineConstant<number>;
@@ -179,6 +201,7 @@ export const ROOF_SQFT_PER_KWP = {
   value: 70,
   unit: "sq ft per kWp",
   source: "Legacy site engine (mainstream modules at standard tilt)",
+  citation: "Indicative area for mainstream modules at standard tilt; the usable area is measured at the site visit",
   effectiveFrom: "2026-02-01",
   status: "to-confirm",
 } as const satisfies EngineConstant<number>;
@@ -189,6 +212,7 @@ export const ANNUAL_DEGRADATION = {
   value: 0.005,
   unit: "share per year",
   source: "Modelling assumption carried from the legacy engine; owner to confirm against the module warranty",
+  citation: "Modelling assumption; the figure for your system comes from the module warranty in your proposal",
   effectiveFrom: "2026-02-01",
   status: "assumption",
 } as const satisfies EngineConstant<number>;
@@ -199,6 +223,7 @@ export const ANNUAL_TARIFF_INFLATION = {
   value: 0.04,
   unit: "share per year",
   source: "Modelling assumption carried from the legacy engine",
+  citation: "Modelling assumption; future tariffs are set by KERC and cannot be guaranteed",
   effectiveFrom: "2026-02-01",
   status: "assumption",
 } as const satisfies EngineConstant<number>;
@@ -209,6 +234,7 @@ export const PROJECTION_HORIZON_YEARS = {
   value: 15,
   unit: "years",
   source: "Modelling assumption carried from the legacy engine",
+  citation: "Modelling assumption",
   effectiveFrom: "2026-02-01",
   status: "assumption",
 } as const satisfies EngineConstant<number>;
@@ -257,6 +283,7 @@ export const SYSTEM_SIZE_LIMITS = {
   },
   unit: "kWp",
   source: "Modelling assumption: 10 kWp is a common domestic rooftop ceiling, 500 kWp matches the society subsidy ceiling; owner to confirm",
+  citation: "Modelling assumption: a common domestic rooftop ceiling, and the society subsidy ceiling",
   effectiveFrom: "2026-09-19",
   status: "assumption",
 } as const satisfies EngineConstant<{ minKwp: number; stepKwp: number; maxKwp: Record<Segment, number> }>;

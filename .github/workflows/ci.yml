@@ -37,4 +37,9 @@ jobs:
 
       - run: npm run test --if-present
 
+      # Lists every engine constant the owner has not signed off (architecture.md §5.4).
+      # Informational here; `npm run check:content -- --launch` is the cutover gate and fails
+      # while a constant behind a rendered money figure is still "to-confirm" (OD-10).
+      - run: npm run check:content
+
       - run: npm run build

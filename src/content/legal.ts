@@ -7,6 +7,12 @@
 
 import type { LegalPage } from "@/content/types";
 
+/**
+ * To publish a notice: change its `status` to "approved" and add the `version` and
+ * `effectiveFrom` counsel signed off on. That one edit prints the version and date at the top
+ * of the page (LegalPageShell), drops the draft banner and puts the page into the index and
+ * the sitemap (`isLegalPageIndexable`). The type refuses "approved" without both fields.
+ */
 export const legalPages: readonly LegalPage[] = [
   {
     slug: "privacy",

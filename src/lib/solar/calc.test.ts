@@ -12,6 +12,7 @@ import {
 } from "./calc";
 import {
   BILL_BOUNDS,
+  citationFor,
   ENGINE_CONSTANTS,
   KWH_BOUNDS,
   OFFSET_CAP,
@@ -273,6 +274,45 @@ describe("assumptions and constants", () => {
       expect(c.source.length).toBeGreaterThan(10);
       expect(c.effectiveFrom).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(["official", "to-confirm", "assumption"]).toContain(c.status);
+    }
+  });
+
+  /**
+   * The assumptions panel is rendered to visitors on / and /get-quote, so it must never leak
+   * the repo's own provenance notes: "legacy site engine", "to be confirmed", or an instruction
+   * addressed to the owner. Those live in each constant's `source`; the panel prints `citation`.
+   */
+  it("keeps internal project-status language out of the customer-facing assumptions", () => {
+    const internal = [
+      /legacy site engine/i,
+      /to be confirmed/i,
+      /not re-verified/i,
+      /owner to (confirm|supply|replace)/i,
+      /applied to every segment/i,
+    ];
+    const inputs: EstimateInput[] = [
+      { segment: "home", monthlyBillInr: 3_500, roofAreaSqft: 400 },
+      { segment: "housing-society", monthlyBillInr: 45_000, roofAreaSqft: 4_000 },
+      { segment: "commercial", monthlyBillInr: 2_00_000, roofAreaSqft: 20_000 },
+    ];
+    for (const input of inputs) {
+      for (const a of buildEstimate(input).assumptions) {
+        for (const pattern of internal) {
+          expect(`${a.label}: ${a.value} — ${a.source}`).not.toMatch(pattern);
+        }
+      }
+    }
+  });
+
+  it("gives every constant a citation that is safe to print, or a source that already is", () => {
+    for (const c of ENGINE_CONSTANTS) {
+      const shown = citationFor(c);
+      expect(shown.length).toBeGreaterThan(10);
+      if (c.status !== "official") {
+        // An unverified figure needs its own customer-facing wording; reusing the internal
+        // note is what put "legacy site engine … to be confirmed" on the live page.
+        expect(c.citation, `${c.id} needs a citation`).toBeDefined();
+      }
     }
   });
 });

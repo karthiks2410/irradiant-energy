@@ -14,7 +14,6 @@ import { headers } from "next/headers";
 import { after } from "next/server";
 import { Resend } from "resend";
 import { site } from "@/content/site";
-import { isProduction } from "@/lib/env";
 import { customerWhatsappHref, renderCustomerAcknowledgement, renderLeadAlert } from "@/lib/leads/emails";
 import { hashEmailDomain, logLeadEvent } from "@/lib/leads/log";
 import { checkLeadRateLimit } from "@/lib/leads/rate-limit";
@@ -32,10 +31,29 @@ const ERROR_TOO_FAST = "That was quick. Please check your details and submit aga
 const ERROR_INVALID = "Please check the highlighted fields.";
 
 // Sender and lead inbox fall back to the addresses in decisions.md D-009; they are not secrets.
+// In Production they are never missing: next.config.ts imports lib/env.server.ts, which fails
+// the build when any of RESEND_API_KEY / EMAIL_FROM / LEAD_EMAIL is absent.
 const EMAIL_FROM = process.env.EMAIL_FROM || "do-not-reply@irradiantenergy.in";
 const LEAD_EMAIL = process.env.LEAD_EMAIL || "leads@irradiantenergy.in";
 
+/**
+ * Entry point for `useActionState`. The body is wrapped so that an unexpected throw still
+ * reaches the visitor as the contact-fallback message and still leaves a log line, instead
+ * of bubbling to error.tsx with the lead lost and nothing recorded (architecture.md §10.5).
+ */
 export async function submitLead(_prev: LeadActionState, formData: FormData): Promise<LeadActionState> {
+  try {
+    return await handleLead(formData);
+  } catch (err) {
+    logLeadEvent("error", "lead_action_failed", {
+      errorName: err instanceof Error ? err.name : "unknown",
+      errorStatus: null,
+    });
+    return { ok: false, error: ERROR_SEND, values: echoValues(formData) };
+  }
+}
+
+async function handleLead(formData: FormData): Promise<LeadActionState> {
   const values = echoValues(formData);
   const parsed = parseLeadForm(formData);
   const reference = newReference();
@@ -60,12 +78,19 @@ export async function submitLead(_prev: LeadActionState, formData: FormData): Pr
     return { ok: false, error: ERROR_RATE_LIMITED, values };
   }
 
+  // A Production build cannot ship without a key (lib/env.server.ts, imported by
+  // next.config.ts), so this only ever fires locally or on an unconfigured Preview. The
+  // developer hint is keyed on NODE_ENV, not VERCEL_ENV, so a Preview visitor — Preview is a
+  // production build — never sees an internal instruction.
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     logLeadEvent("error", "lead_email_unconfigured", { reference });
     return {
       ok: false,
-      error: isProduction ? ERROR_SEND : "Email is not configured: set RESEND_API_KEY in .env.local (see .env.example).",
+      error:
+        process.env.NODE_ENV === "production"
+          ? ERROR_SEND
+          : "Email is not configured: set RESEND_API_KEY in .env.local (see .env.example).",
       values,
     };
   }

@@ -209,15 +209,32 @@ export interface Segment {
   held: readonly HeldItem[];
 }
 
-export type LegalPageStatus = "draft-for-counsel";
+export type LegalPageStatus = "draft-for-counsel" | "approved";
 
-export interface LegalPage {
+interface LegalPageBase {
   slug: "privacy" | "terms" | "cookies";
   href: string;
   title: string;
-  status: LegalPageStatus;
   /** Why the page exists (regime or hygiene), for counsel. */
   basis: string;
   /** Section outline counsel drafts against. Not copy. */
   outline: readonly string[];
 }
+
+/**
+ * A notice is either a counsel draft or an approved version. Every notice's own body tells the
+ * reader that "the version and the date it takes effect appear at the top of this page", so an
+ * approved notice cannot exist without both: the union makes that a compile error rather than a
+ * promise the page does not keep.
+ */
+export type LegalPage = LegalPageBase &
+  (
+    | { status: "draft-for-counsel"; version?: never; effectiveFrom?: never }
+    | {
+        status: "approved";
+        /** Published version label, e.g. "1.0". */
+        version: string;
+        /** ISO date the version takes effect. */
+        effectiveFrom: string;
+      }
+  );

@@ -1,5 +1,13 @@
 import type { NextConfig } from "next";
 
+// Build gate. Importing this validates the server environment and throws when a Production
+// build is missing RESEND_API_KEY / EMAIL_FROM / LEAD_EMAIL. There is no lead store yet
+// (architecture.md OD-4), so the sales alert is the only record of an enquiry: a Production
+// deployment without mail credentials would drop every lead one at a time. Failing here means
+// the bad build never goes live and the previous deployment keeps serving. Outside Production
+// it is a no-op, so local work and Preview still build without credentials.
+import "./src/lib/env.server";
+
 type Redirect = Awaited<ReturnType<NonNullable<NextConfig["redirects"]>>>[number];
 
 // Baseline security headers (docs/discovery/15-security-risk-audit.md). A hash-based CSP is

@@ -100,9 +100,14 @@ const global = createTokenBucketLimiter({ capacity: 30, refillTokens: 1, refillI
 
 const defaultLeadLimiter: RateLimiter = {
   async limit(key) {
-    const [ip, all] = await Promise.all([perIp.limit(key), global.limit(GLOBAL_KEY)]);
-    if (ip.allowed && all.allowed) return { allowed: true, retryAfterSeconds: 0 };
-    return { allowed: false, retryAfterSeconds: Math.max(ip.retryAfterSeconds, all.retryAfterSeconds) };
+    // Sequential, not Promise.all: a request already refused by its own IP bucket must not
+    // spend a token from the shared bucket. Charging both let one flooding IP drain the
+    // whole-instance budget and block every other visitor on that instance.
+    const ip = await perIp.limit(key);
+    if (!ip.allowed) return ip;
+    const all = await global.limit(GLOBAL_KEY);
+    if (!all.allowed) return all;
+    return { allowed: true, retryAfterSeconds: 0 };
   },
 };
 

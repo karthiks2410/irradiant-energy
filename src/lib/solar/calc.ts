@@ -14,6 +14,7 @@ import {
   ANNUAL_TARIFF_INFLATION,
   BESCOM_DOMESTIC_SLABS,
   BILL_BOUNDS,
+  citationFor,
   DEFAULT_NON_DOMESTIC_TARIFF,
   ENGINE_VERSION,
   GRID_EMISSION_FACTOR,
@@ -278,6 +279,11 @@ function resolveTariff(input: EstimateInput): ResolvedTariff {
   return { basis, averageInrPerKwh: monthlyBillInr / monthlyKwh, monthlyBillInr, monthlyKwh, flags };
 }
 
+/**
+ * The assumptions panel is customer-facing copy, so every `source` line here comes from
+ * `citationFor`, never from a constant's internal `source`. Internal provenance ("legacy site
+ * engine", "to be confirmed", "owner to supply…") stays in constants.ts and the repo.
+ */
 function buildAssumptions(input: EstimateInput, tariff: ResolvedTariff, roofCapUsed: boolean): Assumption[] {
   const list: Assumption[] = [];
 
@@ -285,13 +291,13 @@ function buildAssumptions(input: EstimateInput, tariff: ResolvedTariff, roofCapU
     list.push({
       label: "Tariff",
       value: `${BESCOM_DOMESTIC_SLABS.label}, energy charges only (average ₹${inr2.format(tariff.averageInrPerKwh)} per unit at your usage)`,
-      source: `${BESCOM_DOMESTIC_SLABS.source}; to be confirmed`,
+      source: citationFor(BESCOM_DOMESTIC_SLABS),
     });
   } else if (tariff.basis === "flat-default") {
     list.push({
       label: "Tariff",
       value: `₹${inr2.format(tariff.averageInrPerKwh)} per unit (flat average)`,
-      source: DEFAULT_NON_DOMESTIC_TARIFF.source,
+      source: citationFor(DEFAULT_NON_DOMESTIC_TARIFF),
     });
   } else {
     list.push({
@@ -304,22 +310,22 @@ function buildAssumptions(input: EstimateInput, tariff: ResolvedTariff, roofCapU
   list.push({
     label: "Solar offset",
     value: `Up to ${Math.round(OFFSET_CAP.value * 100)}% of your monthly units; fixed charges and taxes stay payable`,
-    source: OFFSET_CAP.source,
+    source: citationFor(OFFSET_CAP),
   });
   list.push({
     label: "Export credit",
     value: "Not included for surplus units",
-    source: "BESCOM export rate and metering arrangement to be confirmed",
+    source: "Any surplus you export is settled by BESCOM under your metering arrangement; it is not counted here",
   });
   list.push({
     label: "Generation",
     value: `${inr.format(Math.round(SPECIFIC_YIELD.value))} kWh per kWp per year`,
-    source: `${SPECIFIC_YIELD.source}; to be confirmed`,
+    source: citationFor(SPECIFIC_YIELD),
   });
   list.push({
     label: "Installed cost",
     value: `₹${inr.format(INSTALL_COST_PER_KWP.value)} per kWp before subsidy`,
-    source: `${INSTALL_COST_PER_KWP.source}; to be confirmed`,
+    source: citationFor(INSTALL_COST_PER_KWP),
   });
 
   const r = PM_SURYA_GHAR_RESIDENTIAL.value;
@@ -333,26 +339,26 @@ function buildAssumptions(input: EstimateInput, tariff: ResolvedTariff, roofCapU
   list.push({
     label: "PM Surya Ghar subsidy",
     value: `${subsidyValue}; decided and paid by the Government after DISCOM inspection; scheme period to ${PM_SURYA_GHAR_SCHEME_END}`,
-    source: PM_SURYA_GHAR_RESIDENTIAL.source,
+    source: citationFor(PM_SURYA_GHAR_RESIDENTIAL),
   });
 
   if (roofCapUsed) {
     list.push({
       label: "Roof area",
       value: `${ROOF_SQFT_PER_KWP.value} sq ft per kWp`,
-      source: `${ROOF_SQFT_PER_KWP.source}; to be confirmed`,
+      source: citationFor(ROOF_SQFT_PER_KWP),
     });
   }
 
   list.push({
     label: "Projection",
     value: `${PROJECTION_HORIZON_YEARS.value} years, ${(ANNUAL_TARIFF_INFLATION.value * 100).toFixed(0)}% tariff increase and ${(ANNUAL_DEGRADATION.value * 100).toFixed(1)}% panel degradation per year`,
-    source: ANNUAL_TARIFF_INFLATION.source,
+    source: citationFor(ANNUAL_TARIFF_INFLATION),
   });
   list.push({
     label: "CO₂ avoided",
     value: `${GRID_EMISSION_FACTOR.value} kg CO₂ per kWh generated`,
-    source: GRID_EMISSION_FACTOR.source,
+    source: citationFor(GRID_EMISSION_FACTOR),
   });
 
   return list;
