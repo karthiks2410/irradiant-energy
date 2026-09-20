@@ -4,6 +4,7 @@ import { HomeCalculator } from "@/components/home/HomeCalculator";
 import { FinalCtaBand } from "@/components/home/FinalCtaBand";
 import { HomeFaqBand } from "@/components/home/HomeFaqBand";
 import { HomeHero } from "@/components/home/HomeHero";
+import { BrandRail } from "@/components/home/BrandRail";
 import { ProjectsBand } from "@/components/home/ProjectsBand";
 import { SystemBand } from "@/components/home/SystemBand";
 import { WhyBand } from "@/components/home/WhyBand";
@@ -30,6 +31,7 @@ export default function HomePage() {
       <AboutBand />
       <SystemBand />
       <WhyBand />
+      <BrandRail />
       <HomeCalculator />
       <ProjectsBand />
       <HomeFaqBand />

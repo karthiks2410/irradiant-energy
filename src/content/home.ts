@@ -243,6 +243,70 @@ const projects: { copy: SectionCopy; photos: readonly (keyof typeof projectImage
   photos: ["installerAtWork", "roadsideArray"],
 };
 
+/**
+ * The equipment rail.
+ *
+ * Released from `held` on owner direction (2026-09-20). It was withheld because a rail of other
+ * companies' marks asserts a relationship, and none was evidenced. The owner has now confirmed
+ * these are the brands they build with, so the names render.
+ *
+ * Two things are deliberately weaker than the prototype's version:
+ * - The eyebrow is "Equipment we install", not "Channel partners". A channel partner is a
+ *   contracted commercial relationship — a dealership or an authorised-installer agreement — and
+ *   we hold no evidence of one. Naming the kit we fit is true whatever the paperwork says.
+ *   Restore "Channel partners" only for brands where the agreement actually exists.
+ * - No logos yet. See the held item `proto:partners:logos`.
+ *
+ * `domain` exists only so official logos can be fetched and self-hosted later; every one is a
+ * best guess and must be checked against the mark that comes back before it ships.
+ *
+ * `category` describes what each company makes, which is a fact about them, not a claim about us.
+ */
+export interface Brand {
+  name: string;
+  category: string;
+  /** For fetching the official mark later. Unverified. */
+  domain: string;
+  /** Self-hosted logo under /images/brands once permission is settled; lettermark until then. */
+  logo?: `/images/brands/${string}`;
+}
+
+const brands: { copy: SectionCopy; items: readonly Brand[] } = {
+  copy: {
+    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (eyebrow). The title is the prototype's own
+    // line and is owner-approved; the eyebrow replaces the prototype's "Channel partners",
+    // which asserts a commercial agreement we hold no evidence of.
+    eyebrow: "Equipment we install",
+    title: "Selected technology brands we work with.",
+    source: "prototype partners (brand list, owner-directed 2026-09-20) · eyebrow proposed",
+    status: "proposed",
+  },
+  items: [
+    { name: "Adani", category: "Modules", domain: "adanisolar.com" , logo: "/images/brands/adani.png" },
+    { name: "Waaree", category: "Modules", domain: "waaree.com" , logo: "/images/brands/waaree.png" },
+    { name: "Goldi", category: "Modules", domain: "goldisolar.com" , logo: "/images/brands/goldi.png" },
+    { name: "Vikram Solar", category: "Modules", domain: "vikramsolar.com" , logo: "/images/brands/vikram-solar.png" },
+    { name: "Emmvee", category: "Modules", domain: "emmvee.com" , logo: "/images/brands/emmvee.png" },
+    { name: "Deye", category: "Inverters", domain: "deyeinverter.com" , logo: "/images/brands/deye.png" },
+    { name: "Solis", category: "Inverters", domain: "solisinverters.com" , logo: "/images/brands/solis.png" },
+    // No logo: logo.dev returned an orange tile that is not Sungrow's mark. Their own site
+    // shows a dark "SUNGROW" wordmark with a "Clean power for all" tagline.
+    { name: "Sungrow", category: "Inverters", domain: "sungrowpower.com" },
+    { name: "SMA", category: "Inverters", domain: "sma.de" , logo: "/images/brands/sma.png" },
+    // No logo: the service had nothing and generated a gradient "D" monogram, which is not a
+    // logo at all. Same on dyness-tech.com.
+    { name: "Dyness", category: "Batteries", domain: "dyness.com" },
+    { name: "ABB", category: "Switchgear", domain: "abb.com" , logo: "/images/brands/abb.png" },
+    { name: "Legrand", category: "Switchgear", domain: "legrand.com" , logo: "/images/brands/legrand.png" },
+    // No logo: a red ring came back that matches no Polycab mark; polycab.in returned blank.
+    { name: "Polycab", category: "Wires", domain: "polycab.com" },
+    { name: "Havells", category: "Wires", domain: "havells.com" , logo: "/images/brands/havells.png" },
+    { name: "KEI", category: "Wires", domain: "kei-ind.com" , logo: "/images/brands/kei.png" },
+    { name: "JSW", category: "Steel", domain: "jsw.in" , logo: "/images/brands/jsw.png" },
+    { name: "APL Apollo", category: "Steel", domain: "aplapollo.com" , logo: "/images/brands/apl-apollo.png" },
+  ],
+};
+
 // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (CTA phrasing). The band now carries a working
 // estimate, so the site-wide "Get a free estimate" would point at what the visitor just used;
 // this CTA names what /get-quote adds instead. Destination unchanged (site.ts primaryCta).
@@ -373,10 +437,11 @@ const held: readonly HeldItem[] = [
     ref: "prototype calc.scheme* · N-01 · N-74",
   },
   {
-    id: "proto:partners",
+    id: "proto:partners:logos",
     where: "channel partners rail",
-    text: "Adani · Waaree · Goldi · Vikram Solar · Emmvee · Deye · Solis · Sungrow · SMA · Dyness · ABB · Legrand · Polycab · Havells · KEI · JSW · APL Apollo",
-    reason: "Third-party marks with no agreement or logo permission; none appears on the live site.",
+    text: "The seventeen brands' official word marks and logotypes",
+    reason:
+      "The brand names now render as text (owner direction, 2026-09-20), which is nominative use and needs no permission. The logos are a separate question: reproducing a third party's mark alongside ours reads as an endorsement, so each one needs either the brand's own press-kit terms checked or its permission. Until then the rail uses lettermarks.",
     ref: "prototype partners · report §5.5 · F-60",
   },
   {
@@ -429,6 +494,7 @@ export const homePage = {
   about,
   system,
   why,
+  brands,
   projects,
   calculator,
   finalCta,
