@@ -192,3 +192,78 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Equipment brand marquee (components/home/BrandRail.tsx)
+
+   Two rails running in opposite directions, from the owner's prototype
+   (.partner-rail / .partner-track). Each track holds its brands twice, so
+   travelling exactly -50% lands on the copy and the loop is seamless.
+
+   Hover and keyboard focus pause it. So does leaving the viewport: the rail
+   sets data-running="false" when it scrolls out, because nothing that moves on
+   its own may keep running off-screen (report §6 motion, same rule the hero
+   carousel follows).
+
+   Reduced motion needs its own answer rather than the global kill switch. That
+   switch forces animation-duration to 0.01ms, which would snap each track to
+   its end state and leave half the brands parked off the left edge. So the
+   animation is switched off by name, the duplicate copy is hidden, and the rail
+   becomes an ordinary horizontal scroller — every brand still reachable, just
+   under the visitor's own thumb.
+--------------------------------------------------------------------------- */
+@keyframes brand-rail-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes brand-rail-right {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+.brand-rail {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent);
+}
+
+.brand-track {
+  display: flex;
+  width: max-content;
+  animation: brand-rail-left 34s linear infinite;
+}
+
+/*
+ * The gap lives on the group, with a trailing one, rather than on the track. With a track gap,
+ * 18 cards have 17 gaps, so half the track width is one gap short of one group and the loop
+ * jumps sideways by half a gap every time it restarts. Giving each group its own trailing gap
+ * makes each group exactly half the track, and -50% lands on the copy to the pixel.
+ */
+.brand-group {
+  display: flex;
+  gap: 14px;
+  padding-right: 14px;
+}
+
+.brand-rail[data-direction="right"] .brand-track {
+  animation-name: brand-rail-right;
+}
+
+.brand-rail:hover .brand-track,
+.brand-rail:focus-within .brand-track,
+.brand-rail[data-running="false"] .brand-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-rail {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  /* `none` here is the animation NAME, which the global switch does not touch. */
+  .brand-track {
+    animation: none;
+  }
+  .brand-track [data-marquee-copy] {
+    display: none;
+  }
+}
