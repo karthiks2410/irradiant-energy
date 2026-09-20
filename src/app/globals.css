@@ -267,3 +267,28 @@
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Scroll lock, set on <html> while the consent banner is unanswered.
+
+   Owner direction (2026-09-20): the page is held still until the visitor
+   answers. Worth recording that this is a cookie wall, which DPDP guidance
+   treats as a dark pattern and which this site does not need — nothing loads
+   before consent either way. It is defensible here only because Reject is one
+   tap, sits beside Accept at the same size, and costs the visitor nothing.
+
+   `overflow: hidden` on the element rather than on body, so it holds for iOS
+   Safari too. `scrollbar-gutter: stable` is on <html> permanently, not just
+   while locked, or the page would jump sideways by the scrollbar's width each
+   time the lock goes on and off.
+--------------------------------------------------------------------------- */
+html {
+  scrollbar-gutter: stable;
+}
+
+html[data-scroll-locked] {
+  overflow: hidden;
+  /* Touch devices ignore overflow on the scrolling element in some cases. */
+  touch-action: none;
+  overscroll-behavior: none;
+}

@@ -195,7 +195,9 @@ const why: { copy: SectionCopy; cards: readonly Feature[] } = {
   copy: {
     eyebrow: "Why Irradiant?",
     title: "Design based on your actual power needs.",
-    lead: "We build trust not with extravagant promises—but with a clear process, quality engineering and responsible service.",
+    // Lead removed on owner direction (2026-09-20). It was the prototype's, and it spent a
+    // sentence saying we do not over-promise, immediately above six cards that demonstrate it.
+    // The original wording is held below as `proto:why:lead`.
     source: "prototype why",
     status: "owner-approved-template",
   },
@@ -452,6 +454,13 @@ const held: readonly HeldItem[] = [
     reason:
       "The brand names now render as text (owner direction, 2026-09-20), which is nominative use and needs no permission. The logos are a separate question: reproducing a third party's mark alongside ours reads as an endorsement, so each one needs either the brand's own press-kit terms checked or its permission. Until then the rail uses lettermarks.",
     ref: "prototype partners · report §5.5 · F-60",
+  },
+  {
+    id: "proto:why:lead",
+    where: "why section lead",
+    text: "We build trust not with extravagant promises—but with a clear process, quality engineering and responsible service.",
+    reason: "Owner direction, 2026-09-20: removed. Approved prototype copy, so it is recorded rather than deleted.",
+    ref: "prototype why.lead",
   },
   {
     id: "proto:reviews",

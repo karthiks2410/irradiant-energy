@@ -20,9 +20,16 @@ import {
  * It renders nothing on the server and nothing at all once the visitor has answered — the lasting
  * cost on an answered visit is this small island plus the stored preference.
  *
+ * While the banner is unanswered the page is held still (owner direction, 2026-09-20). That takes
+ * three things, because any one alone leaves a way through: `overflow: hidden` on <html> via the
+ * `data-scroll-locked` attribute, Lenis stopping its own rAF loop when it sees that attribute, and
+ * the rest of the document going `inert` so a keyboard visitor cannot tab into a page they cannot
+ * scroll. The attribute is the shared signal because the pieces that react to it are nowhere near
+ * each other in the tree.
+ *
  * Focus handling, in full:
- * - The banner takes focus when it appears and does not trap it, and it hands focus back on the way
- *   out (see ConsentBanner).
+ * - The banner takes focus when it appears, traps it while the page is locked, and hands focus back
+ *   on the way out (see ConsentBanner).
  * - The preferences dialog is modal, so the platform traps focus inside it and returns focus to
  *   whatever opened it: the footer link, the /cookies button, or the banner's Manage button.
  * - The outcome of a choice is read out by the polite status region at the bottom of this file,
@@ -47,6 +54,23 @@ export function ConsentManager() {
     return () => window.removeEventListener(CONSENT_SETTINGS_EVENT, open);
   }, []);
 
+  // The banner is showing and nothing else has replaced it: hold the page still.
+  const locked = hydrated && record === null && !settingsOpen;
+
+  useEffect(() => {
+    if (!locked) return;
+    const root = document.documentElement;
+    root.setAttribute("data-scroll-locked", "");
+    // Everything except the banner goes inert, so tab and the pointer cannot reach a page that
+    // will not move. The banner mounts after these, so it is untouched.
+    const outside = [document.getElementById("main"), document.querySelector("header"), document.querySelector("footer")];
+    for (const node of outside) node?.setAttribute("inert", "");
+    return () => {
+      root.removeAttribute("data-scroll-locked");
+      for (const node of outside) node?.removeAttribute("inert");
+    };
+  }, [locked]);
+
   const openSettings = () => {
     setDraft(record ?? DEFAULT_CHOICE);
     setSettingsOpen(true);
@@ -64,7 +88,7 @@ export function ConsentManager() {
 
   return (
     <>
-      {hydrated && record === null && !settingsOpen && (
+      {locked && (
         <ConsentBanner
           onAccept={() => decide(ACCEPT_ALL)}
           onReject={() => decide(REJECT_ALL)}

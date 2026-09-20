@@ -264,33 +264,44 @@ test.describe("consent", () => {
   });
 });
 
-test.describe("the banner does not lock the page", () => {
-  test("content beside and behind the banner stays clickable and scrollable", async ({ page }) => {
+test.describe("the consent banner holds the page", () => {
+  // Owner direction, 2026-09-20, reversing the earlier behaviour: the page does not move until
+  // the visitor answers. Three mechanisms have to agree — `overflow: hidden` on <html>, Lenis
+  // stopping its own loop, and the rest of the document going inert — and each has its own way
+  // of silently not applying, so this drives real input rather than reading a class.
+  test("the page will not scroll until the visitor answers", async ({ page }) => {
+    test.slow();
     await page.goto("/", { waitUntil: "networkidle" });
     await expect(page.getByRole("dialog")).toBeVisible();
 
     const size = page.viewportSize()!;
-    // Only wide viewports have a gap beside the card: it is max-w-3xl (768px), so on a phone
-    // it fills the width and every point in the band is legitimately on the banner itself.
-    const gap = size.width > 768 + 80;
-    // The centring wrapper is full-width. If it takes pointer events, the whole bottom band
-    // of every page is dead until the visitor answers — so what is under the pointer beside
-    // the card must be page content, never an ancestor of the banner.
-    for (const x of gap ? [24, size.width - 24] : []) {
-      const swallowed = await page.evaluate(
-        ([x, y]) => {
-          const banner = document.querySelector('[role="dialog"]');
-          const hit = document.elementFromPoint(x, y);
-          return !hit || !banner ? "nothing under the pointer" : hit.contains(banner) ? hit.className : null;
-        },
-        [x, size.height - 60] as [number, number],
-      );
-      expect(swallowed, `the banner is intercepting clicks at x=${x}`).toBeNull();
-    }
+    const scrollY = () => page.evaluate(() => Math.round(window.scrollY));
 
-    const before = await page.evaluate(() => window.scrollY);
-    await scrollDown(page, 700);
-    expect(await page.evaluate(() => window.scrollY), "the page could not scroll").toBeGreaterThan(before);
+    await page.mouse.move(size.width / 2, size.height / 3);
+    await page.mouse.wheel(0, 900).catch(() => {});
+    await page.waitForTimeout(900);
+    expect(await scrollY(), "the wheel moved the page while consent was unanswered").toBe(0);
+
+    await page.keyboard.press("End");
+    await page.waitForTimeout(600);
+    expect(await scrollY(), "the keyboard moved the page while consent was unanswered").toBe(0);
+
+    // Inert as well as unscrollable: tabbing into a page that cannot move is worse than either.
+    const inert = await page.evaluate(() =>
+      ["main", "header", "footer"].map((selector) => document.querySelector(selector)?.hasAttribute("inert") ?? false),
+    );
+    expect(inert, "the page behind the banner was still reachable").toEqual([true, true, true]);
+  });
+
+  test("answering releases it", async ({ page }) => {
+    test.slow();
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /reject/i }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+
+    expect(await page.evaluate(() => document.documentElement.hasAttribute("data-scroll-locked"))).toBe(false);
+    await scrollDown(page, 900);
+    expect(await page.evaluate(() => Math.round(window.scrollY)), "the page was still held after an answer").toBeGreaterThan(0);
   });
 });
 

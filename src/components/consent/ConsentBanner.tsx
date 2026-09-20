@@ -15,12 +15,14 @@ import { acceptButton, inlineLink, rejectButton, secondaryButton } from "@/compo
  * - Accept and Reject are the same control in two hues (components/consent/styles.ts).
  *
  * Behaviour rules:
- * - It does not block the page. No overlay, no `inert` behind it, no focus trap: Tab leaves it and
- *   walks the page, exactly as if it were the last block of the document. The old site locked the
- *   page until a choice was made (17 §2.6) — that is a dark pattern and an accessibility failure.
- *   The centring wrapper is `pointer-events-none` for the same reason: it is full-width, so it
- *   would otherwise make the whole bottom band of every page unclickable until the visitor
- *   answered, which is the same failure wearing an invisible coat.
+ * - It holds the page until the visitor answers (owner direction, 2026-09-20), so it is a real
+ *   modal: `aria-modal="true"`, and <ConsentManager> marks the rest of the document `inert` and
+ *   locks scrolling while it is up. Worth recording that this is a cookie wall, which DPDP
+ *   guidance treats as a dark pattern (17 §2.6) and which this site does not need, since nothing
+ *   loads before consent either way. It is defensible only because Reject sits beside Accept at
+ *   the same size and costs the visitor nothing.
+ * - The centring wrapper is still `pointer-events-none`: it is full-width, so it would otherwise
+ *   swallow clicks in the band beside the card. That matters again the moment the lock is lifted.
  * - It is `position: fixed`, so it never shifts the layout, and it clears the iOS home indicator
  *   with a safe-area bottom pad.
  * - Focus moves here once, when it appears, so a keyboard or screen-reader visitor meets the
@@ -69,63 +71,50 @@ export function ConsentBanner({ onAccept, onReject, onManage }: ConsentBannerPro
         ref={region}
         tabIndex={-1}
         role="dialog"
-        aria-modal="false"
+        aria-modal="true"
         aria-labelledby="consent-banner-title"
         data-lenis-prevent
-        className="pointer-events-auto max-h-[80dvh] w-full max-w-3xl translate-y-0 overflow-y-auto rounded-lg border border-mist bg-white p-4 opacity-100 shadow-overlay outline-none transition-[opacity,translate] duration-500 ease-controlled sm:p-6 starting:translate-y-6 starting:opacity-0 motion-reduce:transition-none"
+        className="pointer-events-auto max-h-[80dvh] w-full max-w-5xl translate-y-0 overflow-y-auto rounded-md border border-mist bg-white p-4 opacity-100 shadow-overlay outline-none transition-[opacity,translate] duration-500 ease-controlled sm:px-5 starting:translate-y-6 starting:opacity-0 motion-reduce:transition-none"
       >
-        {/* The eyebrow is desktop-only. On a phone this card has to earn every pixel it takes,
-            and the heading directly below already says the same word. */}
-        <p className="hidden font-mono text-label text-green-700 uppercase sm:block">Your privacy</p>
-        <h2 id="consent-banner-title" className="font-display text-h4 font-bold text-carbon sm:mt-2 sm:text-h3">
+        {/* One line, not a card. This sits over the page the visitor came to read and follows
+            them down all of it, so it has to be small: the full version took 46% of a 390px
+            phone screen the whole way down the home page. The heading is visually hidden rather
+            than removed, because the dialog still needs a name.
+
+            What stays visible is the purpose, which is the part that makes the choice informed:
+            what we load today, what an accept would allow, and that a refusal costs nothing.
+            The detail behind it is one tap away in Manage preferences and in the cookie notice. */}
+        <h2 id="consent-banner-title" className="sr-only">
           We value your privacy
         </h2>
 
-        <p className="mt-2 text-small text-ink-2 sm:mt-3">
-          This site loads no analytics and sets no tracking cookies. We are asking before that changes, not after.
-        </p>
-        {/* The purpose statement. It stays at every width — it is what makes the choice an
-            informed one — but it is tightened, because a card that covers the page it is asking
-            about is its own kind of dark pattern. */}
-        <p className="mt-2 text-small text-ink-2">
-          Accept and we may count page visits — no name, no profile, no tracking across other sites. Refuse and
-          nothing loads. Either way the site works the same.
-        </p>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+          <p className="text-small text-ink-2">
+            <span className="font-medium text-carbon">This site loads no analytics and sets no tracking cookies.</span>{" "}
+            Accept and we may count page visits — no name, no profile, no tracking across other sites. Refuse and
+            nothing loads.{" "}
+            <Link href="/cookies" className={inlineLink}>
+              Cookie notice
+            </Link>
+            .
+          </p>
 
-        {/* The two answers are side by side at every width, the same size, in the same row, so
-            neither reads as the expected one. "Manage preferences" is the only secondary control. */}
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 sm:grid-cols-3">
-          <button type="button" onClick={onAccept} className={acceptButton}>
-            Accept
-            <span className="sr-only"> analytics</span>
-          </button>
-          <button type="button" onClick={onReject} className={rejectButton}>
-            Reject
-            <span className="sr-only"> analytics</span>
-          </button>
-          <button type="button" onClick={onManage} className={`${secondaryButton} col-span-2 sm:col-span-1`}>
-            Manage preferences
-          </button>
+          {/* The two answers are the same size, side by side, at every width, so neither reads
+              as the expected one. "Manage preferences" is the only secondary control. */}
+          <div className="grid shrink-0 grid-cols-2 gap-2 lg:flex lg:items-center lg:gap-3">
+            <button type="button" onClick={onAccept} className={acceptButton}>
+              Accept
+              <span className="sr-only"> analytics</span>
+            </button>
+            <button type="button" onClick={onReject} className={rejectButton}>
+              Reject
+              <span className="sr-only"> analytics</span>
+            </button>
+            <button type="button" onClick={onManage} className={`${secondaryButton} col-span-2 lg:col-span-1 lg:whitespace-nowrap`}>
+              Manage preferences
+            </button>
+          </div>
         </div>
-
-        <p className="mt-3 text-small text-grey-600 sm:mt-4">
-          More in our{" "}
-          <Link href="/cookies" className={inlineLink}>
-            cookie notice
-          </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className={inlineLink}>
-            privacy notice
-          </Link>
-          .{" "}
-          {/* Where to change the answer matters, but it is not needed to make the choice, so the
-              phone keeps the short form and the footer link itself carries the rest. */}
-          <span className="hidden sm:inline">
-            You can change your answer any time under{" "}
-            <span className="font-medium text-ink-2">Cookie settings</span> in the footer.
-          </span>
-          <span className="sm:hidden">Changeable any time under Cookie settings.</span>
-        </p>
       </section>
     </div>
   );

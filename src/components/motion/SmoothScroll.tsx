@@ -46,6 +46,11 @@ export function SmoothScroll() {
           stopInertiaOnNavigate: true,
           anchors: { offset: -(headerHeight() + 16) },
         });
+        // Lenis arrives after an idle callback, which is usually later than whatever locked the
+        // page — the consent banner sets its attribute during hydration. Without this it starts
+        // up running and nothing tells it to stop, because the observer below only fires on a
+        // change it has already missed.
+        if (document.documentElement.hasAttribute("data-scroll-locked")) lenisRef.current.stop();
       });
     });
 
@@ -54,6 +59,24 @@ export function SmoothScroll() {
       lenisRef.current?.destroy();
       lenisRef.current = null;
     };
+  }, []);
+
+  // Stop Lenis while something has locked the page. `overflow: hidden` on <html> is not enough
+  // on its own: Lenis moves the page from its own rAF loop, so it would keep scrolling a document
+  // the browser has been told cannot scroll. The lock is an attribute rather than a prop because
+  // whatever sets it (today the consent banner) is nowhere near this component in the tree.
+  useEffect(() => {
+    const root = document.documentElement;
+    const sync = () => {
+      const lenis = lenisRef.current;
+      if (!lenis) return;
+      if (root.hasAttribute("data-scroll-locked")) lenis.stop();
+      else lenis.start();
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(root, { attributes: true, attributeFilter: ["data-scroll-locked"] });
+    return () => observer.disconnect();
   }, []);
 
   // Second half of the same guard, for navigations that are not a link click (the mobile menu's
