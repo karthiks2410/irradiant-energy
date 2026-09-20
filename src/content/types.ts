@@ -1,0 +1,240 @@
+/**
+ * Content contracts for `src/content/*`.
+ *
+ * Every renderable item carries a `source` and a `status`, so a page can show where a
+ * line came from in preview and nothing unverified reaches production (decisions.md
+ * D-004, D-009). Facts that are not cleared live in each module's `held` export with a
+ * reason; page builders never render `held`.
+ *
+ * Source notation: inventory row ids from docs/content-inventory.md ("H-4", "P-SH-2",
+ * "CL-05", "N-44"), discovery notes ("03 §4.4"), "prototype <key>" for the owner's HTML
+ * prototype dictionary, "brand PDF p.N", or "site.ts".
+ */
+
+export type ClaimStatus =
+  /** Observed on the legacy live site and in its repo `main`; the wording may carry over. */
+  | "verified-live"
+  /** Brand Identity Guidelines PDF (design and voice authority, D-004). */
+  | "brand-pdf"
+  /** Positioning copy from the owner's HTML prototype, or wording fixed by an owner decision (D-009). */
+  | "owner-approved-template"
+  /** Needs owner evidence or approval. Lives only in a `held` export. */
+  | "held"
+  /**
+   * New positioning/UX copy written for this build, never a factual claim.
+   * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL.
+   */
+  | "proposed";
+
+export type RenderableStatus = Exclude<ClaimStatus, "held">;
+
+export interface Sourced {
+  source: string;
+  status: RenderableStatus;
+}
+
+export interface TextItem extends Sourced {
+  text: string;
+}
+
+export interface LabelValue {
+  label: string;
+  value: string;
+}
+
+export interface Cta extends Sourced {
+  label: string;
+  href: string;
+}
+
+/**
+ * Copy for a section head. `status` and `source` describe the title and lead; the
+ * eyebrow is a short UX label (font-mono, uppercase, leading rule).
+ */
+export interface SectionCopy extends Sourced {
+  eyebrow?: string;
+  /** Sentence case (report §6). */
+  title: string;
+  lead?: string;
+}
+
+export interface HeroCopy extends SectionCopy {
+  eyebrow: string;
+  lead: string;
+  /** Short proof chips under the lead: positioning only, no numbers or credentials. */
+  chips?: readonly string[];
+  cta: Cta;
+  secondaryCta?: Cta;
+}
+
+export interface Step extends Sourced {
+  number: string;
+  title: string;
+  description: string;
+}
+
+/** Icon names the ui-kit maps to its icon set; taken from the prototype's card keys. */
+export type IconKey =
+  | "sun"
+  | "battery"
+  | "charge"
+  | "monitor"
+  | "site"
+  | "doc"
+  | "shield"
+  | "tools"
+  | "dash"
+  | "support";
+
+export interface Feature extends Sourced {
+  title: string;
+  description: string;
+  number?: string;
+  icon?: IconKey;
+  /** D-009: offerings not sold yet render with a "Coming next" label and no CTA. */
+  comingNext?: boolean;
+}
+
+export interface Faq extends Sourced {
+  /** Inventory FAQ id (H-4, S-2, C-6); stable across pages. */
+  id: string;
+  q: string;
+  /** Paragraphs are separated by "\n\n"; lines starting with "• " or "1. " are list items. */
+  a: string;
+}
+
+export interface FaqGroup {
+  id: string;
+  label: string;
+  items: readonly Faq[];
+}
+
+export interface FaqSection {
+  copy: SectionCopy;
+  groups: readonly FaqGroup[];
+  stillHaveQuestions: {
+    title: string;
+    body: TextItem;
+    whatsappPrompt: TextItem;
+    whatsappLabel: string;
+    callLabel: string;
+  };
+}
+
+export type SystemTypeId = "on-grid" | "off-grid" | "hybrid";
+
+export interface SystemType extends Sourced {
+  id: SystemTypeId;
+  name: string;
+  /** Card headline. */
+  plainName: string;
+  /** Audience-neutral one-liner: use it on the housing-society and business pages. */
+  description: string;
+  /** Written for homeowners (inventory P-SG-3): use it on the Homes page only. */
+  plainDescription: string;
+  note?: string;
+}
+
+export type SegmentSlug = "home" | "housing-society" | "commercial";
+
+export interface AudiencePath extends Sourced {
+  slug: SegmentSlug;
+  label: string;
+  /** The legacy home-hero tile line, e.g. "Rooftop for your house". */
+  tile: string;
+  description: string;
+  href: string;
+}
+
+export interface BillRange {
+  value: string;
+  label: string;
+}
+
+export interface LeadFormCopy extends Sourced {
+  eyebrow: string;
+  title: string;
+  lead: string;
+  submitLabel: string;
+  billLabel: string;
+  billRanges: readonly BillRange[];
+  organisationField?: {
+    label: string;
+    placeholder: string;
+    /** Field name forwarded with the lead. */
+    name: string;
+  };
+}
+
+export interface TeamMember extends Sourced {
+  name: string;
+  role: string;
+}
+
+/** A verified, consented case study. Nothing renders until the owner supplies one (D-009). */
+export interface Project extends Sourced {
+  title: string;
+  segment: SegmentSlug;
+  location?: string;
+  capacityKwp?: number;
+  commissioned?: string;
+}
+
+export interface HeldItem {
+  /** Stable id, e.g. "H-1" or "home:journey:pills". */
+  id: string;
+  /** Where it would have rendered. */
+  where: string;
+  /** The withheld wording, verbatim, or the conflicting value that was not used. */
+  text: string;
+  reason: string;
+  /** Inventory row ids or note references. */
+  ref: string;
+}
+
+export interface Segment {
+  slug: SegmentSlug;
+  href: string;
+  /** Nav label and menu description come from site.ts so they cannot drift. */
+  label: string;
+  description: string;
+  meta: Sourced & { title: string; description: string };
+  hero: HeroCopy;
+  whoItsFor: { copy: SectionCopy; items: readonly TextItem[] };
+  journey: { copy: SectionCopy; steps: readonly Step[] };
+  included: { copy: SectionCopy; items: readonly TextItem[] };
+  trust: { copy: SectionCopy; cards: readonly Feature[] };
+  faq: FaqSection;
+  leadForm: LeadFormCopy;
+  held: readonly HeldItem[];
+}
+
+export type LegalPageStatus = "draft-for-counsel" | "approved";
+
+interface LegalPageBase {
+  slug: "privacy" | "terms" | "cookies";
+  href: string;
+  title: string;
+  /** Why the page exists (regime or hygiene), for counsel. */
+  basis: string;
+  /** Section outline counsel drafts against. Not copy. */
+  outline: readonly string[];
+}
+
+/**
+ * A notice is either a counsel draft or an approved version. Every notice's own body tells the
+ * reader that "the version and the date it takes effect appear at the top of this page", so an
+ * approved notice cannot exist without both: the union makes that a compile error rather than a
+ * promise the page does not keep.
+ */
+export type LegalPage = LegalPageBase &
+  (
+    | { status: "draft-for-counsel"; version?: never; effectiveFrom?: never }
+    | {
+        status: "approved";
+        /** Published version label, e.g. "1.0". */
+        version: string;
+        /** ISO date the version takes effect. */
+        effectiveFrom: string;
+      }
+  );

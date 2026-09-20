@@ -1,0 +1,207 @@
+/**
+ * /about — mission from the legacy site (inventory F-35, F-36), brand story and values
+ * from the Brand Identity Guidelines PDF (docs/discovery/09-brand-guidelines-part1.md
+ * §2.2–2.6, §3.5–3.7), team as names and roles only (F-30 to F-32; bios held, CL-31).
+ */
+
+import { primaryCta, site } from "@/content/site";
+import type { Cta, Feature, HeldItem, SectionCopy, Step, TeamMember, TextItem } from "@/content/types";
+
+const brandText = (text: string, page: string): TextItem => ({ text, source: `brand PDF ${page}`, status: "brand-pdf" });
+
+const meta = {
+  title: "About",
+  description: "Intelligent clean-energy systems for homes, communities and businesses.",
+  source: "brand PDF p.25 (10-word introduction)",
+  status: "brand-pdf",
+} as const;
+
+const mission: SectionCopy = {
+  eyebrow: "Our mission",
+  title: "Powering a Greener Tomorrow",
+  lead: "Built in Bangalore to accelerate India's shift to clean energy. From the first site visit to the last installation screw, we make rooftop solar simple, transparent, and built to last.",
+  source: "F-35 · F-36 · P-AB-2 (the team-authored original F-37 is held for the owner's decision)",
+  status: "verified-live",
+};
+
+const story: { copy: SectionCopy; steps: readonly Step[] } = {
+  copy: {
+    eyebrow: "Our story",
+    title: "Energy is becoming connected, intelligent and customer-controlled.",
+    lead: "Irradiant Energy exists to help people and organisations participate in that change.",
+    source: "brand PDF p.6",
+    status: "brand-pdf",
+  },
+  steps: [
+    { number: "01", title: "Understand", description: "Energy needs", source: "brand PDF p.6", status: "brand-pdf" },
+    { number: "02", title: "Design", description: "The right system", source: "brand PDF p.6", status: "brand-pdf" },
+    { number: "03", title: "Deliver", description: "Professional execution", source: "brand PDF p.6", status: "brand-pdf" },
+    { number: "04", title: "Support", description: "Performance over time", source: "brand PDF p.6", status: "brand-pdf" },
+  ],
+};
+
+const brand = {
+  tagline: brandText("Energy Made Intelligent", "p.5"),
+  essence: brandText("Energy in Motion", "p.5, p.10"),
+  purposeShort: brandText("Make intelligent energy practical", "p.5"),
+  purpose: brandText("To make clean, intelligent and dependable energy practical for everyday life and business.", "p.8"),
+  personality: brandText("Intelligent. Precise. Dependable.", "p.5"),
+  audience: brandText("Homes. Communities. Business.", "p.5"),
+  positioning: brandText("Irradiant is a professional energy-system partner, not a low-cost product seller.", "p.17"),
+  /** "Measurable performance" needs monitoring evidence before it carries weight (report §7.1). */
+  promise: brandText("Clear advice. Reliable engineering. Measurable performance. Long-term support.", "p.19"),
+  nameStory: brandText(
+    "Irradiant is inspired by radiant light and solar irradiance — the sunlight that reaches the Earth and becomes usable clean energy.",
+    "p.7",
+  ),
+} as const;
+
+const value = (number: string, title: string, description: string): Feature => ({
+  number,
+  title,
+  description,
+  source: "brand PDF p.9",
+  status: "brand-pdf",
+});
+
+const values: { copy: SectionCopy; items: readonly Feature[] } = {
+  copy: {
+    eyebrow: "Values",
+    title: "Six behaviours protect the promise.",
+    source: "brand PDF p.9",
+    status: "brand-pdf",
+  },
+  items: [
+    value("01", "Engineering integrity", "Recommend what is right for the site and long-term performance."),
+    value("02", "Clarity", "Explain pricing, generation, savings, risks and timelines."),
+    value("03", "Accountability", "Own the journey from consultation through support."),
+    value("04", "Progress", "Adopt useful technology with purpose."),
+    value("05", "Customer control", "Enable monitoring, education and accessible support."),
+    value("06", "Responsible impact", "Communicate measurable outcomes without greenwashing."),
+  ],
+};
+
+const member = (name: string, role: string, ref: string): TeamMember => ({
+  name,
+  role,
+  source: `${ref} (name and role as live; roster is an OWNER DECISION)`,
+  status: "verified-live",
+});
+
+const team: { copy: SectionCopy; members: readonly TeamMember[] } = {
+  copy: {
+    eyebrow: "Team",
+    title: "Meet the visionaries",
+    lead: "The experts leading the charge toward energy independence.",
+    source: "P-AB-3",
+    status: "verified-live",
+  },
+  members: [
+    member("Keerthi Raj K C", "Founder", "F-30"),
+    member("Maruthi S Pavan", "Co-Founder", "F-31"),
+    member("Maruthi S Tejas", "Head of Marketing", "F-32"),
+  ],
+};
+
+// PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (the rename itself is D-001).
+const newName: SectionCopy = {
+  eyebrow: "Our new name",
+  title: `${site.legacyName} is now ${site.name}.`,
+  lead: "You may still see our earlier name on older documents and around the web.",
+  source: "proposed · D-001",
+  status: "proposed",
+};
+
+const closingCta: { copy: SectionCopy; primary: Cta; whatsappPrompt: TextItem } = {
+  copy: {
+    title: "Let's power your space.",
+    // "Free site visit anywhere in India." trimmed (F-41); see held.
+    lead: "Transparent quote in rupees, no pressure. We'll design the right system for your roof and your bill.",
+    source: "P-AB-4",
+    status: "verified-live",
+  },
+  primary: { label: primaryCta.label, href: primaryCta.href, source: "site.ts primaryCta", status: "proposed" },
+  whatsappPrompt: {
+    text: `Hi ${site.name} — I'd like to talk about going solar.`,
+    source: "W2 (renamed per D-001)",
+    status: "verified-live",
+  },
+};
+
+const held: readonly HeldItem[] = [
+  {
+    id: "F-37",
+    where: "mission body (alternative)",
+    text: "We are dedicated to accelerating India's transition to sustainable energy. Our mission is to make high-efficiency solar power accessible and affordable for every home and business.",
+    reason: "The only mission the team wrote; replaced by an AI-assisted rewrite on 2026-06-25. The owner chooses which survives.",
+    ref: "F-36 · F-37 · CF-26",
+  },
+  {
+    id: "about:credibility-row",
+    where: "hero credibility row",
+    text: "Bangalore HQ / Karnataka · Tamil Nadu · Telangana · MNRE-empanelled / Vendor-grade installers · Tier-1 panels / Bloomberg-rated modules · 1,000+ rooftops / 5 years on the ground",
+    reason: "Code-marked placeholder numbers. Needs the service-area decision, the empanelment ID, the module brand and an installation register.",
+    ref: "P-AB-2 · CL-01 · CL-03 · CL-04 · CL-05",
+  },
+  {
+    id: "about:team:bios",
+    where: "team cards (front line and bio)",
+    text: "Keerthi Raj K C — Driving the transition to renewable energy. / With a Masters in Renewable Systems, Keerthi has spearheaded over 20+ large-scale solar installations across Germany and India. · Maruthi S Pavan — Lead architect of our high-efficiency solar grid systems. / Pavan is a civil engineering veteran with deep expertise designing distributed solar systems for the Indian grid. · Maruthi S Tejas — Ensuring every project leaves a positive footprint on our planet. / Tejas leads brand and growth, translating Irradiant's engineering depth into stories customers and partners trust.",
+    reason: "Expanded in an AI-assisted rewrite ('and India' was added without a source). Each person approves their own bio.",
+    ref: "F-30 · F-31 · F-32 · CL-31",
+  },
+  {
+    id: "about:team:photos-links",
+    where: "team cards",
+    text: "Headshots (identical grey avatars) · LinkedIn links (href=\"#\")",
+    reason: "No real photos or profile URLs exist; consent to publish is needed.",
+    ref: "F-33 · F-34",
+  },
+  {
+    id: "about:cta:anywhere-in-india",
+    where: "closing CTA (sentence trimmed)",
+    text: "Free site visit anywhere in India.",
+    reason: "The service area contradicts itself across the site; the owner defines it.",
+    ref: "F-41 · CL-23 · CF-03",
+  },
+  {
+    id: "about:cta:original",
+    where: "closing CTA (team-authored original)",
+    text: "Ready to switch to solar? — Join happy customers powering their lives with the sun. — Schedule Your Free Consultation",
+    reason: "Candidate for restoration; 'happy customers' implies a customer base.",
+    ref: "R-10",
+  },
+  {
+    id: "brand:vision-mission",
+    where: "brand block",
+    text: "VISION: A future where every home, community and organisation can generate, manage and optimise its own energy intelligently. MISSION: Design, deliver and manage reliable solar, storage, charging and energy-management systems through transparent advice, strong engineering, quality execution and long-term support.",
+    reason: "Names storage and charging as current capabilities; not sold in v1 (D-009).",
+    ref: "brand PDF p.8 · 09 §2.5",
+  },
+  {
+    id: "brand:intros",
+    where: "meta and intros",
+    text: "25-word and 50-word company introductions; proposition 'Complete energy systems'",
+    reason: "Claim storage, EV charging and energy management as live offerings.",
+    ref: "brand PDF p.5, p.25 · 09 §5.3",
+  },
+  {
+    id: "about:founding",
+    where: "our story",
+    text: "Founding year, founding story, service area",
+    reason: "Not stated anywhere; the owner supplies the facts.",
+    ref: "F-38 · F-41 · report §7.5 #2, #5",
+  },
+];
+
+export const aboutPage = {
+  meta,
+  mission,
+  story,
+  brand,
+  values,
+  team,
+  newName,
+  closingCta,
+  held,
+} as const;
