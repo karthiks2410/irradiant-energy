@@ -1,7 +1,9 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { isConfirmed, primaryCta, site, solutions, whatsappLink } from "@/content/site";
 import { showPlaceholders } from "@/lib/env";
 import { LogoLockup } from "@/components/brand/Logo";
+import { CookieSettingsLink } from "@/components/consent";
 import { SocialLinks } from "@/components/ui/SocialIcons";
 
 const company = [
@@ -21,18 +23,31 @@ function Placeholder({ children }: { children: string }) {
   return <span className="font-mono text-label text-yellow-400 uppercase">[{children}]</span>;
 }
 
-function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+const footerLink =
+  "inline-flex min-h-11 items-center text-white/85 transition-colors hover:text-white";
+
+function FooterColumn({
+  title,
+  links,
+  children,
+}: {
+  title: string;
+  links: { label: string; href: string }[];
+  /** Extra rows for the column, appended after `links` (the Legal column's consent control). */
+  children?: ReactNode;
+}) {
   return (
     <div>
       <h2 className="font-mono text-eyebrow font-medium text-yellow-400 uppercase">{title}</h2>
       <ul className="mt-4 space-y-1">
         {links.map((l) => (
           <li key={l.href}>
-            <Link href={l.href} className="inline-flex min-h-11 items-center text-white/85 transition-colors hover:text-white">
+            <Link href={l.href} className={footerLink}>
               {l.label}
             </Link>
           </li>
         ))}
+        {children}
       </ul>
     </div>
   );
@@ -56,7 +71,13 @@ export function SiteFooter() {
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-5">
           <FooterColumn title={solutions.label} links={solutions.items} />
           <FooterColumn title="Company" links={company} />
-          <FooterColumn title="Legal" links={legal} />
+          <FooterColumn title="Legal" links={legal}>
+            {/* Withdrawing consent has to be as easy as giving it, and both the banner and the
+                cookie notice tell the visitor this control is in the footer. */}
+            <li>
+              <CookieSettingsLink className={footerLink} />
+            </li>
+          </FooterColumn>
         </div>
 
         <address className="not-italic lg:col-span-3">

@@ -48,3 +48,8 @@ next-env.d.ts
 
 # local QA screenshots
 /.qa/
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/

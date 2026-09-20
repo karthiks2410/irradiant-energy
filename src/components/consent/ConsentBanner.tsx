@@ -18,6 +18,9 @@ import { acceptButton, inlineLink, rejectButton, secondaryButton } from "@/compo
  * - It does not block the page. No overlay, no `inert` behind it, no focus trap: Tab leaves it and
  *   walks the page, exactly as if it were the last block of the document. The old site locked the
  *   page until a choice was made (17 §2.6) — that is a dark pattern and an accessibility failure.
+ *   The centring wrapper is `pointer-events-none` for the same reason: it is full-width, so it
+ *   would otherwise make the whole bottom band of every page unclickable until the visitor
+ *   answered, which is the same failure wearing an invisible coat.
  * - It is `position: fixed`, so it never shifts the layout, and it clears the iOS home indicator
  *   with a safe-area bottom pad.
  * - Focus moves here once, when it appears, so a keyboard or screen-reader visitor meets the
@@ -54,7 +57,12 @@ export function ConsentBanner({ onAccept, onReject, onManage }: ConsentBannerPro
 
   return (
     // Above the fixed header (z-50) and below the skip link (z-100).
-    <div className="fixed inset-x-0 bottom-0 z-60 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+    //
+    // The centring wrapper spans the full width, so without `pointer-events-none` it would
+    // swallow every click in the band beside the card — an invisible dead strip across the
+    // foot of the page, which is exactly the "page is locked" behaviour this banner is meant
+    // not to have. Pointer events are handed back on the card itself.
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-60 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
       {/* translate-y-0 / opacity-100 are explicit so the @starting-style transition has a resolved
           end value to run towards. */}
       <section
@@ -64,7 +72,7 @@ export function ConsentBanner({ onAccept, onReject, onManage }: ConsentBannerPro
         aria-modal="false"
         aria-labelledby="consent-banner-title"
         data-lenis-prevent
-        className="max-h-[80dvh] w-full max-w-3xl translate-y-0 overflow-y-auto rounded-lg border border-mist bg-white p-5 opacity-100 shadow-overlay outline-none transition-[opacity,translate] duration-500 ease-controlled sm:p-6 starting:translate-y-6 starting:opacity-0 motion-reduce:transition-none"
+        className="pointer-events-auto max-h-[80dvh] w-full max-w-3xl translate-y-0 overflow-y-auto rounded-lg border border-mist bg-white p-5 opacity-100 shadow-overlay outline-none transition-[opacity,translate] duration-500 ease-controlled sm:p-6 starting:translate-y-6 starting:opacity-0 motion-reduce:transition-none"
       >
         <p className="font-mono text-label text-green-700 uppercase">Your privacy</p>
         <h2 id="consent-banner-title" className="mt-2 font-display text-h3 font-bold text-carbon">
