@@ -19,8 +19,9 @@ export const metadata = pageMetadata({
   path: "/",
 });
 
-// Surfaces alternate canvas → white → dark for rhythm (report §6.9); the projects band
-// drops out in production, which leaves the FAQ's white between the two dark bands.
+// Surfaces alternate canvas → white → dark for rhythm (report §6.9). The projects band is
+// canvas, which is the only value that alternates on both sides of it: the calculator above
+// paints itself dark and the closing band below is dark.
 export default function HomePage() {
   return (
     <>

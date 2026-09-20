@@ -209,19 +209,38 @@ const why: { copy: SectionCopy; cards: readonly Feature[] } = {
 };
 
 /**
- * Renders only with verified, consented case studies (D-009). `items` is empty until the
- * owner supplies one; previews show `placeholderSubjects` as labelled placeholders.
+ * The band of the owner's own installation photography.
+ *
+ * It is not a case-study section and must not become one by implication. The photographs carry
+ * no capacity, client, society, location, date, saving or count, because none was supplied, and
+ * a photograph cannot establish any of them on its own. What the owner did state — recorded in
+ * the header of src/content/images.ts — is that these are the company's own photographs of real
+ * completed work and may be shown as our installations. That single fact is the whole claim.
+ *
+ * `photos` names entries in `projectImages`, so the pictures have one home and the alt text
+ * cannot drift from the file that owns it.
  */
-const projects: { copy: SectionCopy; items: readonly Project[]; placeholderSubjects: readonly string[] } = {
+const projects: { copy: SectionCopy; photos: readonly (keyof typeof projectImages)[] } = {
+  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (eyebrow, title and lead). The approved
+  // "Featured projects · Projects for homes, societies and commercial energy." headed a band of
+  // case studies: "featured" implies a curated selection out of a larger set, which is a count,
+  // and naming three segments asserts completed work in each. These photographs establish
+  // neither, and nothing in them distinguishes a housing society from a home. Both approved
+  // lines are held below as `proto:projects:heading` rather than deleted, and come back when
+  // the first consented case study does.
   copy: {
-    eyebrow: "Featured projects",
-    // "agriculture" removed: not an offering in v1 (D-009); see held.
-    title: "Projects for homes, societies and commercial energy.",
-    source: "prototype projects",
-    status: "owner-approved-template",
+    eyebrow: "Our work",
+    title: "Rooftop systems we have installed.",
+    lead: "No stock photography and no renders. Every photograph here is a job our own team completed.",
+    source: "photographs src/content/images.ts (owner-supplied 2026-09-20) · copy proposed",
+    status: "proposed",
   },
-  items: [],
-  placeholderSubjects: ["Home rooftop", "Housing society rooftop", "Commercial rooftop"],
+  // Two frames, and deliberately not four. Of the eight photographs the owner supplied, ie-2151
+  // is the same installation on the same day as the commercial hero's, and ie-2100 is the same
+  // rooftop as hero slide 1 — putting either here shows a visitor a site they have already seen
+  // on this page. ie-2032 is almost entirely panel texture. These two repeat nothing and come
+  // from sites nothing else on the site shows.
+  photos: ["installerAtWork", "roadsideArray"],
 };
 
 // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (CTA phrasing). The band now carries a working
@@ -323,6 +342,14 @@ const held: readonly HeldItem[] = [
     text: "A clean, modern section with icon-led messaging for better clarity and stronger visual balance.",
     reason: "Designer note shipped as copy.",
     ref: "report §5.5",
+  },
+  {
+    id: "proto:projects:heading",
+    where: "featured projects heading and photo-slot subjects",
+    text: "Featured projects · Projects for homes, societies and commercial energy. · Home rooftop / Housing society rooftop / Commercial rooftop",
+    reason:
+      "The band now shows photographs with no project detail beside them. \"Featured\" implies a curated selection out of a larger set, which is a count we cannot support; the three-segment title asserts completed work in each segment, and nothing in the owner's photographs distinguishes a housing society from a home. Restore both lines, and the three segment subjects, when the first consented case study lands.",
+    ref: "prototype projects · D-009 · report §5.5",
   },
   {
     id: "proto:projects:demo",

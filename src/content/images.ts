@@ -52,9 +52,11 @@ export const projectImages = {
     src: "/images/projects/ie-2151.webp",
     width: 1800,
     height: 2400,
-    alt: "A large solar array laid across a metal industrial roof, with open green land beyond the boundary wall.",
-    subject: "Commercial rooftop array on a metal roof",
-    focal: "center 30%",
+    alt: "A solar array laid across a metal industrial roof, with open green land beyond the boundary wall.",
+    subject: "Rooftop array on a metal roof",
+    // The array in this frame begins 43% down, so 30% left a strip of construction mesh and
+    // rubble across the top of every card. Below 20% the whole context band is in view instead.
+    focal: "center 10%",
   },
   palmRooftop: {
     src: "/images/projects/ie-2006.webp",
@@ -81,7 +83,9 @@ export const projectImages = {
     height: 2667,
     alt: "Solar panels angled across a rooftop, with a wooded hillside and palms rising behind.",
     subject: "Rooftop array against a wooded hillside",
-    focal: "center 30%",
+    // Only the top 24% of this frame is anything but panel, so 30% rendered bare glass. This is
+    // the flattest and dimmest of the eight and is not used anywhere.
+    focal: "center 0%",
   },
   roadsideArray: {
     src: "/images/projects/ie-2140.webp",
@@ -103,9 +107,17 @@ export const projectImages = {
     src: "/images/projects/ie-2134.webp",
     width: 1800,
     height: 2400,
-    alt: "An Irradiant installer steadying a panel on a terrace array, with the surrounding neighbourhood behind.",
+    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (alt). It describes only what is in the
+    // frame: the previous wording said he was "steadying" the panel, which infers what he is
+    // doing from a still. "One of our installers" is the owner's own statement that this is our
+    // work. He is the only recognisable person in the set, so confirm his consent before this
+    // ships.
+    alt: "One of our installers with both hands on the frame of a rooftop solar panel, with neighbouring terraces, water tanks and a low treeline behind.",
     subject: "Installer working on a terrace array",
-    focal: "center 40%",
+    // Tuned for the square and 4:5 windows the projects band uses, where his head, shoulder and
+    // both hands are all inside the crop with the terraces still above. A 3:2 window needs about
+    // 65% instead: the old 40% cut his head in half at the bottom edge.
+    focal: "center 46%",
   },
 } as const satisfies Record<string, ProjectImage>;
 

@@ -103,7 +103,7 @@ test.describe("estimator", () => {
     // is that it never succeeds; the field marking is asserted only when validation is what
     // actually answered.
     const said = await alert.first().innerText();
-    const throttled = /that was quick|too many|try again (in|later)/i.test(said);
+    const throttled = /that was quick|received several requests/i.test(said);
     if (!throttled) {
       const invalid = await page.locator("[aria-invalid='true']").count();
       expect(invalid, `no field was marked aria-invalid; the form said: ${said}`).toBeGreaterThan(0);

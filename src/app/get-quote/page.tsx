@@ -65,6 +65,13 @@ export default async function GetQuotePage({
           </ol>
         </nav>
 
+        {/*
+          Not sticky, deliberately. This panel is the tallest thing in its row — 735px empty and
+          about 890px once the estimate fills in its last two tiles, against a 620px form column
+          — so it has no room to travel and sticking it does nothing. Nor is it worth shrinking
+          to fit a laptop fold: the figures are the reason the page exists, and the panel changes
+          height when they arrive, so no fixed layout holds both states above the fold.
+        */}
         <div
           data-surface="dark"
           className="col-span-4 rounded-lg bg-teal-900 p-6 sm:p-8 md:col-span-8 lg:col-span-5"
@@ -74,10 +81,13 @@ export default async function GetQuotePage({
           <h1 className="mt-4 font-display text-h2 font-extrabold text-white">
             Estimate the right solar system for your site.
           </h1>
-          <p className="mt-4 text-lead text-white/80">
-            Tell us what you are putting solar on and roughly what you spend on electricity. The figures update as
-            you go.
-          </p>
+          {/*
+            PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Shortened: the instruction it used to
+            carry ("tell us what you are putting solar on and roughly what you spend") is the
+            same thing the Step 1 column says beside it, and saying it twice cost the panel two
+            lines that pushed its last tiles below the fold on a laptop.
+          */}
+          <p className="mt-4 text-lead text-white/80">The figures update as you go.</p>
           <EstimateResults />
         </div>
 
