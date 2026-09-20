@@ -8,7 +8,7 @@ import { AccentTitle } from "./AccentTitle";
 const { projects } = homePage;
 
 /**
- * Two of the owner's own installation photographs, and nothing else.
+ * The owner's own installation photographs, and nothing else.
  *
  * What is deliberately absent. No per-photo title, because none exists. No segment chip, because
  * a chip on a photograph asserts a building type the frame does not prove, and because the
@@ -16,71 +16,62 @@ const { projects } = homePage;
  * No capacity, location, date or saving, because none was supplied. No visible caption: `alt`
  * serves the reader who cannot see the photograph, and a sighted visitor gains nothing from a
  * line describing what is already in front of them. No call to action either — the calculator
- * sits directly above this band and the closing pair directly below, and a third would be the
- * accessory to take off before leaving the house.
+ * sits directly above this band and the closing pair directly below.
  *
- * The pair is asymmetric on purpose. Seven of the owner's eight frames are the same shot — a
- * low-angle three-quarter view of an array receding to the upper right — so two equal cells
- * side by side read as one picture printed twice, and matching their horizons would make that
- * worse rather than better. A tall cell against a smaller square dropped below it breaks the
- * diptych, and the eye reads two photographs instead of a repeat.
+ * Every frame is portrait, so the cells are portrait too rather than cropping six 3:4 pictures
+ * into landscape boxes.
  *
- * Surface: canvas, the Section default. The calculator above paints itself dark and the closing
- * band below is dark, so canvas is the only value that alternates on both sides. It also suits
- * the pictures: both carry a large pale sky, which meets a dark surface at a hard edge and makes
- * the frame read as pasted on, while against canvas the sky runs into the page.
- *
- * Loading: seventh band of nine, far below the fold, so both images take the lazy default. Next
- * 16 deprecated `priority`; eager loading here would compete with the hero for bandwidth.
+ * The grid tiles exactly at both widths, which is what decides its shape. On three columns the
+ * lead photograph takes a two-by-two block and the other five fill the remaining five cells of a
+ * three-by-three — no gap, no orphan. It leads because it is the only frame with a person in it,
+ * the one that shows a company rather than a product, and six equal cells of what is largely the
+ * same shot would read as wallpaper. Below `lg` there are two columns and no feature cell, since
+ * six equal portraits tile perfectly there and a wide first cell would strand the sixth.
  */
 export function ProjectsBand() {
-  const [tall, small] = projects.photos.map((key) => projectImages[key]);
+  const [lead, ...rest] = projects.photos.map((key) => projectImages[key]);
 
   return (
     <Section aria-labelledby="projects-heading">
       <Reveal>
         <SectionHeading
           id="projects-heading"
-          align="split"
+          align="stacked"
           eyebrow={projects.copy.eyebrow}
           title={<AccentTitle text={projects.copy.title} words={2} />}
-          lead={projects.copy.lead}
         />
 
-        <div className="mt-12 grid-page gap-y-8">
+        <ul className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {/* The frame with a person in it, given the room to be looked at. `focal` is tuned so
-              his head, shoulder and both hands stay inside the crop along with the terraces
-              behind him; a landscape window loses the person at every value. */}
-          <div className="col-span-4 md:col-span-5 lg:col-span-7">
-            <div className="relative aspect-4/5 overflow-hidden rounded-lg ring-1 ring-carbon/10 lg:aspect-square">
+              his head, shoulder and both hands stay in the crop with the terraces behind him. */}
+          <li className="lg:col-span-2 lg:row-span-2">
+            <div className="relative aspect-4/5 overflow-hidden rounded-lg ring-1 ring-carbon/10 lg:aspect-auto lg:h-full">
               <Image
-                src={tall.src}
-                alt={tall.alt}
+                src={lead.src}
+                alt={lead.alt}
                 fill
-                sizes="(min-width: 1024px) 58vw, (min-width: 768px) 62vw, 100vw"
-                style={{ objectPosition: tall.focal }}
+                sizes="(min-width: 1024px) 62vw, 50vw"
+                style={{ objectPosition: lead.focal }}
                 className="object-cover"
               />
             </div>
-          </div>
+          </li>
 
-          {/* Bottom-aligned with its neighbour from lg rather than top-aligned. The tops then
-              sit apart by the difference in height, which is what stops the two horizons lining
-              up and the pair reading as one panorama cut in half — and unlike a fixed top margin
-              it leaves no dead space under the smaller frame at any width. */}
-          <div className="col-span-4 md:col-span-3 lg:col-span-4 lg:col-start-9 lg:flex lg:h-full lg:items-end">
-            <div className="relative aspect-4/5 w-full overflow-hidden rounded-lg ring-1 ring-carbon/10">
-              <Image
-                src={small.src}
-                alt={small.alt}
-                fill
-                sizes="(min-width: 1024px) 32vw, (min-width: 768px) 36vw, 100vw"
-                style={{ objectPosition: small.focal }}
-                className="object-cover"
-              />
-            </div>
-          </div>
-        </div>
+          {rest.map((photo) => (
+            <li key={photo.src}>
+              <div className="relative aspect-4/5 overflow-hidden rounded-lg ring-1 ring-carbon/10">
+                <Image
+                  src={photo.src}
+                  alt={photo.alt}
+                  fill
+                  sizes="(min-width: 1024px) 31vw, 50vw"
+                  style={{ objectPosition: photo.focal }}
+                  className="object-cover"
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
       </Reveal>
     </Section>
   );

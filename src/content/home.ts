@@ -232,16 +232,21 @@ const projects: { copy: SectionCopy; photos: readonly (keyof typeof projectImage
   copy: {
     eyebrow: "Our work",
     title: "Rooftop systems we have installed.",
-    lead: "No stock photography and no renders. Every photograph here is a job our own team completed.",
     source: "photographs src/content/images.ts (owner-supplied 2026-09-20) · copy proposed",
     status: "proposed",
   },
-  // Two frames, and deliberately not four. Of the eight photographs the owner supplied, ie-2151
-  // is the same installation on the same day as the commercial hero's, and ie-2100 is the same
-  // rooftop as hero slide 1 — putting either here shows a visitor a site they have already seen
-  // on this page. ie-2032 is almost entirely panel texture. These two repeat nothing and come
-  // from sites nothing else on the site shows.
-  photos: ["installerAtWork", "roadsideArray"],
+  // Six of the eight frames the owner supplied (owner direction, 2026-09-20: show more than a
+  // pair). The two held back are hero slide 1 and hero slide 2, which a visitor meets at the top
+  // of this same page; everything else appears here. Ordered so the frame with a person in it
+  // leads and no two adjacent cells are the same kind of roof.
+  photos: [
+    "installerAtWork",
+    "roadsideArray",
+    "terraceArray",
+    "metalRoofArray",
+    "palmRooftop",
+    "hillsideArray",
+  ],
 };
 
 /**
