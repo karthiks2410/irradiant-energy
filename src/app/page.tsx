@@ -1,6 +1,6 @@
 import { AboutBand } from "@/components/home/AboutBand";
 import { AudiencePathsBand } from "@/components/home/AudiencePathsBand";
-import { CalculatorTeaser } from "@/components/home/CalculatorTeaser";
+import { HomeCalculator } from "@/components/home/HomeCalculator";
 import { FinalCtaBand } from "@/components/home/FinalCtaBand";
 import { HomeFaqBand } from "@/components/home/HomeFaqBand";
 import { HomeHero } from "@/components/home/HomeHero";
@@ -29,7 +29,7 @@ export default function HomePage() {
       <AboutBand />
       <SystemBand />
       <WhyBand />
-      <CalculatorTeaser />
+      <HomeCalculator />
       <ProjectsBand />
       <HomeFaqBand />
       <FinalCtaBand />

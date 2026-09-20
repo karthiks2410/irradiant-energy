@@ -40,7 +40,9 @@
   --color-soft-green: #e9f4ec;
 
   /* Type families (variables are set by next/font in layout.tsx) */
-  --font-display: var(--font-manrope), ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  /* The prototype sets Inter for everything (it declares Inter but never loads it, so it renders
+     as Helvetica). Owner prefers that look, so headings use Inter rather than the PDF's Manrope. */
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
@@ -79,10 +81,12 @@
   --text-data: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
   --text-data--line-height: 1.2;
 
-  /* Shape — restrained; the pill is reserved for CTAs */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 8px;
+  /* Shape — owner direction (2026-09-20): match the prototype's soft corners rather than the
+     brand PDF's square vector system. Prototype values: chips/inputs 14-18, cards 16-24,
+     large panels 28-30, pills 999. */
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
 
   /* Motion */
   --ease-controlled: cubic-bezier(0.22, 1, 0.36, 1);

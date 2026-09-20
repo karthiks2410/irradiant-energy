@@ -6,6 +6,8 @@
  * Audience paths come from site.ts and the legacy home-hero tiles (inventory P-HM-1).
  */
 
+import { templateImages } from "@/content/images";
+import type { TemplateImage } from "@/content/images";
 import { primaryCta } from "@/content/site";
 import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, LabelValue, Project, SectionCopy } from "@/content/types";
 import { navFor, segmentHref } from "@/content/solutions/shared";
@@ -37,14 +39,67 @@ const audiencePath = (slug: AudiencePath["slug"], tile: string): AudiencePath =>
   };
 };
 
-const hero: HeroCopy = {
-  eyebrow: "Intelligent energy systems",
-  title: "Powering smarter futures.",
-  lead: "Reliable solar systems for homes, businesses, agriculture and communities—designed to perform with clarity and long-term value.",
-  chips: ["Site-based design", "Clear system economics", "Long-term support"],
+/**
+ * One scene of the rotating home hero. The four scenes are transcribed verbatim from the
+ * English `hero` array of the owner's HTML prototype (D-009); only the photo pairing is ours.
+ */
+export interface HeroSlide {
+  eyebrow: string;
+  title: string;
+  lead: string;
+  /** Three positioning chips — never numbers, credentials or performance claims. */
+  chips: readonly [string, string, string];
+  /** Template photography (images.ts). Decoration behind fixed copy, so it renders with alt="". */
+  image: TemplateImage;
+}
+
+/**
+ * Scene → photo pairing. The prototype had four photographs; `public/images/template/`
+ * carries three, so the agriculture scene borrows the commercial rooftop (never adjacent to
+ * its other use in the loop). TODO(photography): a farm/irrigation shot replaces it.
+ */
+const heroScenes = [
+  {
+    eyebrow: "Intelligent energy systems",
+    title: "Powering smarter futures.",
+    lead: "Reliable solar systems for homes, businesses, agriculture and communities—designed to perform with clarity and long-term value.",
+    chips: ["Site-based design", "Clear system economics", "Long-term support"],
+    image: templateImages.heroHomeFamily,
+  },
+  {
+    eyebrow: "Commercial clean energy",
+    title: "Engineered systems for modern business.",
+    lead: "Create more efficient and future-ready energy infrastructure for campuses, facilities and commercial sites.",
+    chips: ["Scalable deployment", "Visible sustainability", "Performance-focused design"],
+    image: templateImages.heroCommercialRooftop,
+  },
+  {
+    eyebrow: "City-scale clean energy",
+    title: "Cleaner ecosystems. Smarter communities.",
+    lead: "Bring clean-energy thinking to urban development, projects and institutions with a premium visual language.",
+    chips: ["Community impact", "Future-ready planning", "Long-term reliability"],
+    image: templateImages.heroCityCampus,
+  },
+  {
+    eyebrow: "Agriculture energy solutions",
+    title: "Solar power for productive land.",
+    lead: "Support irrigation, farm operations and rural resilience with dependable solar systems made for practical conditions.",
+    chips: ["Farm-ready planning", "Clean pumping support", "Built for reliability"],
+    image: templateImages.heroCommercialRooftop, // Reused: no agriculture photo exists yet (see owner_todos).
+  },
+] as const satisfies readonly HeroSlide[];
+
+const hero: HeroCopy & { slides: readonly HeroSlide[] } = {
+  // Scene 1 doubles as the static hero copy: the server renders it, and the h1 keeps it
+  // without JavaScript.
+  eyebrow: heroScenes[0].eyebrow,
+  title: heroScenes[0].title,
+  lead: heroScenes[0].lead,
+  chips: heroScenes[0].chips,
+  slides: heroScenes,
   cta: estimate,
   secondaryCta: requestConsultation,
-  source: "prototype hero[0] · brand PDF p.24 (campaign line)",
+  source: "prototype hero[0]–hero[3] · brand PDF p.24 (campaign line)",
   status: "owner-approved-template",
 };
 
@@ -176,11 +231,34 @@ const projects: { copy: SectionCopy; items: readonly Project[]; placeholderSubje
   placeholderSubjects: ["Home rooftop", "Housing society rooftop", "Commercial rooftop"],
 };
 
+// PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (CTA phrasing). The band now carries a working
+// estimate, so the site-wide "Get a free estimate" would point at what the visitor just used;
+// this CTA names what /get-quote adds instead. Destination unchanged (site.ts primaryCta).
+const calculatorCta: Cta = {
+  label: "Get a proposal for your site",
+  href: primaryCta.href,
+  source: "site.ts primaryCta (href) · label proposed",
+  status: "proposed",
+};
+
+/**
+ * The calculator band, which runs the real estimate engine (src/lib/solar) inline.
+ *
+ * Field and result labels are the prototype's, which the owner approved (D-009), with two
+ * departures, both because the engine will not support the prototype's version:
+ * - the prototype's "System type" and "Daytime energy use" selects fed invented factors
+ *   (a 0.35/0.55/0.75 daytime multiplier); the engine models neither, so they are not asked for.
+ * - "Lifetime savings" became "Projected savings": the engine projects
+ *   PROJECTION_HORIZON_YEARS (15) years and names the horizon beside the figure.
+ * Hints are new UX copy; none of them is a claim, and every figure the panel prints carries the
+ * engine's own assumptions and sources with it.
+ */
 const calculator: {
   copy: SectionCopy;
   bullets: readonly string[];
-  previewInputs: readonly string[];
-  previewResults: readonly string[];
+  fields: Readonly<Record<"segment" | "location" | "bill" | "tariff" | "roof" | "houses", { label: string; hint?: string }>>;
+  results: { title: string; size: string; generation: string; savings: string; payback: string };
+  assumptionsLabel: string;
   disclaimer: string;
   cta: Cta;
 } = {
@@ -193,22 +271,29 @@ const calculator: {
   bullets: [
     "Indicative system size",
     "Estimated annual generation",
-    "Lifetime savings estimate",
+    // PROPOSED: the prototype said "Lifetime savings estimate"; the engine projects 15 years.
+    "Projected savings estimate",
     "Home scheme guidance when relevant",
   ],
-  previewInputs: [
-    "Customer type",
-    "City / PIN code",
-    "Monthly electricity bill (₹)",
-    "Average tariff (₹ / unit)",
-    "Available roof area (sq. ft.) — unlimited",
-    "System type",
-    "Daytime energy use",
-  ],
-  previewResults: ["Recommended size", "Annual generation", "Lifetime savings", "Indicative payback"],
+  fields: {
+    segment: { label: "Customer type" },
+    location: { label: "City / PIN code", hint: "The PIN code decides which tariffs the estimate uses." },
+    bill: { label: "Monthly electricity bill (₹)", hint: "A typical month, before any solar." },
+    tariff: { label: "Average tariff (₹ / unit)", hint: "Leave it blank to use the tariff listed under the assumptions." },
+    roof: { label: "Available roof area (sq. ft.)", hint: "Leave it blank if there is no practical limit." },
+    houses: { label: "Homes in the society", hint: "Sets the ceiling the subsidy estimate can use." },
+  },
+  results: {
+    title: "Your estimate",
+    size: "Recommended size",
+    generation: "Annual generation",
+    savings: "Projected savings",
+    payback: "Indicative payback",
+  },
+  assumptionsLabel: "What this estimate assumes",
   disclaimer:
     "Indicative preview only. Final system size, generation, savings and eligibility depend on site assessment, design and current policy checks.",
-  cta: estimate,
+  cta: calculatorCta,
 };
 
 const finalCta: { copy: SectionCopy; primary: Cta; secondary: Cta } = {

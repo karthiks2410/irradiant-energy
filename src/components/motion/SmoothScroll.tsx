@@ -25,7 +25,14 @@ export function SmoothScroll() {
     idle(() => {
       import("lenis").then(({ default: LenisClass }) => {
         if (cancelled) return;
-        lenis = new LenisClass({ autoRaf: true, anchors: { offset: -(headerHeight() + 16) } });
+        lenis = new LenisClass({
+          autoRaf: true,
+          // Lenis defaults to lerp 0.1, which trails the wheel far enough to feel like dragging.
+          // 0.2 keeps the smoothing but tracks the input closely. Touch stays native (syncTouch off).
+          lerp: 0.2,
+          wheelMultiplier: 1,
+          anchors: { offset: -(headerHeight() + 16) },
+        });
       });
     });
 

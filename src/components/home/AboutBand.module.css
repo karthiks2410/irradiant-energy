@@ -1,0 +1,199 @@
+/*
+ * About band — the prototype's orbiting brand stage, rebuilt as pure CSS (no JS, no Motion)
+ * so AboutBand stays a Server Component. Values are lifted from the prototype's
+ * .about-brand-card / .brand-* / .floating-tag rules, not approximated.
+ *
+ * OFF-PALETTE COLOURS, PERMITTED BY THE OWNER'S OVERRIDE (2026-09-20 — where the prototype
+ * and the brand PDF disagree on shape, depth, motion and type, the prototype wins): the card
+ * keeps the prototype's own gradient stops #0C4137 and #052B25. They are scoped to this card,
+ * exist nowhere else in the system, and must not be promoted to tokens. The middle stop is
+ * Deep Teal #02342B and the greens in the glow/nodes are Radiant Green #06A64C — both tokens.
+ *
+ * The stage is driven by ONE length (the width of .stage): rings, nodes, tile and symbol are
+ * percentages of it, so the whole decoration scales with the column instead of colliding with
+ * the symbol when the card is narrow.
+ */
+
+.card {
+  background: linear-gradient(180deg, #0c4137 0%, #02342b 60%, #052b25 100%);
+}
+
+/* Radial green glow, bottom-left (prototype .about-brand-card::before). */
+.glow {
+  position: absolute;
+  bottom: -140px;
+  left: -80px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(6 166 76 / 0.35), rgb(6 166 76 / 0));
+  filter: blur(8px);
+}
+
+.stage {
+  position: relative;
+  width: min(280px, 100% - 3rem);
+  aspect-ratio: 1;
+}
+
+@media (min-width: 1024px) {
+  .stage {
+    /* The prototype's 380px outer orbit, capped so the floating tags never reach the tile. */
+    width: min(380px, 100% - 6rem);
+  }
+}
+
+/* inset + auto margins centre these without a transform, which leaves transform free for the spin. */
+.ring,
+.ringInner,
+.core {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  display: block;
+}
+
+.ring,
+.ringInner {
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 50%;
+}
+
+.ring {
+  width: 100%;
+  height: 100%;
+}
+
+/* 300 / 380 — the prototype's inner orbit. */
+.ringInner {
+  width: 78.95%;
+  height: 78.95%;
+}
+
+/*
+ * Motion is opt-in, not opt-out: only a browser that actively reports "no preference" ever
+ * gets the animation, so anyone asking for reduced motion — and anything that cannot answer —
+ * sees a still stage. Rotation only: transform is the single animated property.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .ring {
+    animation: spin 26s linear infinite reverse;
+  }
+
+  .ringInner {
+    animation: spin 22s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Glowing nodes ride the inner orbit: 18 / 300 of it, at the prototype's four positions. */
+.node {
+  position: absolute;
+  display: block;
+  width: 6%;
+  height: 6%;
+  border-radius: 50%;
+  background: var(--color-green-500);
+  box-shadow: 0 0 0 8px rgb(6 166 76 / 0.12);
+}
+
+.n1 {
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.n2 {
+  top: 50%;
+  right: 5.33%;
+  transform: translateY(-50%);
+}
+
+.n3 {
+  bottom: 7.33%;
+  left: 18%;
+}
+
+.n4 {
+  top: 28%;
+  left: 6.67%;
+}
+
+/* The soft tile the symbol sits on: 236 / 380 wide, radius 34 / 236. */
+.core {
+  display: grid;
+  place-items: center;
+  width: 62.1%;
+  height: 62.1%;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 14.4%;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.03));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 30px 60px rgb(0 0 0 / 0.18);
+}
+
+/* The supplied logo-only SVG, 160 / 236 of the tile. */
+.logo {
+  width: 67.8%;
+  height: auto;
+  color: var(--color-green-500);
+  filter: drop-shadow(0 16px 38px rgb(6 166 76 / 0.28));
+}
+
+.tag {
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.08);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/*
+ * From lg the tags float around the orbit. The prototype's pixel offsets are expressed as
+ * percentages of its 530 x 520 card, so they track the column width; combined with the capped
+ * stage above, each tag stays clear of the tile at every width from 1024px up. Below lg they
+ * are hidden and the component renders a plain centred row instead.
+ */
+.tagField {
+  position: absolute;
+  inset: 0;
+}
+
+.tagA,
+.tagB,
+.tagC,
+.tagD {
+  position: absolute;
+}
+
+.tagA {
+  top: 14.2%;
+  left: 6.4%;
+}
+
+.tagB {
+  top: 24.2%;
+  right: 7.2%;
+}
+
+.tagC {
+  bottom: 21.5%;
+  left: 8.7%;
+}
+
+.tagD {
+  bottom: 12.3%;
+  right: 10.2%;
+}

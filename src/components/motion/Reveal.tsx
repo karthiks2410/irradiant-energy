@@ -7,7 +7,7 @@ type RevealTag = "div" | "section" | "article" | "ul" | "ol" | "li" | "p" | "fig
 
 const ease = [0.22, 1, 0.36, 1] as const;
 const rise = 8;
-const duration = 0.5;
+const duration = 0.38; // shorter than the 0.5 default so sections settle before the eye arrives
 
 const itemVariants = {
   hidden: { opacity: 0, y: rise, transition: { duration: 0 } },

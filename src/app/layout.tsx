@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Inter, Manrope } from "next/font/google";
+import { IBM_Plex_Mono, Inter } from "next/font/google";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
@@ -8,8 +8,7 @@ import { site } from "@/content/site";
 import { allowIndexing, siteUrl } from "@/lib/env";
 import "./globals.css";
 
-// Brand type system (brand PDF p.48): Manrope display, Inter body/UI, IBM Plex Mono data.
-const manrope = Manrope({ subsets: ["latin"], display: "swap", variable: "--font-manrope" });
+// Inter for display and body (owner direction, matching the prototype), IBM Plex Mono for data.
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], display: "swap", variable: "--font-plex-mono" });
 
@@ -36,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${inter.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <a
