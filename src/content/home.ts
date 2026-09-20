@@ -97,7 +97,7 @@ const audiencePaths: { copy: SectionCopy; items: readonly AudiencePath[] } = {
     eyebrow: "Homes. Communities. Business.",
     // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (UX heading + place qualifier). Bengaluru
     // is VERIFIED-LIVE (content-inventory F-40); 16-seo-deep-dive H3 prescribes it here.
-    title: "Solar for your home, your society or your business in Bengaluru.",
+    title: "Solar for your home, your society or your business in Karnataka.",
     source: "eyebrow brand PDF p.5 · title proposed",
     status: "proposed",
   },
