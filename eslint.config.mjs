@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local QA scratch: gitignored, never shipped, and not worth linting.
+    ".qa/**",
+    "test-results/**",
+    "playwright-report/**",
   ]),
 ]);
 

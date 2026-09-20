@@ -82,6 +82,11 @@ test.describe("estimator", () => {
     await page.goto("/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
 
+    // The form has a 3s minimum fill time to catch bots that post instantly. Submitting
+    // before it elapses returns the bot message and no field errors, so wait it out —
+    // otherwise this test measures the honeypot rather than validation.
+    await page.waitForTimeout(3_500);
+
     const submit = page.getByRole("button", { name: /send|submit|request/i }).last();
     await submit.scrollIntoViewIfNeeded();
     await submit.click();
@@ -128,14 +133,22 @@ test.describe("the banner does not lock the page", () => {
     await expect(page.getByRole("dialog")).toBeVisible();
 
     const size = page.viewportSize()!;
+    // Only wide viewports have a gap beside the card: it is max-w-3xl (768px), so on a phone
+    // it fills the width and every point in the band is legitimately on the banner itself.
+    const gap = size.width > 768 + 80;
     // The centring wrapper is full-width. If it takes pointer events, the whole bottom band
-    // of every page is dead until the visitor answers.
-    for (const x of [24, size.width - 24]) {
-      const tag = await page.evaluate(
-        ([x, y]) => document.elementFromPoint(x, y)?.tagName ?? "none",
+    // of every page is dead until the visitor answers — so what is under the pointer beside
+    // the card must be page content, never an ancestor of the banner.
+    for (const x of gap ? [24, size.width - 24] : []) {
+      const swallowed = await page.evaluate(
+        ([x, y]) => {
+          const banner = document.querySelector('[role="dialog"]');
+          const hit = document.elementFromPoint(x, y);
+          return !hit || !banner ? "nothing under the pointer" : hit.contains(banner) ? hit.className : null;
+        },
         [x, size.height - 60] as [number, number],
       );
-      expect(tag, `the banner wrapper is intercepting clicks at x=${x}`).not.toBe("DIV");
+      expect(swallowed, `the banner is intercepting clicks at x=${x}`).toBeNull();
     }
 
     const before = await page.evaluate(() => window.scrollY);

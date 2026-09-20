@@ -15,6 +15,13 @@ const COPY_FADE_OUT_MS = 240;
 /** Prototype easing (CSS `ease`), used for the crossfade and the Ken Burns drift. */
 const PROTO_EASE = "ease-[cubic-bezier(0.25,0.1,0.25,1)]";
 
+/* Shared between the live scene and the hidden sizer behind it, so the two measure the same. */
+const HEADLINE =
+  "font-display text-[clamp(3rem,6vw,3.625rem)] leading-[0.96] font-bold tracking-[-0.045em] text-white md:text-[clamp(3.625rem,6vw,6rem)]";
+const LEAD = "mt-5 max-w-[590px] text-[0.9375rem] leading-[1.7] text-white/90 md:text-[1.1875rem]";
+const CHIPS = "mt-[22px] flex flex-wrap gap-x-[18px] gap-y-2.5";
+const CHIP = "flex items-center gap-2 text-small text-white/90";
+
 /** Never fires: the snapshot only has to differ between the server and the client. */
 const neverChanges = () => () => {};
 
@@ -163,39 +170,66 @@ export function HeroBackdrop({ slides, overlay, actions }: HeroBackdropProps) {
 
       <div className="relative z-20 container-page">
         {/* 690px is the prototype's copy measure; the top padding clears the fixed header and
-            drops the block just below centre, as the prototype's 170px does. */}
-        <div
-          className={`max-w-[690px] pt-[calc(var(--header-h)+4.5rem)] transition-[opacity,translate] ease-controlled md:pt-[calc(var(--header-h)+5.25rem)] [@media(max-height:720px)]:pt-[calc(var(--header-h)+2rem)] [@media(max-height:720px)]:pb-16 ${
-            copyIn ? "translate-y-0 opacity-100 duration-500" : "translate-y-2 opacity-0 duration-200"
-          }`}
-        >
-          <Eyebrow tone="signal" className="mb-4">
-            {scene.eyebrow}
-          </Eyebrow>
+            drops the block just below centre, as the prototype's 170px does.
 
-          {/* Prototype display type: clamp(58px, 6vw, 96px) — 48px under 768 — on 0.96 leading
-              and -0.045em tracking. One h1 per page; its text follows the scene. */}
-          <h1
-            id="hero-title"
-            className="font-display text-[clamp(3rem,6vw,3.625rem)] leading-[0.96] font-bold tracking-[-0.045em] text-white md:text-[clamp(3.625rem,6vw,6rem)]"
-          >
-            {scene.title}
-          </h1>
-
-          <p className="mt-5 max-w-[590px] text-[0.9375rem] leading-[1.7] text-white/90 md:text-[1.1875rem]">
-            {scene.lead}
-          </p>
-
-          {actions}
-
-          <ul className="mt-[22px] flex flex-wrap gap-x-[18px] gap-y-2.5">
-            {scene.chips.map((chip) => (
-              <li key={chip} className="flex items-center gap-2 text-small text-white/90">
-                <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-green-500" />
-                {chip}
-              </li>
+            The scenes are stacked in one grid cell rather than swapped in place. The block is
+            vertically centred, so a scene with a taller headline used to move its own top edge
+            when the slideshow advanced — a layout shift with no user interaction behind it,
+            which is exactly what CLS counts. Every scene is laid out in the cell and all but
+            the live one is hidden, so the cell is always as tall as the tallest scene and the
+            rotation changes nothing but pixels. */}
+        <div className="grid max-w-[690px] pt-[calc(var(--header-h)+4.5rem)] md:pt-[calc(var(--header-h)+5.25rem)] [@media(max-height:720px)]:pt-[calc(var(--header-h)+2rem)] [@media(max-height:720px)]:pb-16">
+          {/* The sizer: every scene, laid out and measured, shown to nobody. It carries no
+              heading and no landmark, so it adds nothing for assistive technology to find. */}
+          <div aria-hidden="true" className="invisible col-start-1 row-start-1 grid">
+            {slides.map((slide) => (
+              <div key={slide.title} className="col-start-1 row-start-1">
+                <Eyebrow tone="signal" className="mb-4">
+                  {slide.eyebrow}
+                </Eyebrow>
+                <p className={HEADLINE}>{slide.title}</p>
+                <p className={LEAD}>{slide.lead}</p>
+                {actions}
+                <ul className={CHIPS}>
+                  {slide.chips.map((chip) => (
+                    <li key={chip} className={CHIP}>
+                      <span className="size-2 shrink-0 rounded-full bg-green-500" />
+                      {chip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
+
+          <div
+            className={`col-start-1 row-start-1 transition-[opacity,translate] ease-controlled ${
+              copyIn ? "translate-y-0 opacity-100 duration-500" : "translate-y-2 opacity-0 duration-200"
+            }`}
+          >
+            <Eyebrow tone="signal" className="mb-4">
+              {scene.eyebrow}
+            </Eyebrow>
+
+            {/* Prototype display type: clamp(58px, 6vw, 96px) — 48px under 768 — on 0.96 leading
+                and -0.045em tracking. One h1 per page; its text follows the scene. */}
+            <h1 id="hero-title" className={HEADLINE}>
+              {scene.title}
+            </h1>
+
+            <p className={LEAD}>{scene.lead}</p>
+
+            {actions}
+
+            <ul className={CHIPS}>
+              {scene.chips.map((chip) => (
+                <li key={chip} className={CHIP}>
+                  <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-green-500" />
+                  {chip}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
 
