@@ -24,12 +24,13 @@
  * - the fields sit in <FieldRow>s so the inputs line up whatever the helper text says.
  */
 
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { enIn, flagNotes, parseSegment } from "@/components/quote/copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "@/components/quote/FieldRow";
 import { ChevronDownIcon, SelectField, StatTile, TextField } from "@/components/ui";
 import { billBounds, buildEstimate } from "@/lib/solar/calc";
 import { SEGMENTS, SEGMENT_LABELS, type Segment } from "@/lib/solar/constants";
+import { TickerNumber } from "@/components/motion/TickerNumber";
 import { formatInr } from "@/lib/solar/format";
 
 /** The visitor may type a city, a PIN code or both; only a well-formed PIN reaches the engine. */
@@ -54,7 +55,16 @@ const positive = (value: string): number | undefined => {
 
 type FieldCopy = { label: string; hint?: string };
 
-type Tile = { label: string; value: string; unit?: string; note?: string };
+type Tile = { label: string; value: ReactNode; unit?: string; note?: string };
+
+/**
+ * Figures travel to their new value rather than cutting to it. `key` is deliberately absent:
+ * React must keep the same TickerNumber instance across an estimate change, or the spring
+ * restarts from the new value and nothing moves.
+ */
+const ticker = (value: number, format: (n: number) => string) => (
+  <TickerNumber value={value} format={format} />
+);
 
 export type HomeCalculatorPanelProps = {
   fields: Record<"segment" | "location" | "bill" | "roof" | "houses", FieldCopy>;
@@ -99,16 +109,21 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
   const payback = estimate?.paybackYears ?? null;
   const tiles: Tile[] = estimate
     ? [
-        { label: results.size, value: estimate.systemKwp.toFixed(1), unit: "kWp" },
-        { label: results.generation, value: enIn.format(estimate.annualGenerationKwh), unit: "kWh" },
+        { label: results.size, value: ticker(estimate.systemKwp, (n) => n.toFixed(1)), unit: "kWp" },
+        {
+          label: results.generation,
+          value: ticker(estimate.annualGenerationKwh, (n) => enIn.format(Math.round(n))),
+          unit: "kWh",
+        },
         {
           label: results.savings,
-          value: formatInr(estimate.projection.cumulativeSavingsInr),
+          value: ticker(estimate.projection.cumulativeSavingsInr, (n) => formatInr(Math.round(n))),
           note: `Over ${estimate.projection.horizonYears} years`,
         },
         {
           label: results.payback,
-          value: payback === null ? "—" : payback.toFixed(1),
+          // Payback can be genuinely unavailable, and an em dash is not a number to spring to.
+          value: payback === null ? "—" : ticker(payback, (n) => n.toFixed(1)),
           unit: payback === null ? undefined : "years",
           note: estimate.subsidyInr > 0 ? "After the estimated subsidy" : undefined,
         },

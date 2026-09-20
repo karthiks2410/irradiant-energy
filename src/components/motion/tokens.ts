@@ -16,3 +16,11 @@ export const REVEAL_DURATION = 0.62;
 
 /** Route change: opacity only (see RouteTransition for why), so it has to be quick. */
 export const ROUTE_DURATION = 0.34;
+
+/**
+ * A figure counting to a new value (TickerNumber), on EASE_OUT_EXPO like everything else here.
+ * Long enough to read as counting rather than flickering, short enough that dragging a slider
+ * still feels answered. A tween, not a spring: see TickerNumber for why the old site's spring
+ * took seconds to arrive.
+ */
+export const TICKER_DURATION = 0.9;

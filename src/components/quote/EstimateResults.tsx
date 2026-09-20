@@ -11,6 +11,8 @@
  * tiles stand empty, unlabelled as estimates, with a prompt in their place.
  */
 
+import { TickerNumber } from "@/components/motion/TickerNumber";
+import type { ReactNode } from "react";
 import { ChevronDownIcon, StatTile } from "@/components/ui";
 import { formatInr } from "@/lib/solar/format";
 import { enIn, estimateDisclaimer, flagNotes } from "./copy";
@@ -18,10 +20,20 @@ import { useEstimate } from "./EstimateProvider";
 
 interface Tile {
   label: string;
-  value: string;
+  value: ReactNode;
   unit?: string;
   note?: string;
 }
+
+/**
+ * Figures travel to their new value rather than cutting to it, so that moving a control reads
+ * as the same number changing. `key` is deliberately absent from the tiles: React must keep the
+ * same TickerNumber instance across an estimate change, or the spring restarts from the new
+ * value and nothing moves.
+ */
+const ticker = (value: number, format: (n: number) => string) => (
+  <TickerNumber value={value} format={format} />
+);
 
 /** PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Empty-state microcopy; it makes no claim. */
 const PINCODE_PROMPT = "Add your PIN code to see your estimate — it decides which tariffs the figures use.";
@@ -37,22 +49,34 @@ export function EstimateResults() {
   let tiles: Tile[] = waitingTiles;
   if (estimate) {
     tiles = [
-      { label: "System size", value: estimate.systemKwp.toFixed(1), unit: "kWp" },
-      { label: "Annual generation", value: enIn.format(estimate.annualGenerationKwh), unit: "kWh" },
-      { label: "Annual savings", value: formatInr(estimate.annualSavingsInr), note: "Year one" },
+      { label: "System size", value: ticker(estimate.systemKwp, (n) => n.toFixed(1)), unit: "kWp" },
+      {
+        label: "Annual generation",
+        value: ticker(estimate.annualGenerationKwh, (n) => enIn.format(Math.round(n))),
+        unit: "kWh",
+      },
+      {
+        label: "Annual savings",
+        value: ticker(estimate.annualSavingsInr, (n) => formatInr(Math.round(n))),
+        note: "Year one",
+      },
     ];
     if (estimate.subsidyInr > 0) {
       tiles.push({
         label: "PM Surya Ghar subsidy",
-        value: formatInr(estimate.subsidyInr),
+        value: ticker(estimate.subsidyInr, (n) => formatInr(Math.round(n))),
         note: estimate.flags.includes("subsidy-house-count-unknown") ? "Upper limit" : undefined,
       });
     }
     tiles.push(
-      { label: estimate.subsidyInr > 0 ? "Net cost after subsidy" : "Indicative cost", value: formatInr(estimate.netCostInr) },
+      {
+        label: estimate.subsidyInr > 0 ? "Net cost after subsidy" : "Indicative cost",
+        value: ticker(estimate.netCostInr, (n) => formatInr(Math.round(n))),
+      },
       {
         label: "Payback",
-        value: estimate.paybackYears === null ? "—" : estimate.paybackYears.toFixed(1),
+        // Payback can be genuinely unavailable, and an em dash is not a number to spring to.
+        value: estimate.paybackYears === null ? "—" : ticker(estimate.paybackYears, (n) => n.toFixed(1)),
         unit: estimate.paybackYears === null ? undefined : "years",
       },
     );

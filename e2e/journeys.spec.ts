@@ -79,6 +79,8 @@ test.describe("estimator", () => {
   // (The action parses the form before it ever looks at the mail credentials, so an invalid
   // submission cannot reach Resend.)
   test("an empty lead submission is rejected with field errors", async ({ page }) => {
+    // It waits out a deliberate 3.5s and then makes a server round-trip, against other workers.
+    test.slow();
     await page.goto("/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
 
@@ -95,9 +97,81 @@ test.describe("estimator", () => {
     await expect(alert.first(), "an empty form produced no error").toBeVisible({ timeout: 10_000 });
     await expect(page.locator("body")).not.toContainText(/thank you|we.{0,3}ll be in touch/i);
 
-    // Required fields must be marked invalid for assistive technology, not only coloured.
-    const invalid = await page.locator("[aria-invalid='true']").count();
-    expect(invalid, "no field was marked aria-invalid").toBeGreaterThan(0);
+    // Three guards can legitimately answer an empty submission: validation, the bot-speed
+    // check, and the per-IP rate limiter — and running this suite repeatedly against one local
+    // server will eventually trip the limiter, which is the limiter working. So the invariant
+    // is that it never succeeds; the field marking is asserted only when validation is what
+    // actually answered.
+    const said = await alert.first().innerText();
+    const throttled = /that was quick|too many|try again (in|later)/i.test(said);
+    if (!throttled) {
+      const invalid = await page.locator("[aria-invalid='true']").count();
+      expect(invalid, `no field was marked aria-invalid; the form said: ${said}`).toBeGreaterThan(0);
+    }
+  });
+});
+
+test.describe("the estimate counts to its new value", () => {
+  /** Drive the bill up and sample the figure the visitor actually sees, frame by frame. */
+  async function sampleWhileChanging(page: import("@playwright/test").Page) {
+    await page.goto("/get-quote", { waitUntil: "networkidle" });
+    await dismissConsent(page);
+    await page.getByLabel(/pin code/i).first().fill("562106");
+    await expect(page.getByText(/annual savings/i).first()).toBeVisible();
+
+    const shown = () =>
+      page.evaluate(() => {
+        const tile = [...document.querySelectorAll("li")].find((l) => l.textContent?.includes("Annual savings"));
+        return {
+          moving: tile?.querySelector("[aria-hidden='true']")?.textContent ?? "",
+          target: tile?.querySelector(".sr-only")?.textContent ?? "",
+        };
+      });
+
+    const slider = page.getByRole("slider").first();
+    await slider.focus();
+    for (let i = 0; i < 15; i++) await page.keyboard.press("ArrowRight");
+
+    const frames = [];
+    for (let i = 0; i < 12; i++) {
+      frames.push(await shown());
+      await page.waitForTimeout(60);
+    }
+    return { frames, shown };
+  }
+
+  test("the figure travels rather than cutting, and lands on the real number", async ({ page }) => {
+    test.slow();
+    const { frames, shown } = await sampleWhileChanging(page);
+
+    // More than a couple of distinct readings means it counted rather than jumped.
+    const distinct = new Set(frames.map((f) => f.moving));
+    expect(distinct.size, "the figure cut straight to its new value").toBeGreaterThan(3);
+
+    // A money figure must never show more than the real one on the way.
+    const asNumber = (s: string) => Number(s.replace(/[^0-9.]/g, ""));
+    for (const f of frames) {
+      if (!f.moving || !f.target) continue;
+      expect(asNumber(f.moving), `overshot past ${f.target}`).toBeLessThanOrEqual(asNumber(f.target));
+    }
+
+    await expect
+      .poll(async () => { const s = await shown(); return s.moving === s.target; }, { timeout: 5_000 })
+      .toBe(true);
+  });
+
+  test.describe("under reduced motion", () => {
+    test.use({ reducedMotion: "reduce" });
+
+    test("the figure is set outright", async ({ page }) => {
+      test.slow();
+      const { frames } = await sampleWhileChanging(page);
+      // The estimate itself may legitimately change more than once while the slider is driven,
+      // so the property is not "one value" — it is that the figure on screen is never an
+      // in-between one. It always equals the settled value.
+      const inBetween = frames.filter((f) => f.moving && f.target && f.moving !== f.target);
+      expect(inBetween, "the figure animated despite a reduced-motion preference").toEqual([]);
+    });
   });
 });
 

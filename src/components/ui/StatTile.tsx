@@ -1,6 +1,12 @@
+import type { ReactNode } from "react";
+
 type StatTileProps = {
-  /** Pre-formatted figure, e.g. "5.7" or "₹8,63,718". */
-  value: string;
+  /**
+   * The figure. A pre-formatted string ("5.7", "₹8,63,718"), or a node where it has to move —
+   * <TickerNumber> for a live calculator result. Anything passed here inherits the tile's
+   * `tabular-nums`, so a changing figure does not reflow the line.
+   */
+  value: ReactNode;
   unit?: string;
   label: string;
   /** Estimated figures look different from measured ones (brand PDF p.31): muted, dashed, and labelled. */

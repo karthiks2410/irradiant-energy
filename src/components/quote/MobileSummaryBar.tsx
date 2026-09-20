@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { ArrowRightIcon } from "@/components/ui";
+import { TickerNumber } from "@/components/motion/TickerNumber";
 import { formatInr } from "@/lib/solar/format";
 import { useEstimate } from "./EstimateProvider";
 
@@ -48,11 +49,17 @@ export function MobileSummaryBar({ targetId }: { targetId: string }) {
             </>
           ) : (
             <>
+              {/* Same springing figures as the tiles above, so the bar and the panel agree
+                  frame by frame instead of one settling before the other. */}
               <p className="font-mono text-ui font-medium text-white tabular-nums">
-                {estimate.systemKwp.toFixed(1)} kWp
+                <TickerNumber value={estimate.systemKwp} format={(n) => n.toFixed(1)} /> kWp
               </p>
-              <p className="text-small text-on-dark-muted">
-                {formatInr(estimate.annualSavingsInr, { compact: true })} a year (estimated)
+              <p className="text-small text-on-dark-muted tabular-nums">
+                <TickerNumber
+                  value={estimate.annualSavingsInr}
+                  format={(n) => formatInr(Math.round(n), { compact: true })}
+                />{" "}
+                a year (estimated)
               </p>
             </>
           )}
