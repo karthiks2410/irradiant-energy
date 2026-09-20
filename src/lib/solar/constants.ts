@@ -23,7 +23,13 @@ export type ConstantStatus =
   /** Carried over from the legacy site; the owner must confirm it before launch. */
   | "to-confirm"
   /** A modelling assumption, not a fact; always shown as such. */
-  | "assumption";
+  | "assumption"
+  /**
+   * Carried over from the legacy site and knowingly accepted by the owner (2026-09-20) so v1
+   * can launch, with the intention of revisiting. Passes the launch gate but is NOT verified:
+   * `npm run check:content` still lists these so they stay visible.
+   */
+  | "owner-accepted";
 
 export interface EngineConstant<T> {
   readonly id: string;
@@ -133,7 +139,7 @@ export const BESCOM_DOMESTIC_SLABS = {
   source: "KERC tariff order for FY 2025-26, as recorded in the legacy site engine (not re-verified against kerc.gov.in)",
   citation: "Indicative BESCOM LT-2(a) energy charges; your actual tariff is read from your bill at the site visit",
   effectiveFrom: "2025-04-01",
-  status: "to-confirm",
+  status: "owner-accepted",
   note: "Energy charges only. Owner to supply the current official schedule, including fixed charges and taxes.",
 } as const satisfies EngineConstant<readonly TariffSlab[]>;
 
@@ -162,7 +168,7 @@ export const SPECIFIC_YIELD = {
   source: "Legacy site engine planning figure (about 5.0–5.5 peak sun hours a day, derated for soiling, temperature and inverter losses)",
   citation: "Planning figure for Karnataka (about 5.0–5.5 peak sun hours a day, derated for soiling, temperature and inverter losses); your roof is modelled at the site visit",
   effectiveFrom: "2026-02-01",
-  status: "to-confirm",
+  status: "owner-accepted",
   note: "Owner to confirm the figure used in proposals.",
 } as const satisfies EngineConstant<number>;
 
@@ -191,7 +197,7 @@ export const INSTALL_COST_PER_KWP = {
   source: "Legacy site engine benchmark (residential); applied to every segment until the owner supplies per-segment pricing",
   citation: "Indicative benchmark for a standard rooftop installation; your price comes from the site survey and the written proposal",
   effectiveFrom: "2026-02-01",
-  status: "to-confirm",
+  status: "owner-accepted",
 } as const satisfies EngineConstant<number>;
 
 /** Conflicts with the legacy FAQ's "roughly 100 sq ft per kW" (content-inventory CF-06); owner to settle. */
@@ -203,7 +209,7 @@ export const ROOF_SQFT_PER_KWP = {
   source: "Legacy site engine (mainstream modules at standard tilt)",
   citation: "Indicative area for mainstream modules at standard tilt; the usable area is measured at the site visit",
   effectiveFrom: "2026-02-01",
-  status: "to-confirm",
+  status: "owner-accepted",
 } as const satisfies EngineConstant<number>;
 
 export const ANNUAL_DEGRADATION = {

@@ -52,6 +52,14 @@ if (!launch) {
 }
 
 const blocking = MONEY_CRITICAL.filter((c) => c.status === "to-confirm");
+const accepted = MONEY_CRITICAL.filter((c) => c.status === "owner-accepted");
+if (accepted.length) {
+  console.log(
+    `\nNOTE: ${accepted.length} money constant(s) are owner-accepted legacy values, not verified figures:\n` +
+      accepted.map((c) => `  - ${c.id} (${c.label}): ${JSON.stringify(c.value)} ${c.unit ?? ""}`).join("\n") +
+      "\nThey do not block launch. Revisit them when the real pricing is confirmed.",
+  );
+}
 if (blocking.length === 0) {
   console.log("\nLaunch gate: every constant behind a rendered money figure is confirmed.");
   process.exit(0);
