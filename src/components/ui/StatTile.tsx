@@ -9,8 +9,14 @@ type StatTileProps = {
   value: ReactNode;
   unit?: string;
   label: string;
-  /** Estimated figures look different from measured ones (brand PDF p.31): muted, dashed, and labelled. */
+  /** Estimated figures look different from measured ones (brand PDF p.31): muted and dashed. */
   estimated?: boolean;
+  /**
+   * Whether the tile also spells out "(estimated)" beside its label. Turn it off where every
+   * tile in the group is estimated and the group says so once — four identical parentheses
+   * around one answer read as a lack of confidence in the figures rather than as candour.
+   */
+  labelEstimated?: boolean;
   /** Scope or period, e.g. "per month". */
   note?: string;
   size?: "md" | "xl";
@@ -27,6 +33,7 @@ export function StatTile({
   unit,
   label,
   estimated = false,
+  labelEstimated = true,
   note,
   size = "md",
   surface = "canvas",
@@ -41,7 +48,7 @@ export function StatTile({
     >
       <span className={`block text-small ${muted}`}>
         {label}
-        {estimated && <span className="font-mono text-label uppercase"> (estimated)</span>}
+        {estimated && labelEstimated && <span className="font-mono text-label uppercase"> (estimated)</span>}
       </span>
       <span
         className={`mt-2 block font-mono font-medium tabular-nums ${size === "xl" ? "text-data-xl" : "text-data"} ${

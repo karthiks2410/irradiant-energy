@@ -2,6 +2,7 @@ import Link from "next/link";
 import { isNavGroup, nav, primaryCta } from "@/content/site";
 import { LogoLockup } from "@/components/brand/Logo";
 import { ButtonLink } from "@/components/ui/Button";
+import { HeaderContact } from "./HeaderContact";
 import { HeaderShell } from "./HeaderShell";
 import { MobileMenu } from "./MobileMenu";
 import { NavLinkItem } from "./NavLinkItem";
@@ -28,7 +29,9 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 md:gap-2 lg:gap-3">
+          <HeaderContact />
+
           {/* The wrapper carries the display utility, not the pill: ButtonLink's own
               `inline-flex` is emitted after `.hidden` in the Tailwind stylesheet, so a
               `hidden` passed through className loses the cascade and the CTA stays on

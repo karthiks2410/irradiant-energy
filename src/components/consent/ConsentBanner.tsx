@@ -72,24 +72,29 @@ export function ConsentBanner({ onAccept, onReject, onManage }: ConsentBannerPro
         aria-modal="false"
         aria-labelledby="consent-banner-title"
         data-lenis-prevent
-        className="pointer-events-auto max-h-[80dvh] w-full max-w-3xl translate-y-0 overflow-y-auto rounded-lg border border-mist bg-white p-5 opacity-100 shadow-overlay outline-none transition-[opacity,translate] duration-500 ease-controlled sm:p-6 starting:translate-y-6 starting:opacity-0 motion-reduce:transition-none"
+        className="pointer-events-auto max-h-[80dvh] w-full max-w-3xl translate-y-0 overflow-y-auto rounded-lg border border-mist bg-white p-4 opacity-100 shadow-overlay outline-none transition-[opacity,translate] duration-500 ease-controlled sm:p-6 starting:translate-y-6 starting:opacity-0 motion-reduce:transition-none"
       >
-        <p className="font-mono text-label text-green-700 uppercase">Your privacy</p>
-        <h2 id="consent-banner-title" className="mt-2 font-display text-h3 font-bold text-carbon">
+        {/* The eyebrow is desktop-only. On a phone this card has to earn every pixel it takes,
+            and the heading directly below already says the same word. */}
+        <p className="hidden font-mono text-label text-green-700 uppercase sm:block">Your privacy</p>
+        <h2 id="consent-banner-title" className="font-display text-h4 font-bold text-carbon sm:mt-2 sm:text-h3">
           We value your privacy
         </h2>
 
-        <p className="mt-3 text-small text-ink-2">
+        <p className="mt-2 text-small text-ink-2 sm:mt-3">
           This site loads no analytics and sets no tracking cookies. We are asking before that changes, not after.
         </p>
+        {/* The purpose statement. It stays at every width — it is what makes the choice an
+            informed one — but it is tightened, because a card that covers the page it is asking
+            about is its own kind of dark pattern. */}
         <p className="mt-2 text-small text-ink-2">
-          Accept and we may count page visits — no name, no profile, no tracking across other websites. Refuse and
-          nothing loads. Either way the site works exactly the same, and all we keep on your device is your answer.
+          Accept and we may count page visits — no name, no profile, no tracking across other sites. Refuse and
+          nothing loads. Either way the site works the same.
         </p>
 
         {/* The two answers are side by side at every width, the same size, in the same row, so
             neither reads as the expected one. "Manage preferences" is the only secondary control. */}
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 sm:grid-cols-3">
           <button type="button" onClick={onAccept} className={acceptButton}>
             Accept
             <span className="sr-only"> analytics</span>
@@ -103,7 +108,7 @@ export function ConsentBanner({ onAccept, onReject, onManage }: ConsentBannerPro
           </button>
         </div>
 
-        <p className="mt-4 text-small text-grey-600">
+        <p className="mt-3 text-small text-grey-600 sm:mt-4">
           More in our{" "}
           <Link href="/cookies" className={inlineLink}>
             cookie notice
@@ -112,8 +117,14 @@ export function ConsentBanner({ onAccept, onReject, onManage }: ConsentBannerPro
           <Link href="/privacy" className={inlineLink}>
             privacy notice
           </Link>
-          . You can change your answer any time under{" "}
-          <span className="font-medium text-ink-2">Cookie settings</span> in the footer.
+          .{" "}
+          {/* Where to change the answer matters, but it is not needed to make the choice, so the
+              phone keeps the short form and the footer link itself carries the rest. */}
+          <span className="hidden sm:inline">
+            You can change your answer any time under{" "}
+            <span className="font-medium text-ink-2">Cookie settings</span> in the footer.
+          </span>
+          <span className="sm:hidden">Changeable any time under Cookie settings.</span>
         </p>
       </section>
     </div>

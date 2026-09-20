@@ -6,7 +6,7 @@
  * never sits on top of the form or the footer.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRightIcon } from "@/components/ui";
 import { TickerNumber } from "@/components/motion/TickerNumber";
 import { formatInr } from "@/lib/solar/format";
@@ -15,6 +15,29 @@ import { useEstimate } from "./EstimateProvider";
 export function MobileSummaryBar({ targetId }: { targetId: string }) {
   const { estimate } = useEstimate();
   const [atTarget, setAtTarget] = useState(false);
+  const rail = useRef<HTMLDivElement>(null);
+
+  // Publish the rail's height so anything else anchored to the bottom of the viewport can sit
+  // above it. Today that is the floating WhatsApp bubble, which would otherwise land on top of
+  // this bar on a phone. It is measured rather than hard-coded because the bar wraps to two
+  // lines at narrow widths, and cleared whenever the bar is not actually occupying space.
+  useEffect(() => {
+    const node = rail.current;
+    const root = document.documentElement;
+    const clear = () => root.style.removeProperty("--bottom-rail-h");
+    if (!node || atTarget) {
+      clear();
+      return clear;
+    }
+    const observer = new ResizeObserver(([entry]) => {
+      root.style.setProperty("--bottom-rail-h", `${Math.round(entry.contentRect.height)}px`);
+    });
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      clear();
+    };
+  }, [atTarget]);
 
   // One-way: once the form has been reached the shortcut has done its job, and a bar that came
   // back on the way down would sit on top of the footer.
@@ -33,6 +56,7 @@ export function MobileSummaryBar({ targetId }: { targetId: string }) {
 
   return (
     <div
+      ref={rail}
       data-surface="dark"
       inert={atTarget}
       className={`fixed inset-x-0 bottom-0 z-40 border-t border-white/15 bg-teal-900 transition-[opacity,transform] duration-200 ease-controlled lg:hidden ${

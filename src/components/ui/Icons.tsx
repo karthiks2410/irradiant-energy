@@ -18,6 +18,8 @@
 
 import {
   Activity,
+  MessageCircle,
+  Phone,
   ArrowRight,
   BatteryCharging,
   Check,
@@ -85,4 +87,17 @@ export function ChevronDownIcon({ className }: IconProps) {
 
 export function ErrorIcon({ className }: IconProps) {
   return <CircleAlert aria-hidden="true" strokeWidth={strokeWidth} className={className} />;
+}
+
+export function PhoneIcon({ className }: IconProps) {
+  return <Phone aria-hidden="true" strokeWidth={strokeWidth} className={className} />;
+}
+
+/**
+ * Stands in for WhatsApp. Deliberately the generic message glyph rather than the WhatsApp mark:
+ * the brand's logo is theirs, its use is governed by their brand rules, and a monoline redraw of
+ * a trademark is the kind of thing that gets a site a letter. The link text names WhatsApp.
+ */
+export function ChatIcon({ className }: IconProps) {
+  return <MessageCircle aria-hidden="true" strokeWidth={strokeWidth} className={className} />;
 }

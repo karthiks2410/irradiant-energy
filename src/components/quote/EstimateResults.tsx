@@ -38,7 +38,7 @@ const ticker = (value: number, format: (n: number) => string) => (
 /** PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Empty-state microcopy; it makes no claim. */
 const PINCODE_PROMPT = "Add your PIN code to see your estimate — it decides which tariffs the figures use.";
 
-const waitingTiles: Tile[] = ["System size", "Annual generation", "Annual savings", "Payback"].map((label) => ({
+const waitingTiles: Tile[] = ["Annual savings", "Payback", "System size", "Annual generation"].map((label) => ({
   label,
   value: "—",
 }));
@@ -49,16 +49,22 @@ export function EstimateResults() {
   let tiles: Tile[] = waitingTiles;
   if (estimate) {
     tiles = [
+      {
+        label: "Annual savings",
+        value: ticker(estimate.annualSavingsInr, (n) => formatInr(Math.round(n))),
+        note: "Year one",
+      },
+      {
+        label: "Payback",
+        // Payback can be genuinely unavailable, and an em dash is not a number to count to.
+        value: estimate.paybackYears === null ? "—" : ticker(estimate.paybackYears, (n) => n.toFixed(1)),
+        unit: estimate.paybackYears === null ? undefined : "years",
+      },
       { label: "System size", value: ticker(estimate.systemKwp, (n) => n.toFixed(1)), unit: "kWp" },
       {
         label: "Annual generation",
         value: ticker(estimate.annualGenerationKwh, (n) => enIn.format(Math.round(n))),
         unit: "kWh",
-      },
-      {
-        label: "Annual savings",
-        value: ticker(estimate.annualSavingsInr, (n) => formatInr(Math.round(n))),
-        note: "Year one",
       },
     ];
     if (estimate.subsidyInr > 0) {
@@ -68,28 +74,25 @@ export function EstimateResults() {
         note: estimate.flags.includes("subsidy-house-count-unknown") ? "Upper limit" : undefined,
       });
     }
-    tiles.push(
-      {
-        label: estimate.subsidyInr > 0 ? "Net cost after subsidy" : "Indicative cost",
-        value: ticker(estimate.netCostInr, (n) => formatInr(Math.round(n))),
-      },
-      {
-        label: "Payback",
-        // Payback can be genuinely unavailable, and an em dash is not a number to spring to.
-        value: estimate.paybackYears === null ? "—" : ticker(estimate.paybackYears, (n) => n.toFixed(1)),
-        unit: estimate.paybackYears === null ? undefined : "years",
-      },
-    );
+    // Payback already leads the block above; cost closes it.
+    tiles.push({
+      label: estimate.subsidyInr > 0 ? "Net cost after subsidy" : "Indicative cost",
+      value: ticker(estimate.netCostInr, (n) => formatInr(Math.round(n))),
+    });
   }
 
   return (
     <div className="mt-8">
-      <h2 className="font-mono text-label text-on-dark-muted uppercase">
-        Your estimate
-      </h2>
+      {/* The word "estimate" does the labelling here, and the dashed rule under each figure is
+          the brand's own mark for a modelled number (brand PDF p.31). "(estimated)" on each of
+          six tiles as well — under a heading that already says estimate and above a line that
+          says it again — read as doubt about our own engine rather than as candour. The
+          substance is untouched: the assumptions stay one click away and the disclaimer stays
+          below. */}
+      <h2 className="font-mono text-label text-on-dark-muted uppercase">Your estimate</h2>
 
       <div aria-live="polite" className="mt-3">
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="grid grid-cols-2 gap-3">
           {tiles.map((tile) => (
             <StatTile
               as="li"
@@ -99,6 +102,7 @@ export function EstimateResults() {
               unit={tile.unit}
               note={tile.note}
               estimated={estimate !== null}
+              labelEstimated={false}
             />
           ))}
         </ul>
