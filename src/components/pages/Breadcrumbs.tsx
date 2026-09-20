@@ -8,6 +8,9 @@ export interface Crumb {
 /**
  * Visible breadcrumb trail (report §9.2). Home is added automatically, so the trail mirrors
  * <BreadcrumbJsonLd> exactly; the current page is plain text with aria-current.
+ *
+ * Every inner page opens with this line — it is the first thing that tells a visitor they have
+ * left the home page (owner review round 2, point 1).
  */
 export function Breadcrumbs({ trail = [], current }: { trail?: readonly Crumb[]; current: string }) {
   const links: readonly Crumb[] = [{ name: "Home", href: "/" }, ...trail];

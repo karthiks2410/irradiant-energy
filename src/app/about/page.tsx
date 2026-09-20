@@ -1,13 +1,12 @@
-import Image from "next/image";
 import { AccentedTitle } from "@/components/pages/AccentedTitle";
 import { EnergyPath } from "@/components/pages/EnergyPath";
+import { PageHero } from "@/components/pages/PageHero";
 import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
 import { Reveal } from "@/components/motion/Reveal";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { ButtonLink, Card, CardGrid, Eyebrow, FeatureCard, Section, SectionHeading } from "@/components/ui";
+import { ClosingCtaBand } from "@/components/solutions/ClosingCta";
+import { Card, CardGrid, Eyebrow, FeatureCard, Section, SectionHeading } from "@/components/ui";
 import { aboutPage } from "@/content/about";
-import { templateImages } from "@/content/images";
-import { site, whatsappLink } from "@/content/site";
 import { showPlaceholders } from "@/lib/env";
 import { pageMetadata } from "@/lib/seo";
 
@@ -19,8 +18,6 @@ export const metadata = pageMetadata({
 });
 
 const { mission, story, brand, values, team, newName, closingCta } = aboutPage;
-
-const heroPhoto = templateImages.heroCityCampus;
 
 /** Short, quotable lines from the brand guidelines, each under its own mono label. */
 const stands = [
@@ -44,28 +41,18 @@ export default function AboutPage() {
     <>
       <BreadcrumbJsonLd items={[{ name: "About", path: "/about" }]} />
 
-      <Section
-        surface="dark"
-        padded={false}
-        container={false}
-        className="relative isolate overflow-hidden"
-        aria-labelledby="about-hero-heading"
-      >
-        {/* TODO(photography): replace with approved photo. Decorative backdrop, so the alt is empty. */}
-        {/* Above-the-fold hero. Next 16 deprecated `priority` in favour of loading/fetchPriority. */}
-        <Image src={heroPhoto.src} alt="" fill sizes="100vw" loading="eager" fetchPriority="high" className="object-cover" />
-        <div aria-hidden="true" className="absolute inset-0 bg-teal-900/88" />
-        <div className="relative container-page section-y">
-          <SectionHeading
-            id="about-hero-heading"
-            headingLevel={1}
-            align="stacked"
-            eyebrow={mission.eyebrow}
-            title={<AccentedTitle text={mission.title} />}
-            lead={mission.lead}
-          />
-        </div>
-      </Section>
+      {/*
+       * Not the home hero (owner review round 2, point 1): the full-bleed photograph and the
+       * display-size headline are gone, and the page opens on the shared inner-page band —
+       * breadcrumb first, Deep Teal, Radiant Field, `text-h1`. Dropping the photo also removes a
+       * second eager LCP image from the route.
+       */}
+      <PageHero
+        current="About"
+        eyebrow={mission.eyebrow}
+        title={<AccentedTitle text={mission.title} />}
+        lead={mission.lead}
+      />
 
       <Section surface="canvas" aria-labelledby="about-story-heading">
         <SectionHeading
@@ -74,27 +61,26 @@ export default function AboutPage() {
           title={<AccentedTitle text={story.copy.title} />}
           lead={story.copy.lead}
         />
-        <Reveal className="mt-14">
-          {/* Exactly one Solar Yellow node, on the handover the whole path leads to (brand PDF p.54). */}
-          <EnergyPath steps={story.steps} highlightIndex={2} halo="canvas" />
-        </Reveal>
+        {/* Exactly one Solar Yellow node, on the handover the whole path leads to (brand PDF p.54). */}
+        <EnergyPath className="mt-14 lg:mt-20" steps={story.steps} highlightIndex={2} halo="canvas" variant="stage" />
       </Section>
 
       <Section surface="white" aria-labelledby="about-stands-heading">
         <SectionHeading
           id="about-stands-heading"
+          align="stacked"
           eyebrow="What we stand for"
           title={brand.purpose.text}
           lead={brand.positioning.text}
         />
-        <Reveal className="mt-12">
+        <Reveal className="mt-12 lg:mt-16">
           <CardGrid columns={2}>
             {stands.map((item) => (
-              <Card key={item.label} as="li" padding="lg">
-                <Eyebrow rule={false}>
-                  {item.label}
-                </Eyebrow>
-                <p className="mt-3 font-display text-h4 font-semibold text-carbon">{item.value}</p>
+              // Same green top rule as every other non-interactive card on the site, so the card
+              // language does not change from page to page.
+              <Card key={item.label} as="li" padding="lg" className="border-t-2 border-t-green-500">
+                <Eyebrow rule={false}>{item.label}</Eyebrow>
+                <p className="mt-4 max-w-[36ch] font-display text-h4 font-semibold text-carbon">{item.value}</p>
               </Card>
             ))}
           </CardGrid>
@@ -109,24 +95,30 @@ export default function AboutPage() {
             <h2 id="about-name-heading" className="mt-4 font-display text-h2 font-bold">
               <AccentedTitle text={newName.title} tail={2} />
             </h2>
-            <p className="mt-5 text-lead text-ink-2">{newName.lead}</p>
+            <p className="mt-5 max-w-[62ch] text-lead text-ink-2">{newName.lead}</p>
           </div>
-          <div className="col-span-4 md:col-span-8 lg:col-span-5 lg:col-start-8">
-            <blockquote className="border-l-2 border-green-500 pl-6">
+          {/* Pull quote: the page's card shape with the accent moved to the leading edge, so it
+              reads as a quotation rather than another fact card. */}
+          <Card
+            padding="lg"
+            className="col-span-4 border-l-4 border-l-green-500 md:col-span-8 lg:col-span-5 lg:col-start-8"
+          >
+            <blockquote>
               <p className="font-display text-h3 font-semibold text-carbon">{brand.nameStory.text}</p>
             </blockquote>
-          </div>
+          </Card>
         </div>
       </Section>
 
       <Section surface="dark" aria-labelledby="about-values-heading">
         <SectionHeading
           id="about-values-heading"
+          align="stacked"
           eyebrowTone="signal"
           eyebrow={values.copy.eyebrow}
           title={<AccentedTitle text={values.copy.title} tail={2} />}
         />
-        <Reveal className="mt-12">
+        <Reveal className="mt-12 lg:mt-16">
           <CardGrid columns={3}>
             {values.items.map((item) => (
               <FeatureCard key={item.number} title={item.title} numeral={item.number}>
@@ -138,8 +130,14 @@ export default function AboutPage() {
       </Section>
 
       <Section surface="white" aria-labelledby="about-team-heading">
-        <SectionHeading id="about-team-heading" eyebrow={team.copy.eyebrow} title={team.copy.title} lead={team.copy.lead} />
-        <Reveal className="mt-12">
+        <SectionHeading
+          id="about-team-heading"
+          align="stacked"
+          eyebrow={team.copy.eyebrow}
+          title={team.copy.title}
+          lead={team.copy.lead}
+        />
+        <Reveal className="mt-12 lg:mt-16">
           <CardGrid columns={3}>
             {team.members.map((member) => (
               <Card key={member.name} as="li" padding="lg" className="flex items-center gap-5">
@@ -158,35 +156,18 @@ export default function AboutPage() {
           </CardGrid>
         </Reveal>
         {showPlaceholders && (
-          <p className="mt-6 text-small text-grey-600">
+          <p className="mt-8 max-w-prose border-l-4 border-yellow-400 py-1 pl-4 text-small text-ink-2">
             <PlaceholderTag>Headshots and profiles held</PlaceholderTag> Photographs, biographies and profile links
             go live only once each person approves their own.
           </p>
         )}
       </Section>
 
-      <Section surface="dark" aria-labelledby="about-cta-heading">
-        <SectionHeading
-          id="about-cta-heading"
-          align="center"
-          title={<AccentedTitle text={closingCta.copy.title} tail={2} />}
-          lead={closingCta.copy.lead}
-        />
-        <div className="mt-10 flex flex-wrap justify-center gap-4">
-          <ButtonLink href={closingCta.primary.href} variant="light">
-            {closingCta.primary.label}
-          </ButtonLink>
-          <ButtonLink
-            href={whatsappLink(closingCta.whatsappPrompt.text)}
-            variant="outline-light"
-            target="_blank"
-            rel="noopener noreferrer"
-            arrow={false}
-          >
-            WhatsApp {site.name}
-          </ButtonLink>
-        </div>
-      </Section>
+      <ClosingCtaBand
+        copy={closingCta.copy}
+        primary={closingCta.primary}
+        whatsappText={closingCta.whatsappPrompt.text}
+      />
     </>
   );
 }

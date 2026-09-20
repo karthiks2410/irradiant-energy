@@ -2,12 +2,17 @@
 
 import { LazyMotion, domAnimation, m, stagger, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { EASE_OUT_EXPO, REVEAL_DURATION, REVEAL_RISE } from "./tokens";
 
 type RevealTag = "div" | "section" | "article" | "ul" | "ol" | "li" | "p" | "figure" | "span";
 
-const ease = [0.22, 1, 0.36, 1] as const;
-const rise = 8;
-const duration = 0.38; // shorter than the 0.5 default so sections settle before the eye arrives
+// Owner review 2, point 13: the old 8px / 0.38s fade was too small to register as movement — the
+// sections looked like they were simply switching on. A 28px rise on an ease-out-expo curve travels
+// far enough to read as "coming up" while the curve's fast exit keeps the page from feeling slow:
+// most of the distance is covered in the first third of the 0.62s.
+const ease = EASE_OUT_EXPO;
+const rise = REVEAL_RISE;
+const duration = REVEAL_DURATION;
 
 const itemVariants = {
   hidden: { opacity: 0, y: rise, transition: { duration: 0 } },
@@ -29,7 +34,7 @@ type RevealProps = {
 };
 
 /**
- * Fade + 8px rise when the block scrolls into view, once. The server HTML is fully visible: elements are
+ * Fade + rise when the block scrolls into view, once. The server HTML is fully visible: elements are
  * hidden only after hydration and only when they sit below the viewport, so LCP and above-the-fold
  * content are never affected. No-op under prefers-reduced-motion.
  */

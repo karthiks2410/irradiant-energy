@@ -6,8 +6,8 @@
  * Audience paths come from site.ts and the legacy home-hero tiles (inventory P-HM-1).
  */
 
-import { templateImages } from "@/content/images";
-import type { TemplateImage } from "@/content/images";
+import { projectImages } from "@/content/images";
+import type { ProjectImage } from "@/content/images";
 import { primaryCta } from "@/content/site";
 import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, LabelValue, Project, SectionCopy } from "@/content/types";
 import { navFor, segmentHref } from "@/content/solutions/shared";
@@ -50,7 +50,7 @@ export interface HeroSlide {
   /** Three positioning chips — never numbers, credentials or performance claims. */
   chips: readonly [string, string, string];
   /** Template photography (images.ts). Decoration behind fixed copy, so it renders with alt="". */
-  image: TemplateImage;
+  image: ProjectImage;
 }
 
 /**
@@ -67,14 +67,14 @@ const heroScenes = [
     // "agriculture" removed from the prototype line: it is not an offering (D-009); see held.
     lead: "Reliable solar systems for homes, businesses and communities—designed to perform with clarity and long-term value.",
     chips: ["Site-based design", "Clear system economics", "Long-term support"],
-    image: templateImages.heroHomeFamily,
+    image: projectImages.duskSkyline,
   },
   {
     eyebrow: "Commercial clean energy",
     title: "Engineered systems for modern business.",
     lead: "Create more efficient and future-ready energy infrastructure for campuses, facilities and commercial sites.",
     chips: ["Scalable deployment", "Visible sustainability", "Performance-focused design"],
-    image: templateImages.heroCommercialRooftop,
+    image: projectImages.industrialRoofArray,
   },
 ] as const satisfies readonly HeroSlide[];
 

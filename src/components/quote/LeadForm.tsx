@@ -17,6 +17,7 @@ import { Button, CheckboxField, controlClass, FieldShell, TextField } from "@/co
 import { site, whatsappLink } from "@/content/site";
 import { initialLeadState, type LeadFieldErrors } from "@/lib/leads/state";
 import { fieldLimits } from "./copy";
+import { FieldRow, fieldCell, fieldCellNoHelper } from "./FieldRow";
 import { useEstimate } from "./EstimateProvider";
 
 const linkClass = "font-medium text-green-700 underline underline-offset-2 hover:no-underline";
@@ -101,8 +102,9 @@ export function LeadForm({ startedAt }: { startedAt: number }) {
       <input type="hidden" name="segment" value={segment} />
       <input type="hidden" name="monthlyBill" value={String(monthlyBill)} />
       {/* Only a PIN code the engine actually accepted travels: a half-typed one would come back
-          from the server as an error against a field that is not on screen. */}
-      <input type="hidden" name="pincode" value={estimate.region.pincode ?? ""} />
+          from the server as an error against a field that is not on screen. There is no estimate
+          at all until step 1 has one (owner review round 2, point 8). */}
+      <input type="hidden" name="pincode" value={estimate?.region.pincode ?? ""} />
       {/* The roof area the visitor entered (not estimate.roofAreaSqft, which is the area the
           recommended system needs). It caps the size, so the server recomputes with it too. */}
       <input type="hidden" name="roofAreaSqft" value={Number(roofArea) > 0 ? roofArea : ""} />
@@ -114,8 +116,11 @@ export function LeadForm({ startedAt }: { startedAt: number }) {
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      {/* Name has no helper text and Mobile number has one, so the row aligns through <FieldRow>
+          rather than leaving the two inputs at different heights (owner review round 2, point 8). */}
+      <FieldRow gap="roomy">
         <TextField
+          className={fieldCellNoHelper}
           id="lead-name"
           name="name"
           required
@@ -127,6 +132,7 @@ export function LeadForm({ startedAt }: { startedAt: number }) {
           error={fieldErrors.name}
         />
         <TextField
+          className={fieldCell}
           id="lead-phone"
           name="phone"
           required
@@ -139,7 +145,7 @@ export function LeadForm({ startedAt }: { startedAt: number }) {
           error={fieldErrors.phone}
           hint="A 10-digit Indian mobile number."
         />
-      </div>
+      </FieldRow>
 
       <TextField
         id="lead-email"
@@ -193,6 +199,17 @@ export function LeadForm({ startedAt }: { startedAt: number }) {
           label="You can also reach me on WhatsApp about this enquiry."
         />
       </div>
+
+      {/* PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Not a blocker: the request still sends, it
+          simply carries no figures until step 1 has the PIN code it needs. */}
+      {estimate === null && (
+        <p className="text-small text-ink-2">
+          <a href="#estimate-pincode" className={linkClass}>
+            Add your PIN code in step 1
+          </a>{" "}
+          and your estimate travels with this request.
+        </p>
+      )}
 
       <SubmitButton />
     </form>

@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { AccentedTitle } from "@/components/pages/AccentedTitle";
+import { PageHero } from "@/components/pages/PageHero";
 import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { ButtonLink, Card, Eyebrow, Section, SectionHeading } from "@/components/ui";
+import { ClosingCtaBand } from "@/components/solutions/ClosingCta";
+import { ButtonLink, Card, Eyebrow, Section } from "@/components/ui";
 import { primaryCta, site, whatsappLink } from "@/content/site";
+import type { SectionCopy } from "@/content/types";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -29,34 +32,46 @@ const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURICom
 const contactLink =
   "inline-flex min-h-11 items-center font-display text-h3 font-semibold text-carbon underline-offset-4 transition-colors duration-200 ease-controlled hover:text-green-700 hover:underline";
 
+const inlineLink = "font-medium text-green-700 underline underline-offset-2 hover:text-teal-900";
+
+/** Each way in is one row on a shared hairline rhythm, so no route looks more official than another. */
+const contactRow = "border-t border-mist pt-8 first:border-t-0 first:pt-0";
+
+// PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: positioning copy, no promise of a response time.
+const callBackCta: SectionCopy = {
+  title: "Prefer a call back?",
+  lead: "Send us your PIN code and a rough idea of your monthly electricity bill, and we will come back to you about your roof.",
+  source: "proposed",
+  status: "proposed",
+};
+
 export default function ContactPage() {
   return (
     <>
       <BreadcrumbJsonLd items={[{ name: "Contact", path: "/contact" }]} />
 
-      <Section surface="dark" aria-labelledby="contact-hero-heading">
-        {/* PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: positioning copy, no promise of a response time. */}
-        <SectionHeading
-          id="contact-hero-heading"
-          headingLevel={1}
-          align="stacked"
-          eyebrow="Contact"
-          title={<AccentedTitle text="Talk to us about your roof." tail={2} />}
-          lead="Call, message or write — whichever suits you. Tell us where you are and what you would like to power, and we will take it from there."
-        />
-      </Section>
+      {/* PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: positioning copy, no promise of a response time. */}
+      <PageHero
+        current="Contact"
+        eyebrow="Contact"
+        title={<AccentedTitle text="Talk to us about your roof." tail={2} />}
+        lead="Call, message or write — whichever suits you. Tell us where you are and what you would like to power, and we will take it from there."
+      />
 
       <Section surface="white" aria-labelledby="contact-ways-heading">
-        <h2 id="contact-ways-heading" className="sr-only">
-          Ways to reach us
-        </h2>
-        <div className="grid-page gap-y-12">
+        <div className="grid-page items-start gap-y-12">
           <div className="col-span-4 md:col-span-8 lg:col-span-7">
-            <ul className="space-y-10">
-              <li>
+            {/* The heading used to be screen-reader-only, which left the column opening on a bare
+                list of numbers. It is the section's subject, so it is on the page now. */}
+            <h2 id="contact-ways-heading" className="font-display text-h2 font-bold">
+              Ways to reach us
+            </h2>
+
+            <ul className="mt-10 space-y-8">
+              <li className={contactRow}>
                 <Eyebrow>Call us</Eyebrow>
                 {/* One tel: link per number — the legacy site wrapped both numbers in a single link. */}
-                <ul className="mt-2">
+                <ul className="mt-3">
                   {phones.map((phone) => (
                     <li key={phone.tel}>
                       <a href={`tel:${phone.tel}`} className={contactLink}>
@@ -67,25 +82,25 @@ export default function ContactPage() {
                 </ul>
               </li>
 
-              <li>
+              <li className={contactRow}>
                 <Eyebrow>WhatsApp</Eyebrow>
-                <p className="mt-2 text-body text-ink-2">
+                <p className="mt-3 max-w-[62ch] text-body text-ink-2">
                   Send photos of your roof or your last electricity bill and we can start from there.
                 </p>
                 <ButtonLink
                   href={whatsappLink(whatsappPrompt)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-4"
+                  className="mt-5"
                   arrow={false}
                 >
                   Message us on WhatsApp
                 </ButtonLink>
               </li>
 
-              <li>
+              <li className={contactRow}>
                 <Eyebrow>Email</Eyebrow>
-                <p className="mt-2">
+                <p className="mt-3">
                   <a href={`mailto:${email.value}`} className={contactLink}>
                     {email.value}
                   </a>
@@ -101,9 +116,9 @@ export default function ContactPage() {
              * claim. Whether visitors can come to the office is likewise unconfirmed, so the card
              * says only where we are.
              */}
-            <Card padding="lg">
-              <Eyebrow>Our office</Eyebrow>
-              <address className="mt-3 text-body not-italic text-ink-2">
+            <Card padding="lg" className="border-t-2 border-t-green-500">
+              <Eyebrow rule={false}>Our office</Eyebrow>
+              <address className="mt-4 text-body not-italic text-ink-2">
                 {address.value.lines.map((line) => (
                   <span key={line} className="block">
                     {line}
@@ -137,27 +152,18 @@ export default function ContactPage() {
             {site.legal.grievanceOfficer ? (
               <>
                 {site.legal.grievanceOfficer.name} —{" "}
-                <a
-                  href={`mailto:${site.legal.grievanceOfficer.email}`}
-                  className="font-medium text-green-700 underline underline-offset-2 hover:text-teal-900"
-                >
+                <a href={`mailto:${site.legal.grievanceOfficer.email}`} className={inlineLink}>
                   {site.legal.grievanceOfficer.email}
                 </a>
               </>
             ) : (
               <>
                 <PlaceholderTag>Grievance contact to be named</PlaceholderTag> Email{" "}
-                <a
-                  href={`mailto:${email.value}`}
-                  className="font-medium text-green-700 underline underline-offset-2 hover:text-teal-900"
-                >
+                <a href={`mailto:${email.value}`} className={inlineLink}>
                   {email.value}
                 </a>{" "}
                 or call{" "}
-                <a
-                  href={`tel:${phonePrimary.value.tel}`}
-                  className="font-medium text-green-700 underline underline-offset-2 hover:text-teal-900"
-                >
+                <a href={`tel:${phonePrimary.value.tel}`} className={inlineLink}>
                   {phonePrimary.value.display}
                 </a>{" "}
                 and say that it is a privacy request.
@@ -166,7 +172,7 @@ export default function ContactPage() {
           </p>
           <p className="mt-4 text-body text-ink-2">
             Our{" "}
-            <Link href="/privacy" className="font-medium text-green-700 underline underline-offset-2 hover:text-teal-900">
+            <Link href="/privacy" className={inlineLink}>
               privacy notice
             </Link>{" "}
             sets out what we collect through this site and why.
@@ -174,19 +180,8 @@ export default function ContactPage() {
         </div>
       </Section>
 
-      <Section surface="dark" aria-labelledby="contact-cta-heading">
-        <SectionHeading
-          id="contact-cta-heading"
-          align="center"
-          title={<AccentedTitle text="Prefer a call back?" tail={2} />}
-          lead="Send us your PIN code and a rough idea of your monthly electricity bill, and we will come back to you about your roof."
-        />
-        <div className="mt-10 flex justify-center">
-          <ButtonLink href={primaryCta.href} variant="light">
-            {primaryCta.label}
-          </ButtonLink>
-        </div>
-      </Section>
+      {/* The phone numbers are the subject of this page, so the shared band drops its call link. */}
+      <ClosingCtaBand copy={callBackCta} primary={primaryCta} whatsappText={whatsappPrompt} showCall={false} />
     </>
   );
 }

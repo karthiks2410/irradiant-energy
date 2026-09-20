@@ -1,16 +1,17 @@
 import Image from "next/image";
+import { PageHero } from "@/components/pages/PageHero";
 import { ArrowRightIcon, ButtonLink, PlaceholderPanel } from "@/components/ui";
-import { templateImages, type TemplateImage } from "@/content/images";
+import { projectImages, type ProjectImage } from "@/content/images";
 import { whatsappPrompts } from "@/content/solutions";
 import type { Segment, SegmentSlug } from "@/content/types";
+import { showPlaceholders } from "@/lib/env";
 import { WhatsAppButton } from "./Contact";
-import { SolutionsHero } from "./SolutionsHero";
 
-// TODO(photography): replace with approved photos. Template imagery is temporary hero/section
-// dressing only — never presented as our projects, customers or team (D-009).
-const heroPhoto: Partial<Record<SegmentSlug, TemplateImage>> = {
-  home: templateImages.heroHomeFamily,
-  commercial: templateImages.heroCommercialRooftop,
+// The owner's own installation photography (src/content/images.ts), so these may be shown as our work.
+const heroPhoto: Partial<Record<SegmentSlug, ProjectImage>> = {
+  home: projectImages.palmRooftop,
+  "housing-society": projectImages.terraceArray,
+  commercial: projectImages.industrialRoofArray,
 };
 
 /** Photo brief for the segments with no matching template scene (report §16, shot list A1/A7). */
@@ -20,20 +21,32 @@ const photoSubject: Record<SegmentSlug, string> = {
   commercial: "Rooftop array on a factory or warehouse",
 };
 
+/**
+ * A single contained picture beside the copy — deliberately not the home hero's full-bleed,
+ * rotating, full-viewport stage. It is cropped to a card, it sits inside the page grid, and the
+ * copy never crosses it, so no scrim is needed and the picture stays legible as a picture.
+ *
+ * With no photo and no placeholder to show (production, housing society), this renders nothing
+ * and the hero falls back to the Radiant Field — the brand's own answer to missing photography
+ * (docs/design-system.md §6.2 "honest placeholder"), instead of the blank teal rectangle the
+ * band used to leave there.
+ */
 function HeroMedia({ slug }: { slug: SegmentSlug }) {
   const photo = heroPhoto[slug];
-  if (!photo) return <PlaceholderPanel subject={photoSubject[slug]} aspect="3/2" fallback="solid" />;
+  if (!photo) return <PlaceholderPanel subject={photoSubject[slug]} aspect="3/2" />;
   return (
-    <div className="relative aspect-3/2 overflow-hidden rounded-md">
+    <div className="relative aspect-3/2 overflow-hidden rounded-lg ring-1 ring-white/12">
       <Image
         src={photo.src}
         alt={photo.alt}
         fill
-        // Above-the-fold hero image. Next 16 deprecated `priority`; the docs recommend
+        // Above-the-fold hero image. Next 16 deprecated `priority` in favour of `preload`, and
+        // node_modules/next/dist/docs/01-app/03-api-reference/02-components/image.md recommends
         // loading="eager" + fetchPriority="high" over `preload` in most cases.
         loading="eager"
         fetchPriority="high"
         sizes="(min-width: 1024px) 40vw, 100vw"
+        style={{ objectPosition: photo.focal }}
         className="object-cover"
       />
     </div>
@@ -43,14 +56,17 @@ function HeroMedia({ slug }: { slug: SegmentSlug }) {
 /** Audience-page opener: breadcrumb, audience eyebrow, H1, lead, estimate CTA and WhatsApp. */
 export function SegmentHero({ segment }: { segment: Segment }) {
   const { hero } = segment;
+  // No photo and no placeholder means no media column at all, so <PageHero> draws its brand
+  // device rather than reserving a column for an empty block.
+  const hasMedia = Boolean(heroPhoto[segment.slug]) || showPlaceholders;
   return (
-    <SolutionsHero
+    <PageHero
       trail={[{ name: "Solutions", href: "/solutions" }]}
       current={segment.label}
       eyebrow={hero.eyebrow}
       title={hero.title}
       lead={hero.lead}
-      media={<HeroMedia slug={segment.slug} />}
+      media={hasMedia ? <HeroMedia slug={segment.slug} /> : undefined}
       actions={
         <>
           <ButtonLink href={hero.cta.href} variant="light">

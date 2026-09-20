@@ -85,7 +85,8 @@ export default async function GetQuotePage({
           <Eyebrow>Step 1</Eyebrow>
           <h2 className="mt-4 font-display text-h3 font-bold text-carbon">Your property and usage</h2>
           <p className="mt-2 text-body text-ink-2">
-            The more you can tell us, the closer the estimate gets. Everything except your bill is optional.
+            The more you can tell us, the closer the estimate gets. Your bill and your PIN code are the only two we
+            need — the PIN code decides which tariffs the figures use.
           </p>
           <div className="mt-8">
             <EstimateControls />

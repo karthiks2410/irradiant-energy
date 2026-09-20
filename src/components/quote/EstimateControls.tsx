@@ -3,20 +3,35 @@
 /**
  * Step 1 inputs. Deliberately not a <form>: nothing is submitted here, the figures update as
  * the visitor types and the values travel to step 2 as hidden fields.
+ *
+ * The PIN code is required (owner review round 2, point 8) — it decides which tariffs the
+ * estimate uses — and the pair of text fields sits in a <FieldRow> so the two inputs stay level
+ * however their helper text wraps, and however long the PIN code's error message is.
  */
 
 import { RadioCards, RangeField, TextField } from "@/components/ui";
 import { formatInr } from "@/lib/solar/format";
 import { billBounds } from "@/lib/solar/calc";
 import { parseSegment, segmentOptions } from "./copy";
+import { FieldRow, fieldCell } from "./FieldRow";
 import { useEstimate } from "./EstimateProvider";
 
 /** Keeps a numeric field to digits and a sane length while it is being typed. */
 const digits = (value: string, max: number) => value.replace(/\D/g, "").slice(0, max);
 
 export function EstimateControls() {
-  const { segment, setSegment, monthlyBill, setMonthlyBill, pincode, setPincode, pincodeError, roofArea, setRoofArea } =
-    useEstimate();
+  const {
+    segment,
+    setSegment,
+    monthlyBill,
+    setMonthlyBill,
+    pincode,
+    setPincode,
+    touchPincode,
+    pincodeError,
+    roofArea,
+    setRoofArea,
+  } = useEstimate();
   const bounds = billBounds(segment);
 
   return (
@@ -45,22 +60,25 @@ export function EstimateControls() {
         hint="Use a typical month, before any solar."
       />
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      <FieldRow gap="roomy">
         <TextField
+          className={fieldCell}
           id="estimate-pincode"
           name="estimate-pincode"
-          label="PIN code"
-          optional
+          label="PIN code (required)"
+          required
           type="text"
           inputMode="numeric"
           autoComplete="postal-code"
           maxLength={6}
           value={pincode}
           onChange={(event) => setPincode(digits(event.target.value, 6))}
+          onBlur={touchPincode}
           error={pincodeError}
           hint="Tells us which tariffs to use."
         />
         <TextField
+          className={fieldCell}
           id="estimate-roof"
           name="estimate-roof"
           label="Usable roof area (sq ft)"
@@ -73,7 +91,7 @@ export function EstimateControls() {
           onChange={(event) => setRoofArea(digits(event.target.value, 7))}
           hint="Leave empty if you are not sure."
         />
-      </div>
+      </FieldRow>
     </div>
   );
 }

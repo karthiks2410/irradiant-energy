@@ -1,8 +1,10 @@
 import { Reveal } from "@/components/motion/Reveal";
+import { AccentedTitle } from "@/components/pages/AccentedTitle";
+import { PageHero } from "@/components/pages/PageHero";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { ClosingCtaBand } from "@/components/solutions/ClosingCta";
-import { SolutionsHero } from "@/components/solutions/SolutionsHero";
-import { CardGrid, LinkCard, Section } from "@/components/ui";
+import { WhatsAppButton } from "@/components/solutions/Contact";
+import { ButtonLink, CardGrid, LinkCard, Section } from "@/components/ui";
 import { homePage } from "@/content/home";
 import { closingCta, segmentNoun } from "@/content/solutions";
 import { primaryCta } from "@/content/site";
@@ -24,12 +26,22 @@ export default function SolutionsPage() {
     <>
       <BreadcrumbJsonLd items={[{ name: "Solutions", path: "/solutions" }]} />
 
-      <SolutionsHero
+      <PageHero
         current="Solutions"
         eyebrow={copy.eyebrow}
-        title={copy.title}
+        title={<AccentedTitle text={copy.title} tail={1} />}
         // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (navigational copy; states no fact).
         lead="Three starting points, one way of working. Each page shows who it is for, how the project runs and which system fits."
+        // The hub is a junction, so the estimate route is offered here too rather than only in the
+        // closing band; the three audience pages open with the same pair.
+        actions={
+          <>
+            <ButtonLink href={primaryCta.href} variant="light">
+              {primaryCta.label}
+            </ButtonLink>
+            <WhatsAppButton variant="outline-light" />
+          </>
+        }
       />
 
       <Section aria-label="Solar solutions by audience">

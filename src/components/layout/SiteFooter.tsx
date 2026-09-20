@@ -2,6 +2,7 @@ import Link from "next/link";
 import { isConfirmed, primaryCta, site, solutions, whatsappLink } from "@/content/site";
 import { showPlaceholders } from "@/lib/env";
 import { LogoLockup } from "@/components/brand/Logo";
+import { SocialLinks } from "@/components/ui/SocialIcons";
 
 const company = [
   { label: "About", href: "/about" },
@@ -47,22 +48,9 @@ export function SiteFooter() {
         <div className="lg:col-span-4">
           <LogoLockup className="h-12 w-auto" />
           <p className="mt-6 max-w-sm text-white/80">{site.description}</p>
-          {site.social.length > 0 && (
-          <ul className="mt-6 flex gap-2">
-            {site.social.map((s) => (
-              <li key={s.href}>
-                <a
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center rounded-full border border-white/25 px-4 text-small font-medium transition-colors hover:bg-white hover:text-teal-900"
-                >
-                  {s.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-          )}
+          {/* Brand marks, dark-surface styling picked up from the footer's data-surface. The row
+              hides itself when no profile is live (SocialLinks guards on site.social). */}
+          <SocialLinks className="mt-6" />
         </div>
 
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-5">

@@ -147,7 +147,11 @@ export function HeroBackdrop({ slides, overlay, actions }: HeroBackdropProps) {
               sizes="100vw"
               loading={position === 0 ? "eager" : "lazy"}
               fetchPriority={position === 0 ? "high" : "auto"}
-              className={`object-cover object-[65%_50%] transition-transform duration-[7500ms] ${PROTO_EASE} md:object-center ${
+              // Each photo carries its own focal point (src/content/images.ts): these are portrait
+              // frames in a landscape stage, and a blind centre crop lands on bare panel texture.
+              // This stage is the shallow one, so it takes the wide value where there is one.
+              style={{ objectPosition: slide.image.focalWide ?? slide.image.focal }}
+              className={`object-cover transition-transform duration-[7500ms] ${PROTO_EASE} ${
                 position === index && drifting ? "scale-[1.08]" : "scale-[1.02]"
               }`}
             />
