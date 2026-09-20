@@ -25,21 +25,25 @@ const { brands } = homePage;
 function BrandCard({ brand }: { brand: Brand }) {
   return (
     <li className="flex min-h-[4.5rem] items-center gap-3 rounded-md border border-mist bg-white px-4 py-3">
-      {/* A real mark carries its own colour and often its own background, so it is shown plain.
-          The lettermark keeps the tinted square, which is what makes the two read as the same
-          kind of object at the same size. */}
+      {/* The slot is landscape, not square. Most of these marks are wordmarks at roughly 4:1,
+          and a square box shrinks them to fit their width, so "POLYCAB" rendered about nine
+          pixels tall. A real mark carries its own colour and is shown plain; the lettermark
+          keeps the tinted panel, which is what makes the two read as the same kind of object. */}
       {brand.logo ? (
         <Image
           src={brand.logo}
           alt=""
-          width={40}
-          height={40}
-          className="size-10 shrink-0 rounded-sm object-contain"
+          // The slot is 64x32 CSS pixels; these are the source dimensions next/image generates
+          // from, so they are the slot at 2x for a retina screen. Asking for 40 here served a
+          // 40px-wide file into a 64px box, which is why the marks looked soft and small.
+          width={128}
+          height={64}
+          className="h-8 w-16 shrink-0 object-contain object-left"
         />
       ) : (
         <span
           aria-hidden="true"
-          className="grid size-10 shrink-0 place-items-center rounded-sm bg-green-500/10 font-display text-ui font-bold text-green-700"
+          className="grid h-8 w-16 shrink-0 place-items-center rounded-sm bg-green-500/10 font-display text-ui font-bold text-green-700"
         >
           {/* Initials of the words in the name, so "APL Apollo" reads AA rather than A. */}
           {brand.name

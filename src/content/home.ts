@@ -289,17 +289,18 @@ const brands: { copy: SectionCopy; items: readonly Brand[] } = {
     { name: "Emmvee", category: "Modules", domain: "emmvee.com" , logo: "/images/brands/emmvee.png" },
     { name: "Deye", category: "Inverters", domain: "deyeinverter.com" , logo: "/images/brands/deye.png" },
     { name: "Solis", category: "Inverters", domain: "solisinverters.com" , logo: "/images/brands/solis.png" },
-    // No logo: logo.dev returned an orange tile that is not Sungrow's mark. Their own site
-    // shows a dark "SUNGROW" wordmark with a "Clean power for all" tagline.
-    { name: "Sungrow", category: "Inverters", domain: "sungrowpower.com" },
+    // Taken from Sungrow's own site, not the logo service: Brand Search confirmed the domain
+    // was right all along and the service simply holds no correct asset for them.
+    { name: "Sungrow", category: "Inverters", domain: "sungrowpower.com", logo: "/images/brands/sungrow.png" },
     { name: "SMA", category: "Inverters", domain: "sma.de" , logo: "/images/brands/sma.png" },
-    // No logo: the service had nothing and generated a gradient "D" monogram, which is not a
-    // logo at all. Same on dyness-tech.com.
-    { name: "Dyness", category: "Batteries", domain: "dyness.com" },
+    // dyness.com and dyness.us both return a generated monogram; the real mark sits under the
+    // manufacturer's Chinese domain, which is what Brand Search surfaced as a second result.
+    { name: "Dyness", category: "Batteries", domain: "dyness-tech.com.cn", logo: "/images/brands/dyness.png" },
     { name: "ABB", category: "Switchgear", domain: "abb.com" , logo: "/images/brands/abb.png" },
     { name: "Legrand", category: "Switchgear", domain: "legrand.com" , logo: "/images/brands/legrand.png" },
-    // No logo: a red ring came back that matches no Polycab mark; polycab.in returned blank.
-    { name: "Polycab", category: "Wires", domain: "polycab.com" },
+    // Also taken from Polycab India's own site. The service returned a red ring matching no
+    // Polycab mark, and polycab.com.tr is an unrelated Turkish company of the same name.
+    { name: "Polycab", category: "Wires", domain: "polycab.com", logo: "/images/brands/polycab.png" },
     { name: "Havells", category: "Wires", domain: "havells.com" , logo: "/images/brands/havells.png" },
     { name: "KEI", category: "Wires", domain: "kei-ind.com" , logo: "/images/brands/kei.png" },
     { name: "JSW", category: "Steel", domain: "jsw.in" , logo: "/images/brands/jsw.png" },
