@@ -48,13 +48,10 @@ export function TickerNumber({ value, format, countUpOnMount = false, className 
   const settled = format(value);
 
   // `format` is written inline at every call site, so its identity changes on every render.
-  // Reading it through a ref keeps that from restarting the animation on an unrelated render.
-  // It has to be declared before `useTransform`, which runs the closure straight away.
-  const formatRef = useRef(format);
-  formatRef.current = format;
-
+  // That is harmless: useTransform simply adopts the new function, and the animation below is
+  // keyed on the value rather than on the formatter, so a re-render cannot restart it.
   const motionValue = useMotionValue(value);
-  const display = useTransform(motionValue, (current) => formatRef.current(current));
+  const display = useTransform(motionValue, format);
 
   const started = useRef(false);
   useEffect(() => {

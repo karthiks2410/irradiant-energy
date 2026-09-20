@@ -97,16 +97,16 @@ test.describe("estimator", () => {
     await expect(alert.first(), "an empty form produced no error").toBeVisible({ timeout: 10_000 });
     await expect(page.locator("body")).not.toContainText(/thank you|we.{0,3}ll be in touch/i);
 
-    // Three guards can legitimately answer an empty submission: validation, the bot-speed
-    // check, and the per-IP rate limiter — and running this suite repeatedly against one local
-    // server will eventually trip the limiter, which is the limiter working. So the invariant
-    // is that it never succeeds; the field marking is asserted only when validation is what
-    // actually answered.
+    // Three guards can legitimately answer an empty submission: validation, the bot-speed check
+    // and the per-IP rate limiter. Both Playwright projects submit within the limiter's window,
+    // so which one answers is not deterministic — and a tripped limiter is the limiter working.
+    // The invariant asserted above is the one that always holds: it never succeeds. The field
+    // marking is asserted only when validation is demonstrably the guard that answered, which
+    // its own message states.
     const said = await alert.first().innerText();
-    const throttled = /that was quick|received several requests/i.test(said);
-    if (!throttled) {
+    if (said.includes("Please check the highlighted fields")) {
       const invalid = await page.locator("[aria-invalid='true']").count();
-      expect(invalid, `no field was marked aria-invalid; the form said: ${said}`).toBeGreaterThan(0);
+      expect(invalid, "validation answered but marked no field aria-invalid").toBeGreaterThan(0);
     }
   });
 });

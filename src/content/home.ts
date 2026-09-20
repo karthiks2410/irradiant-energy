@@ -9,7 +9,7 @@
 import { projectImages } from "@/content/images";
 import type { ProjectImage } from "@/content/images";
 import { primaryCta } from "@/content/site";
-import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, LabelValue, Project, SectionCopy } from "@/content/types";
+import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, LabelValue, SectionCopy } from "@/content/types";
 import { navFor, segmentHref } from "@/content/solutions/shared";
 
 const requestConsultation: Cta = {
