@@ -64,8 +64,8 @@ export const projectImages = {
   },
   palmRooftop: {
     src: "/images/projects/ie-2006.webp",
-    width: 2600,
-    height: 3467,
+    width: 1950,
+    height: 2600,
     alt: "Rooftop solar panels on a home, framed by coconut palms and neighbouring houses under a blue sky.",
     subject: "Home rooftop array among coconut palms",
     focal: "center 38%",
@@ -80,15 +80,6 @@ export const projectImages = {
     // The full-bleed stage is much shallower: 38% there puts the site boundary across the
     // middle of the frame, so the wide crop sits lower, on the array and the ribbed roof.
     focalWide: "center 70%",
-  },
-  commercialHeroArray: {
-    src: "/images/projects/ie-2006.webp",
-    width: 1950,
-    height: 2600,
-    alt: "Solar panels installed on a commercial rooftop.",
-    subject: "Commercial rooftop solar installation",
-    focal: "center 50%",
-    focalWide: "center 50%",
   },
   hillsideArray: {
     src: "/images/projects/ie-2032.webp",
