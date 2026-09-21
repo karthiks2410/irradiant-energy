@@ -74,7 +74,7 @@ const heroScenes = [
     title: "Engineered systems for modern business.",
     lead: "Create more efficient and future-ready energy infrastructure for campuses, facilities and commercial sites.",
     chips: ["Scalable deployment", "Visible sustainability", "Performance-focused design"],
-    image: projectImages.industrialRoofArray,
+    image: projectImages.commercialHeroArray,
   },
 ] as const satisfies readonly HeroSlide[];
 

@@ -81,6 +81,15 @@ export const projectImages = {
     // middle of the frame, so the wide crop sits lower, on the array and the ribbed roof.
     focalWide: "center 70%",
   },
+  commercialHeroArray: {
+    src: "/images/projects/ie-2006.webp",
+    width: 2600,
+    height: 1950,
+    alt: "Solar panels installed on a commercial rooftop.",
+    subject: "Commercial rooftop solar installation",
+    focal: "center 50%",
+    focalWide: "center 50%",
+  },
   hillsideArray: {
     src: "/images/projects/ie-2032.webp",
     width: 2600,
