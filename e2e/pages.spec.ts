@@ -42,6 +42,11 @@ for (const route of ROUTES) {
         const r = el.getBoundingClientRect();
         if (r.bottom < 0 || r.top > innerHeight || r.height === 0) continue;
         const s = getComputedStyle(el);
+        // Deliberately hidden UI — a closed menu, a collapsed panel — is `visibility: hidden`,
+        // which is inherited. Scroll-reveal content stuck at opacity 0 is still visible, so this
+        // keeps the test on what it is for without flagging the closed Solutions menu, which
+        // lives in the fixed header and is always inside the viewport.
+        if (s.visibility !== "visible") continue;
         if (parseFloat(s.opacity) < 0.9) out.push((el.textContent ?? "").slice(0, 60));
       }
       return out;
