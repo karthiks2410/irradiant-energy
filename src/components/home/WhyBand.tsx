@@ -21,6 +21,7 @@ export function WhyBand() {
           {why.cards.map((card) => (
             <FeatureCard
               key={card.title}
+              lift
               numeral={card.number}
               icon={<FeatureIcon name={card.icon} />}
               title={card.title}
