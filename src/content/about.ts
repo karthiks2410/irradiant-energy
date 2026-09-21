@@ -47,12 +47,30 @@ const brand = {
   promise: brandText("Clear advice. Reliable engineering. Measurable performance. Long-term support.", "p.19"),
 } as const;
 
+/**
+ * The six value names are the brand PDF's (p.9). Its descriptions were written as instructions to
+ * staff ("Recommend…", "Explain…", "Adopt…"), so they are rewritten as promises to the customer
+ * in the same meaning. PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-21).
+ */
+/**
+ * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-21). Replaces the brand-guideline cards
+ * "Essence: Energy in Motion", "Personality: Intelligent. Precise. Dependable." and "Who we serve:
+ * Homes. Communities. Business." Those described the brand to its designers. These are three
+ * things a customer can act on, each owner-confirmed: coverage across Karnataka, the system types
+ * sold including batteries and monitoring, and what residential customers get.
+ */
+export const facts: readonly { label: string; value: string }[] = [
+  { label: "Who we work with", value: "Homes, housing societies and businesses across Karnataka." },
+  { label: "What we install", value: "On-grid, off-grid and hybrid rooftop systems, with batteries and monitoring." },
+  { label: "Included for homes and societies", value: "A free site visit and quote, the paperwork, and 5 years of free maintenance." },
+];
+
 const value = (number: string, title: string, description: string): Feature => ({
   number,
   title,
   description,
-  source: "brand PDF p.9",
-  status: "brand-pdf",
+  source: "names brand PDF p.9 · descriptions rewritten, proposed",
+  status: "proposed",
 });
 
 const values: { copy: SectionCopy; items: readonly Feature[] } = {
@@ -64,9 +82,12 @@ const values: { copy: SectionCopy; items: readonly Feature[] } = {
     status: "proposed",
   },
   items: [
-    value("01", "Engineering integrity", "Recommend what is right for the site and long-term performance."),
-    value("02", "Clarity", "Explain pricing, generation, savings, risks and timelines."),
-    value("03", "Accountability", "Own the journey from consultation through support."),
+    value("01", "Engineering integrity", "We recommend what is right for your site and its long-term performance."),
+    value("02", "Clarity", "We explain pricing, generation, savings, risks and timelines."),
+    value("03", "Accountability", "We own the journey, from the first consultation through support."),
+    value("04", "Progress", "We recommend new technology only where it serves your site."),
+    value("05", "Customer control", "You can see how your system performs, understand the numbers, and reach us when you need to."),
+    value("06", "Responsible impact", "We describe results in figures you can check, not green slogans."),
   ],
 };
 
@@ -179,6 +200,7 @@ export const aboutPage = {
   mission,
   story,
   brand,
+  facts,
   values,
   team,
   closingCta,

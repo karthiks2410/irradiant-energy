@@ -10,7 +10,7 @@
 import { projectImages } from "@/content/images";
 import type { ProjectImage } from "@/content/images";
 import { primaryCta } from "@/content/site";
-import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, SectionCopy } from "@/content/types";
+import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, LabelValue, SectionCopy } from "@/content/types";
 import { navFor, segmentHref } from "@/content/solutions/shared";
 
 const requestConsultation: Cta = {
@@ -48,6 +48,12 @@ export interface HeroSlide {
   eyebrow: string;
   title: string;
   lead: string;
+  /**
+   * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-21). Three facts the owner has confirmed,
+   * replacing the prototype's chips, which repeated the Why card titles ("Site-based design",
+   * "Long-term support") or were jargon ("Scalable deployment"). Facts only: no virtue words.
+   */
+  chips: readonly [string, string, string];
   /** Template photography (images.ts). Decoration behind fixed copy, so it renders with alt="". */
   image: ProjectImage;
 }
@@ -65,12 +71,14 @@ const heroScenes = [
     title: "Powering smarter futures.",
     // "agriculture" removed from the prototype line: it is not an offering (D-009); see held.
     lead: "Solar systems for homes, businesses and communities.",
+    chips: ["Free site visit and quote", "Paperwork handled", "Installing across Karnataka"],
     image: projectImages.duskSkyline,
   },
   {
     eyebrow: "Commercial clean energy",
     title: "Engineered systems for modern business.",
     lead: "Efficient energy infrastructure for campuses, facilities and commercial sites.",
+    chips: ["Free site visit and quote", "Batteries and monitoring", "Installing across Karnataka"],
     image: projectImages.industrialRoofArray,
   },
 ] as const satisfies readonly HeroSlide[];
@@ -81,6 +89,7 @@ const hero: HeroCopy & { slides: readonly HeroSlide[] } = {
   eyebrow: heroScenes[0].eyebrow,
   title: heroScenes[0].title,
   lead: heroScenes[0].lead,
+  chips: heroScenes[0].chips,
   slides: heroScenes,
   cta: estimate,
   secondaryCta: requestConsultation,
@@ -108,6 +117,8 @@ const about: {
   copy: SectionCopy;
   capEyebrow: string;
   caption: string;
+  tags: readonly string[];
+  points: readonly LabelValue[];
   cta: Cta;
 } = {
   copy: {
@@ -120,6 +131,20 @@ const about: {
   },
   capEyebrow: "About Irradiant",
   caption: "Solar that thinks beyond installation.",
+  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-21). The prototype's pills listed the
+  // audiences a fifth time on the page; these name the system types sold instead, which appear
+  // nowhere else on the home page.
+  tags: ["On-grid", "Off-grid", "Hybrid", "Batteries"],
+  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-21). The prototype's tiles were virtue
+  // words ("Performance, trust and practicality") or repeats. These are what a customer gets,
+  // each confirmed by the owner: the free site visit and what it checks (Homes step 01), the
+  // paperwork, named equipment, and maintenance for residential customers only.
+  points: [
+    { label: "Site visit", value: "Free, with a roof, shading and load check" },
+    { label: "Paperwork", value: "Approvals and the subsidy, handled by us" },
+    { label: "Equipment", value: "Panels, inverters and batteries from named brands" },
+    { label: "Maintenance", value: "Free for 5 years, for homes and societies" },
+  ],
   cta: { label: "About Irradiant", href: "/about", source: "prototype about.capEyebrow", status: "owner-approved-template" },
 };
 
@@ -185,6 +210,19 @@ const whyCard = (
   status: "owner-approved-template",
 });
 
+/** PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-21): a rewritten prototype card. */
+const proposedWhyCard = (
+  number: string,
+  protoIndex: number,
+  icon: Feature["icon"],
+  title: string,
+  description: string,
+): Feature => ({
+  ...whyCard(number, protoIndex, icon, title, description),
+  source: `rewrite of prototype why.cards[${protoIndex}] · proposed`,
+  status: "proposed",
+});
+
 const why: { copy: SectionCopy; cards: readonly Feature[] } = {
   copy: {
     eyebrow: "Why Irradiant?",
@@ -196,9 +234,16 @@ const why: { copy: SectionCopy; cards: readonly Feature[] } = {
     status: "owner-approved-template",
   },
   cards: [
-    whyCard("01", 1, "doc", "Transparent proposal", "Clear estimates for production, cost, warranty and timeline."),
-    whyCard("02", 4, "dash", "Digital monitoring", "Visibility into generation and system health over time."),
-    whyCard("03", 5, "support", "Long-term support", "Service thinking that continues beyond project handover."),
+    // 01, 03 and 04 are rewrites of prototype cards that restated the heading ("Site-based
+    // design") or made claims any installer makes ("Quality equipment", "Professional
+    // execution"). They now say how: what the site visit checks, which brands, who does the work.
+    // These also render on the Business page through proofFallback, so none mentions maintenance.
+    proposedWhyCard("01", 0, "site", "Designed for your roof", "We measure the roof, check shading and load, then size the system to your bill."),
+    whyCard("02", 1, "doc", "Transparent proposal", "Clear estimates for production, cost, warranty and timeline."),
+    proposedWhyCard("03", 2, "shield", "Brands you can check", "Panels, inverters and batteries from makers such as Waaree, SMA and Dyness."),
+    proposedWhyCard("04", 3, "tools", "One team, end to end", "Site visit, design, installation, paperwork and support, all by Irradiant."),
+    whyCard("05", 4, "dash", "Digital monitoring", "Visibility into generation and system health over time."),
+    whyCard("06", 5, "support", "Long-term support", "Service thinking that continues beyond project handover."),
   ],
 };
 
@@ -331,6 +376,7 @@ const calculatorCta: Cta = {
  */
 const calculator: {
   copy: SectionCopy;
+  bullets: readonly string[];
   fields: Readonly<Record<"segment" | "location" | "bill" | "tariff" | "roof" | "houses", { label: string; hint?: string }>>;
   results: { title: string; size: string; generation: string; savings: string; payback: string };
   assumptionsLabel: string;
@@ -343,6 +389,17 @@ const calculator: {
     source: "prototype calc",
     status: "owner-approved-template",
   },
+  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-21). The prototype's bullets were the
+  // labels of the result tiles sitting beside them. These say why to use it instead, each true
+  // of the engine: the bill is the only input it needs, it applies Karnataka tariffs and the
+  // PM Surya Ghar subsidy where it applies, it recalculates live, and every assumption is listed
+  // with its source.
+  bullets: [
+    "Only your monthly bill is needed",
+    "Karnataka tariffs and the PM Surya Ghar subsidy, where it applies",
+    "Figures update as you type",
+    "Every assumption listed with its source",
+  ],
   fields: {
     segment: { label: "Customer type" },
     // The hint no longer claims the PIN decides the tariffs, because it does not: every tariff

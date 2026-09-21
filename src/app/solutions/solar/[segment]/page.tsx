@@ -90,8 +90,11 @@ export default async function SegmentPage({ params }: SegmentPageProps) {
         <Reveal className="mt-12 lg:mt-16">
           <CardGrid columns={trustCards.length === 4 ? 2 : 3}>
             {trustCards.map((card) => (
+              // Lifts like the home Why cards: on Business these are the same cards, and every
+              // audience page's "Why us" plays the same role, so they behave the same everywhere.
               <FeatureCard
                 key={card.title}
+                lift
                 title={card.title}
                 numeral={card.number}
                 icon={card.icon ? <FeatureIcon name={card.icon} /> : undefined}
