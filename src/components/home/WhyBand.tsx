@@ -5,7 +5,7 @@ import { AccentTitle } from "./AccentTitle";
 
 const { why } = homePage;
 
-/** Three proof cards, numbered 01–03. No numbers or credentials: positioning only. */
+/** Six proof cards, numbered 01–06 as in the prototype. No numbers or credentials: positioning only. */
 export function WhyBand() {
   return (
     <Section surface="white" aria-labelledby="why-heading">

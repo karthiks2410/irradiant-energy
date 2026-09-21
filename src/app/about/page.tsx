@@ -5,7 +5,7 @@ import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
 import { Reveal } from "@/components/motion/Reveal";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { ClosingCtaBand } from "@/components/solutions/ClosingCta";
-import { Card, CardGrid, FeatureCard, Section, SectionHeading } from "@/components/ui";
+import { Card, CardGrid, Eyebrow, FeatureCard, Section, SectionHeading } from "@/components/ui";
 import { aboutPage } from "@/content/about";
 import { showPlaceholders } from "@/lib/env";
 import { pageMetadata } from "@/lib/seo";
@@ -17,7 +17,7 @@ export const metadata = pageMetadata({
   path: "/about",
 });
 
-const { mission, story, brand, values, team, closingCta } = aboutPage;
+const { mission, story, brand, facts, values, team, closingCta } = aboutPage;
 
 function initials(name: string): string {
   return name
@@ -60,6 +60,18 @@ export default function AboutPage() {
           title={brand.positioning.text}
           lead={brand.promise.text}
         />
+        {/* Three things a customer can act on, in the slot the brand-guideline cards used to take.
+            Same card language as the rest of the site: the green top rule on a plain card. */}
+        <Reveal className="mt-12 lg:mt-16">
+          <CardGrid columns={3}>
+            {facts.map((item) => (
+              <Card key={item.label} as="li" padding="lg" className="border-t-2 border-t-green-500">
+                <Eyebrow rule={false}>{item.label}</Eyebrow>
+                <p className="mt-4 font-display text-h4 font-semibold text-carbon">{item.value}</p>
+              </Card>
+            ))}
+          </CardGrid>
+        </Reveal>
       </Section>
 
       <Section surface="dark" aria-labelledby="about-values-heading">
