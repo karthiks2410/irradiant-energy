@@ -64,8 +64,8 @@ export const projectImages = {
   },
   palmRooftop: {
     src: "/images/projects/ie-2006.webp",
-    width: 2600,
-    height: 3467,
+    width: 1950,
+    height: 2600,
     alt: "Rooftop solar panels on a home, framed by coconut palms and neighbouring houses under a blue sky.",
     subject: "Home rooftop array among coconut palms",
     focal: "center 38%",
