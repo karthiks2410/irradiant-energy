@@ -19,8 +19,8 @@ const { hero } = homePage;
  * what drops the copy just below centre the way the prototype's 170px does.
  *
  * Everything that does not change with the scene is server-rendered here and handed to the
- * island: the scrims and the CTAs. The rotating eyebrow, h1, lead and chips live in
- * <HeroBackdrop> because they share its slide index; scene 1 is still in the server HTML.
+ * island: the scrims and the CTAs. The rotating eyebrow, h1 and lead live in <HeroBackdrop>
+ * because they share its slide index; scene 1 is still in the server HTML.
  *
  * The scrim is two Deep Teal photo layers, which report §6.10 allows where it rules out
  * decorative gradients. The prototype used a single overlay that thins to 18% opacity

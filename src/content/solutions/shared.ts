@@ -43,7 +43,7 @@ export const systemTypesAnchor = "system-types";
 export const systemTypesCopy = (noun: string): SectionCopy => ({
   eyebrow: "Choose what fits",
   title: `Which solar system suits your ${noun}?`,
-  lead: "Not sure which one is right? Don't worry — pick what sounds closest to your situation, or skip ahead and our team will help you decide on the call.",
+  lead: "Not sure which is right? Our team will help you decide on the call.",
   source: "P-SG-3 · 03 §3.2",
   status: "verified-live",
 });
@@ -56,7 +56,7 @@ export const systemTypes: readonly SystemType[] = [
     plainName: "Stay connected, sell extra power",
     description: "Connected to utility grid, export excess power",
     plainDescription:
-      "Your roof powers the home. Whatever's left over goes to the grid and the bill drops or turns into a credit. Most popular for homes with steady electricity.",
+      "Your roof powers the home; the surplus goes to the grid as a bill credit. Most popular for homes with steady electricity.",
     source: "F-54 · P-ST-2 · OLD solutions-data.ts:60-68",
     status: "verified-live",
   },
@@ -67,7 +67,6 @@ export const systemTypes: readonly SystemType[] = [
     description: "Independent system with battery backup",
     plainDescription:
       "Your roof + a battery pack. Zero dependence on the grid, even during outages. Right for places with bad supply or remote properties.",
-    note: "Battery-backed. D-009 keeps batteries out of v1 as an offering; the owner confirms whether this system type is sold today (report §7.5 #1).",
     source: "F-54 · P-ST-2 · OLD solutions-data.ts:69-77",
     status: "verified-live",
   },
@@ -77,18 +76,17 @@ export const systemTypes: readonly SystemType[] = [
     plainName: "Best of both — power + backup",
     description: "Best of both - grid + battery storage",
     plainDescription:
-      "Grid-connected and battery-backed. Run on solar by day, store extra in batteries, fall back to the grid only if you need to. The most resilient option.",
-    note: "Battery-backed. D-009 keeps batteries out of v1 as an offering; the owner confirms whether this system type is sold today (report §7.5 #1).",
+      "Run on solar by day, store the extra in batteries, and fall back to the grid only if you need to. The most resilient option.",
     source: "F-54 · P-ST-2 · OLD solutions-data.ts:78-86",
     status: "verified-live",
   },
 ];
 
-/** Closing band on every audience page (inventory P-SG-6). The "free" promises need owner confirmation. */
+/** Closing band on every audience page (inventory P-SG-6). The "free" promises were owner-confirmed 2026-09-21. */
 export const closingCta: { copy: SectionCopy; primary: (slug: SegmentSlug) => Cta } = {
   copy: {
     title: "Ready to see your savings?",
-    lead: "Free site visit. Free quote. Zero pressure. We'll show you exactly what you'll save — in rupees, on your bill.",
+    lead: "Free site visit. Free quote. Zero pressure.",
     source: "P-SG-6 · 03 §3.2",
     status: "verified-live",
   },
@@ -139,7 +137,7 @@ export const sharedHeld: readonly HeldItem[] = [
     where: "system-type cards on the housing-society and business pages",
     text: "Your roof powers the home … Most popular for homes with steady electricity.",
     reason:
-      "The plain-language card bodies were written for homeowners but shown to all three audiences. Those pages use the audience-neutral one-liner (`description`) instead.",
+      "The plain-language card bodies were written for homeowners but shown to all three audiences. Those pages show the card headline alone.",
     ref: "P-SG-3 · 03 §3.3",
   },
   {

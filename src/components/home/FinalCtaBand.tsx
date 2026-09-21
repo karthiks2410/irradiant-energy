@@ -24,7 +24,6 @@ export function FinalCtaBand() {
           eyebrow={finalCta.copy.eyebrow}
           eyebrowTone="signal"
           title={<AccentTitle text={finalCta.copy.title} />}
-          lead={finalCta.copy.lead}
         />
 
         <div className="mt-10 flex flex-wrap justify-center gap-3">

@@ -22,8 +22,6 @@ export const metadata = pageMetadata({
   noindex: !isLegalPageIndexable("terms"),
 });
 
-const { email } = site.contact;
-
 export default function TermsPage() {
   return (
     <LegalPageShell
@@ -44,8 +42,8 @@ export default function TermsPage() {
       <h2>What this site is for</h2>
       <p>
         This site describes our rooftop solar services and lets you work out a rough idea of what a system might do for
-        you. It is information, not professional advice. It is not financial, tax, legal or engineering advice, and you
-        should not treat it as the basis for a decision on its own.
+        you. It is information, not financial, tax, legal, engineering or other professional advice, and you should not
+        treat it as the basis for a decision on its own.
       </p>
 
       <h2>Estimates are not offers</h2>
@@ -75,8 +73,8 @@ export default function TermsPage() {
       <h2>Sending us an enquiry</h2>
       <p>
         Sending an enquiry or asking for an estimate does not create a contract between us. Please give us accurate
-        details — if what you tell us is wrong, our estimate and our advice will be wrong too. How we handle your
-        details is set out in our <Link href="/privacy">privacy notice</Link>.
+        details — our estimate and advice depend on them. How we handle your details is set out in our{" "}
+        <Link href="/privacy">privacy notice</Link>.
       </p>
       <p>
         Please do not use this site or its forms to send unlawful, abusive or misleading content, to attempt to
@@ -92,15 +90,15 @@ export default function TermsPage() {
 
       <h2>Links to other websites</h2>
       <p>
-        We link to other websites — government scheme pages, distribution-company pages and map services — because they
-        are useful. We do not control them and we are not responsible for their content or their practices.
+        We link to other websites: government scheme pages, distribution-company pages and map services. We do not
+        control them and we are not responsible for their content or their practices.
       </p>
 
       <h2>Availability and accuracy</h2>
       <p>
-        We try to keep this site available and up to date, but we cannot promise it will always be available, complete
-        or free of errors. Prices, scheme details and tariffs change, and pages may be out of date between updates. We
-        may change, move or remove any part of the site at any time.
+        We cannot promise this site will always be available, complete or free of errors. Prices, scheme details and
+        tariffs change, and pages may be out of date between updates. We may change, move or remove any part of the
+        site at any time.
       </p>
 
       <h2>Our responsibility to you</h2>
@@ -125,14 +123,8 @@ export default function TermsPage() {
 
       <h2>Changes to these terms</h2>
       <p>
-        We may update these terms. The version and the date they take effect appear at the top of this page, and the
-        version on the site at the time you use it is the one that applies.
-      </p>
-
-      <h2>Contact</h2>
-      <p>
-        Questions about these terms: <a href={`mailto:${email.value}`}>{email.value}</a>, or use our{" "}
-        <Link href="/contact">contact page</Link>.
+        We may update these terms. The version and effective date appear at the top of this page, and the version on
+        the site when you use it is the one that applies.
       </p>
     </LegalPageShell>
   );

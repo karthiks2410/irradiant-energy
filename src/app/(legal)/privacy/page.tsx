@@ -53,7 +53,7 @@ export default function PrivacyPage() {
       <p>
         It covers this website and the enquiries you send through it, by email, or on WhatsApp after you use a link on
         this site. It does not cover other organisations&rsquo; websites we link to, such as government scheme pages or
-        map services. Those sites have their own notices.
+        map services.
       </p>
 
       <h2>What we collect</h2>
@@ -71,14 +71,13 @@ export default function PrivacyPage() {
         <li>a record that you gave your consent, with the date and time.</li>
       </ul>
       <p>
-        <strong>When you simply browse</strong>, our hosting provider records technical details of each request — the
+        <strong>When you browse</strong>, our hosting provider records technical details of each request — the
         internet address your device is using, the browser and device type, the page requested and the time. We use
         these to keep the site running and to look into problems and abuse.
       </p>
       <p>
-        <strong>What we do not ask for.</strong> There is no account and no login on this site. We do not ask for
-        identity documents, bank or card details, or your date of birth. We do not use advertising or analytics cookies
-        — see our{" "}
+        <strong>What we do not ask for:</strong> an account or login, identity documents, bank or card details, or your
+        date of birth. We do not use advertising or analytics cookies — see our{" "}
         <Link href="/cookies">cookie notice</Link>.
       </p>
 
@@ -141,8 +140,8 @@ export default function PrivacyPage() {
 
       <h2>How long we keep it</h2>
       <p>
-        <PlaceholderTag>Retention periods to be confirmed with counsel</PlaceholderTag> Our working position, which
-        counsel is reviewing:
+        <PlaceholderTag>Retention periods to be confirmed with counsel</PlaceholderTag> Provisional, pending legal
+        review:
       </p>
       <ul>
         <li>
@@ -164,9 +163,9 @@ export default function PrivacyPage() {
 
       <h2>How we protect it</h2>
       <p>
-        The site is served over an encrypted connection. Form submissions are sent to our servers, never placed in a
-        web address. Access to enquiry emails is limited to the people who need it. No system is perfectly safe, so
-        if something does go wrong we will act on it and tell the people and the authorities we have to tell.
+        The site is served over an encrypted connection. Access to enquiry emails is limited to the people who need
+        it. No system is perfectly safe; if something goes wrong, we will act on it and tell the people and
+        authorities we have to.
       </p>
 
       <h2>Your choices</h2>
@@ -193,14 +192,14 @@ export default function PrivacyPage() {
 
       <h2>Children</h2>
       <p>
-        This site is meant for adults making decisions about a property. We do not knowingly collect information from
-        anyone under 18. If you believe a child has sent us their details, tell us and we will delete them.
+        We do not knowingly collect information from anyone under 18. If you believe a child has sent us their details,
+        tell us and we will delete them.
       </p>
 
       <h2>Changes to this notice</h2>
       <p>
-        We will update this notice when what we do changes. The version and the date it takes effect appear at the top
-        of this page.
+        We will update this notice when what we do changes. The version and effective date appear at the top of this
+        page.
       </p>
 
       <h2>Grievance and privacy contact</h2>
@@ -215,9 +214,7 @@ export default function PrivacyPage() {
             <PlaceholderTag>Grievance contact to be named</PlaceholderTag> Until we name one, please use the contact
             details above and say that it is a privacy request.
           </>
-        )}{" "}
-        You can also reach us through the{" "}
-        <Link href="/contact#grievance">grievance and privacy contact</Link> section of our contact page.
+        )}
       </p>
     </LegalPageShell>
   );

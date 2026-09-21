@@ -290,7 +290,7 @@ function buildAssumptions(input: EstimateInput, tariff: ResolvedTariff, roofCapU
   if (tariff.basis === "bescom-domestic-slabs") {
     list.push({
       label: "Tariff",
-      value: `${BESCOM_DOMESTIC_SLABS.label}, energy charges only (average ₹${inr2.format(tariff.averageInrPerKwh)} per unit at your usage)`,
+      value: `${BESCOM_DOMESTIC_SLABS.label} only (average ₹${inr2.format(tariff.averageInrPerKwh)} per unit at your usage)`,
       source: citationFor(BESCOM_DOMESTIC_SLABS),
     });
   } else if (tariff.basis === "flat-default") {
@@ -315,7 +315,7 @@ function buildAssumptions(input: EstimateInput, tariff: ResolvedTariff, roofCapU
   list.push({
     label: "Export credit",
     value: "Not included for surplus units",
-    source: "Any surplus you export is settled by BESCOM under your metering arrangement; it is not counted here",
+    source: "Any surplus you export is settled by BESCOM under your metering arrangement",
   });
   list.push({
     label: "Generation",
@@ -338,7 +338,7 @@ function buildAssumptions(input: EstimateInput, tariff: ResolvedTariff, roofCapU
         : "Not applicable to commercial connections";
   list.push({
     label: "PM Surya Ghar subsidy",
-    value: `${subsidyValue}; decided and paid by the Government after DISCOM inspection; scheme period to ${PM_SURYA_GHAR_SCHEME_END}`,
+    value: input.segment === "commercial" ? subsidyValue : `${subsidyValue}; decided and paid by the Government after DISCOM inspection; scheme period to ${PM_SURYA_GHAR_SCHEME_END}`,
     source: citationFor(PM_SURYA_GHAR_RESIDENTIAL),
   });
 
@@ -354,11 +354,6 @@ function buildAssumptions(input: EstimateInput, tariff: ResolvedTariff, roofCapU
     label: "Projection",
     value: `${PROJECTION_HORIZON_YEARS.value} years, ${(ANNUAL_TARIFF_INFLATION.value * 100).toFixed(0)}% tariff increase and ${(ANNUAL_DEGRADATION.value * 100).toFixed(1)}% panel degradation per year`,
     source: citationFor(ANNUAL_TARIFF_INFLATION),
-  });
-  list.push({
-    label: "CO₂ avoided",
-    value: `${GRID_EMISSION_FACTOR.value} kg CO₂ per kWh generated`,
-    source: citationFor(GRID_EMISSION_FACTOR),
   });
 
   return list;

@@ -5,7 +5,7 @@ import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
 import { Reveal } from "@/components/motion/Reveal";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { ClosingCtaBand } from "@/components/solutions/ClosingCta";
-import { Card, CardGrid, Eyebrow, FeatureCard, Section, SectionHeading } from "@/components/ui";
+import { Card, CardGrid, FeatureCard, Section, SectionHeading } from "@/components/ui";
 import { aboutPage } from "@/content/about";
 import { showPlaceholders } from "@/lib/env";
 import { pageMetadata } from "@/lib/seo";
@@ -17,15 +17,7 @@ export const metadata = pageMetadata({
   path: "/about",
 });
 
-const { mission, story, brand, values, team, newName, closingCta } = aboutPage;
-
-/** Short, quotable lines from the brand guidelines, each under its own mono label. */
-const stands = [
-  { label: "Essence", value: brand.essence.text },
-  { label: "Personality", value: brand.personality.text },
-  { label: "Who we serve", value: brand.audience.text },
-  { label: "Our promise", value: brand.promise.text },
-];
+const { mission, story, brand, values, team, closingCta } = aboutPage;
 
 function initials(name: string): string {
   return name
@@ -55,12 +47,7 @@ export default function AboutPage() {
       />
 
       <Section surface="canvas" aria-labelledby="about-story-heading">
-        <SectionHeading
-          id="about-story-heading"
-          eyebrow={story.copy.eyebrow}
-          title={<AccentedTitle text={story.copy.title} />}
-          lead={story.copy.lead}
-        />
+        <SectionHeading id="about-story-heading" title={<AccentedTitle text={story.copy.title} />} />
         {/* Exactly one Solar Yellow node, on the handover the whole path leads to (brand PDF p.54). */}
         <EnergyPath className="mt-14 lg:mt-20" steps={story.steps} highlightIndex={2} halo="canvas" variant="stage" />
       </Section>
@@ -70,44 +57,9 @@ export default function AboutPage() {
           id="about-stands-heading"
           align="stacked"
           eyebrow="What we stand for"
-          title={brand.purpose.text}
-          lead={brand.positioning.text}
+          title={brand.positioning.text}
+          lead={brand.promise.text}
         />
-        <Reveal className="mt-12 lg:mt-16">
-          <CardGrid columns={2}>
-            {stands.map((item) => (
-              // Same green top rule as every other non-interactive card on the site, so the card
-              // language does not change from page to page.
-              <Card key={item.label} as="li" padding="lg" className="border-t-2 border-t-green-500">
-                <Eyebrow rule={false}>{item.label}</Eyebrow>
-                <p className="mt-4 max-w-[36ch] font-display text-h4 font-semibold text-carbon">{item.value}</p>
-              </Card>
-            ))}
-          </CardGrid>
-        </Reveal>
-      </Section>
-
-      <Section surface="canvas" aria-labelledby="about-name-heading">
-        <div className="grid-page items-start gap-y-10">
-          <div className="col-span-4 md:col-span-8 lg:col-span-6">
-            {/* PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: the rename note (decisions.md D-001). */}
-            <Eyebrow>{newName.eyebrow}</Eyebrow>
-            <h2 id="about-name-heading" className="mt-4 font-display text-h2 font-bold">
-              <AccentedTitle text={newName.title} tail={2} />
-            </h2>
-            <p className="mt-5 max-w-[62ch] text-lead text-ink-2">{newName.lead}</p>
-          </div>
-          {/* Pull quote: the page's card shape with the accent moved to the leading edge, so it
-              reads as a quotation rather than another fact card. */}
-          <Card
-            padding="lg"
-            className="col-span-4 border-l-4 border-l-green-500 md:col-span-8 lg:col-span-5 lg:col-start-8"
-          >
-            <blockquote>
-              <p className="font-display text-h3 font-semibold text-carbon">{brand.nameStory.text}</p>
-            </blockquote>
-          </Card>
-        </div>
       </Section>
 
       <Section surface="dark" aria-labelledby="about-values-heading">
@@ -135,7 +87,6 @@ export default function AboutPage() {
           align="stacked"
           eyebrow={team.copy.eyebrow}
           title={team.copy.title}
-          lead={team.copy.lead}
         />
         <Reveal className="mt-12 lg:mt-16">
           <CardGrid columns={3}>

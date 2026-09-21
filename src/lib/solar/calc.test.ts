@@ -257,7 +257,7 @@ describe("monotonicity and sanity", () => {
 describe("assumptions and constants", () => {
   it("lists every assumption with a label, value and source", () => {
     const e = buildEstimate(home({ monthlyBillInr: 3_500 }));
-    expect(e.assumptions.length).toBeGreaterThanOrEqual(8);
+    expect(e.assumptions.length).toBeGreaterThanOrEqual(7);
     for (const a of e.assumptions) {
       expect(a.label.length).toBeGreaterThan(0);
       expect(a.value.length).toBeGreaterThan(0);

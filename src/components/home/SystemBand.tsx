@@ -2,23 +2,21 @@ import Link from "next/link";
 import { ArrowRightIcon, Card, FeatureIcon, Section, SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
 import { homePage } from "@/content/home";
-import type { Feature } from "@/content/types";
 import { AccentTitle } from "./AccentTitle";
 
 const { system } = homePage;
 
-/** Where "Generate" goes; the other three are not offerings in v1 (D-009). */
-const generateHref = "/solutions";
+/** Link line on the one card with an href (Generate). */
 const generateCta = "Explore rooftop solar";
 
 /**
- * Icon-led card with two states. The linked one repeats the kit's whole-card link
+ * Icon-led card with three states. The linked one repeats the kit's whole-card link
  * pattern (one tab stop, the title's ::after covers the card, the focus ring is drawn on
- * the card) because <LinkCard> has no icon slot above the title; the rest carry a mono
- * "Coming next" label and, per D-009, no call to action at all.
+ * the card) because <LinkCard> has no icon slot above the title; a card not sold yet carries
+ * a mono "Coming next" label and, per D-009, no call to action; the rest carry neither.
  */
-function SystemCard({ card, comingNextLabel }: { card: Feature; comingNextLabel: string }) {
-  const href = card.comingNext ? null : generateHref;
+function SystemCard({ card, comingNextLabel }: { card: (typeof system.cards)[number]; comingNextLabel: string }) {
+  const href = card.comingNext ? null : (card.href ?? null);
 
   return (
     <Card
@@ -51,14 +49,14 @@ function SystemCard({ card, comingNextLabel }: { card: Feature; comingNextLabel:
           {generateCta}
           <ArrowRightIcon className="size-4 transition-transform duration-200 ease-controlled group-hover:translate-x-0.5" />
         </span>
-      ) : (
+      ) : card.comingNext ? (
         <span className="mt-auto pt-6 font-mono text-label text-ink-2 uppercase">{comingNextLabel}</span>
-      )}
+      ) : null}
     </Card>
   );
 }
 
-/** Generate · Store · Charge · Monitor. Only Generate is sold today (D-009). */
+/** Generate · Store · Charge · Monitor. Only Charge (EV) is marked "Coming next": it is not confirmed. */
 export function SystemBand() {
   return (
     <Section surface="canvas" aria-labelledby="system-heading">

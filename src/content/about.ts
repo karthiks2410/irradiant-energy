@@ -1,5 +1,5 @@
 /**
- * /about — mission from the legacy site (inventory F-35, F-36), brand story and values
+ * /about — mission from the legacy site (inventory F-35, F-36), working steps and values
  * from the Brand Identity Guidelines PDF (docs/discovery/09-brand-guidelines-part1.md
  * §2.2–2.6, §3.5–3.7), team as names and roles only (F-30 to F-32; bios held, CL-31).
  */
@@ -19,18 +19,17 @@ const meta = {
 const mission: SectionCopy = {
   eyebrow: "Our mission",
   title: "Powering a Greener Tomorrow",
-  lead: "Built in Bangalore to accelerate India's shift to clean energy. From the first site visit to the last installation screw, we make rooftop solar simple, transparent, and built to last.",
+  lead: "Built in Bengaluru. We make rooftop solar simple, transparent and built to last.",
   source: "F-35 · F-36 · P-AB-2 (the team-authored original F-37 is held for the owner's decision)",
   status: "verified-live",
 };
 
 const story: { copy: SectionCopy; steps: readonly Step[] } = {
   copy: {
-    eyebrow: "Our story",
-    title: "Energy is becoming connected, intelligent and customer-controlled.",
-    lead: "Irradiant Energy exists to help people and organisations participate in that change.",
-    source: "brand PDF p.6",
-    status: "brand-pdf",
+    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (heading adapted from the page's meta description).
+    title: "How we work",
+    source: "proposed · /about meta description",
+    status: "proposed",
   },
   steps: [
     { number: "01", title: "Understand", description: "Energy needs", source: "brand PDF p.6", status: "brand-pdf" },
@@ -42,18 +41,10 @@ const story: { copy: SectionCopy; steps: readonly Step[] } = {
 
 const brand = {
   tagline: brandText("Energy Made Intelligent", "p.5"),
-  essence: brandText("Energy in Motion", "p.5, p.10"),
   purposeShort: brandText("Make intelligent energy practical", "p.5"),
-  purpose: brandText("To make clean, intelligent and dependable energy practical for everyday life and business.", "p.8"),
-  personality: brandText("Intelligent. Precise. Dependable.", "p.5"),
-  audience: brandText("Homes. Communities. Business.", "p.5"),
   positioning: brandText("Irradiant is a professional energy-system partner, not a low-cost product seller.", "p.17"),
   /** "Measurable performance" needs monitoring evidence before it carries weight (report §7.1). */
   promise: brandText("Clear advice. Reliable engineering. Measurable performance. Long-term support.", "p.19"),
-  nameStory: brandText(
-    "Irradiant is inspired by radiant light and solar irradiance — the sunlight that reaches the Earth and becomes usable clean energy.",
-    "p.7",
-  ),
 } as const;
 
 const value = (number: string, title: string, description: string): Feature => ({
@@ -67,17 +58,15 @@ const value = (number: string, title: string, description: string): Feature => (
 const values: { copy: SectionCopy; items: readonly Feature[] } = {
   copy: {
     eyebrow: "Values",
-    title: "Six behaviours protect the promise.",
-    source: "brand PDF p.9",
-    status: "brand-pdf",
+    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (heading reworded; the values are brand PDF p.9).
+    title: "How we keep our promise.",
+    source: "proposed · values brand PDF p.9",
+    status: "proposed",
   },
   items: [
     value("01", "Engineering integrity", "Recommend what is right for the site and long-term performance."),
     value("02", "Clarity", "Explain pricing, generation, savings, risks and timelines."),
     value("03", "Accountability", "Own the journey from consultation through support."),
-    value("04", "Progress", "Adopt useful technology with purpose."),
-    value("05", "Customer control", "Enable monitoring, education and accessible support."),
-    value("06", "Responsible impact", "Communicate measurable outcomes without greenwashing."),
   ],
 };
 
@@ -91,25 +80,16 @@ const member = (name: string, role: string, ref: string): TeamMember => ({
 const team: { copy: SectionCopy; members: readonly TeamMember[] } = {
   copy: {
     eyebrow: "Team",
-    title: "Meet the visionaries",
-    lead: "The experts leading the charge toward energy independence.",
-    source: "P-AB-3",
-    status: "verified-live",
+    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (heading adapted from the page's meta description).
+    title: "The people behind Irradiant",
+    source: "proposed · /about meta description",
+    status: "proposed",
   },
   members: [
     member("Keerthi Raj K C", "Founder", "F-30"),
     member("Maruthi S Pavan", "Co-Founder", "F-31"),
     member("Maruthi S Tejas", "Head of Marketing", "F-32"),
   ],
-};
-
-// PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (the rename itself is D-001).
-const newName: SectionCopy = {
-  eyebrow: "Our new name",
-  title: `${site.legacyName} is now ${site.name}.`,
-  lead: "You may still see our earlier name on older documents and around the web.",
-  source: "proposed · D-001",
-  status: "proposed",
 };
 
 const closingCta: { copy: SectionCopy; primary: Cta; whatsappPrompt: TextItem } = {
@@ -201,7 +181,6 @@ export const aboutPage = {
   brand,
   values,
   team,
-  newName,
   closingCta,
   held,
 } as const;

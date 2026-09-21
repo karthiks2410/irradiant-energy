@@ -1,15 +1,16 @@
 /**
- * Home page copy, in page order, transcribed exactly from the English dictionary of
- * the owner's HTML prototype (D-009: its positioning copy is owner-approved). Sections
- * the prototype filled with demo material (projects, partners, reviews, news) are not
- * transcribed; their headings stay and the demo items are recorded in `held`.
+ * Home page copy, in page order, transcribed from the English dictionary of the owner's
+ * HTML prototype (D-009: its positioning copy is owner-approved) and trimmed on owner
+ * direction (2026-09-21). Sections the prototype filled with demo material (projects,
+ * partners, reviews, news) are not transcribed; their headings stay and the demo items are
+ * recorded in `held`.
  * Audience paths come from site.ts and the legacy home-hero tiles (inventory P-HM-1).
  */
 
 import { projectImages } from "@/content/images";
 import type { ProjectImage } from "@/content/images";
 import { primaryCta } from "@/content/site";
-import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, LabelValue, SectionCopy } from "@/content/types";
+import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, SectionCopy } from "@/content/types";
 import { navFor, segmentHref } from "@/content/solutions/shared";
 
 const requestConsultation: Cta = {
@@ -40,15 +41,13 @@ const audiencePath = (slug: AudiencePath["slug"], tile: string): AudiencePath =>
 };
 
 /**
- * One scene of the rotating home hero. The scenes are transcribed verbatim from the English
- * `hero` array of the owner's HTML prototype (D-009); only the photo pairing is ours.
+ * One scene of the rotating home hero. The scenes come from the English `hero` array of the
+ * owner's HTML prototype (D-009), trimmed (2026-09-21); only the photo pairing is ours.
  */
 export interface HeroSlide {
   eyebrow: string;
   title: string;
   lead: string;
-  /** Three positioning chips — never numbers, credentials or performance claims. */
-  chips: readonly [string, string, string];
   /** Template photography (images.ts). Decoration behind fixed copy, so it renders with alt="". */
   image: ProjectImage;
 }
@@ -65,15 +64,13 @@ const heroScenes = [
     eyebrow: "Intelligent energy systems",
     title: "Powering smarter futures.",
     // "agriculture" removed from the prototype line: it is not an offering (D-009); see held.
-    lead: "Reliable solar systems for homes, businesses and communities—designed to perform with clarity and long-term value.",
-    chips: ["Site-based design", "Clear system economics", "Long-term support"],
+    lead: "Solar systems for homes, businesses and communities.",
     image: projectImages.duskSkyline,
   },
   {
     eyebrow: "Commercial clean energy",
     title: "Engineered systems for modern business.",
-    lead: "Create more efficient and future-ready energy infrastructure for campuses, facilities and commercial sites.",
-    chips: ["Scalable deployment", "Visible sustainability", "Performance-focused design"],
+    lead: "Efficient energy infrastructure for campuses, facilities and commercial sites.",
     image: projectImages.industrialRoofArray,
   },
 ] as const satisfies readonly HeroSlide[];
@@ -84,7 +81,6 @@ const hero: HeroCopy & { slides: readonly HeroSlide[] } = {
   eyebrow: heroScenes[0].eyebrow,
   title: heroScenes[0].title,
   lead: heroScenes[0].lead,
-  chips: heroScenes[0].chips,
   slides: heroScenes,
   cta: estimate,
   secondaryCta: requestConsultation,
@@ -94,12 +90,11 @@ const hero: HeroCopy & { slides: readonly HeroSlide[] } = {
 
 const audiencePaths: { copy: SectionCopy; items: readonly AudiencePath[] } = {
   copy: {
-    eyebrow: "Homes. Communities. Business.",
     // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (UX heading + place qualifier). Karnataka is
     // owner-stated (2026-09-20): the business installs across the state, not only in Bengaluru,
     // where it is registered. The old site named only the city, which under-claimed the coverage.
-    title: "Solar for your home, your society or your business in Karnataka.",
-    source: "eyebrow brand PDF p.5 · title proposed",
+    title: "Solar for your home, society or business in Karnataka.",
+    source: "title proposed",
     status: "proposed",
   },
   items: [
@@ -113,33 +108,26 @@ const about: {
   copy: SectionCopy;
   capEyebrow: string;
   caption: string;
-  tags: readonly string[];
-  points: readonly LabelValue[];
   cta: Cta;
 } = {
   copy: {
     eyebrow: "About us",
     title: "An energy partner built around real-world performance.",
     // "agriculture" removed from the prototype line: it is not an offering (D-009); see held.
-    lead: "Irradiant Energy designs, installs and supports intelligent solar systems for homes, housing societies and modern business environments.",
+    lead: "Irradiant Energy designs, installs and supports solar systems for homes, housing societies and businesses.",
     source: "prototype about",
     status: "owner-approved-template",
   },
   capEyebrow: "About Irradiant",
   caption: "Solar that thinks beyond installation.",
-  // "Agriculture" removed: not an offering in v1 (D-009); see held.
-  tags: ["Homes", "Societies", "Projects", "Business"],
-  points: [
-    { label: "Approach", value: "Understand · Design · Deliver · Support" },
-    { label: "Promise", value: "Clear advice and long-term value" },
-    { label: "Focus", value: "Performance, trust and practicality" },
-    { label: "Fit", value: "Homes, societies, projects and facilities" },
-  ],
   cta: { label: "About Irradiant", href: "/about", source: "prototype about.capEyebrow", status: "owner-approved-template" },
 };
 
-/** D-009: Store, Charge and Monitor carry a "Coming next" label and no CTA. The lead is held (designer note). */
-const system: { copy: SectionCopy; comingNextLabel: string; cards: readonly Feature[] } = {
+/**
+ * Only Generate links out. Charge (EV) carries a "Coming next" label and no CTA; batteries and
+ * monitoring are sold today (owner, 2026-09-21). The lead is held (designer note).
+ */
+const system: { copy: SectionCopy; comingNextLabel: string; cards: readonly (Feature & { href?: string })[] } = {
   copy: {
     eyebrow: "Complete energy system",
     title: "More than solar. A better energy future.",
@@ -152,6 +140,7 @@ const system: { copy: SectionCopy; comingNextLabel: string; cards: readonly Feat
       icon: "sun",
       title: "Generate",
       description: "Solar systems designed around your real energy demand.",
+      href: "/solutions",
       source: "prototype system.cards[0]",
       status: "owner-approved-template",
     },
@@ -159,8 +148,7 @@ const system: { copy: SectionCopy; comingNextLabel: string; cards: readonly Feat
       icon: "battery",
       title: "Store",
       description: "Battery-ready pathways for resilience and control.",
-      comingNext: true,
-      source: "prototype system.cards[1] · D-009",
+      source: "prototype system.cards[1]",
       status: "owner-approved-template",
     },
     {
@@ -175,19 +163,25 @@ const system: { copy: SectionCopy; comingNextLabel: string; cards: readonly Feat
       icon: "monitor",
       title: "Monitor",
       description: "Understand generation and performance with clarity.",
-      comingNext: true,
-      source: "prototype system.cards[3] · D-009 · CL-18",
+      source: "prototype system.cards[3] · CL-18",
       status: "owner-approved-template",
     },
   ],
 };
 
-const whyCard = (number: string, icon: Feature["icon"], title: string, description: string): Feature => ({
+/** `protoIndex` is the card's position in the prototype, which no longer matches its number. */
+const whyCard = (
+  number: string,
+  protoIndex: number,
+  icon: Feature["icon"],
+  title: string,
+  description: string,
+): Feature => ({
   number,
   icon,
   title,
   description,
-  source: `prototype why.cards[${Number(number) - 1}]`,
+  source: `prototype why.cards[${protoIndex}]`,
   status: "owner-approved-template",
 });
 
@@ -196,18 +190,15 @@ const why: { copy: SectionCopy; cards: readonly Feature[] } = {
     eyebrow: "Why Irradiant?",
     title: "Design based on your actual power needs.",
     // Lead removed on owner direction (2026-09-20). It was the prototype's, and it spent a
-    // sentence saying we do not over-promise, immediately above six cards that demonstrate it.
+    // sentence saying we do not over-promise, immediately above the cards that demonstrate it.
     // The original wording is held below as `proto:why:lead`.
     source: "prototype why",
     status: "owner-approved-template",
   },
   cards: [
-    whyCard("01", "site", "Site-based design", "The basis for the actual roof area, electricity demand and long-term goals."),
-    whyCard("02", "doc", "Transparent proposal", "Clear estimates for production, cost, warranty and timeline."),
-    whyCard("03", "shield", "Quality equipment", "Components chosen for safety, compatibility and dependable performance."),
-    whyCard("04", "tools", "Professional execution", "A controlled approach to planning, installation, testing and commissioning."),
-    whyCard("05", "dash", "Digital monitoring", "Easy visibility into generation and system health over time."),
-    whyCard("06", "support", "Long-term support", "Service thinking that continues beyond project handover."),
+    whyCard("01", 1, "doc", "Transparent proposal", "Clear estimates for production, cost, warranty and timeline."),
+    whyCard("02", 4, "dash", "Digital monitoring", "Visibility into generation and system health over time."),
+    whyCard("03", 5, "support", "Long-term support", "Service thinking that continues beyond project handover."),
   ],
 };
 
@@ -285,7 +276,7 @@ const brands: { copy: SectionCopy; items: readonly Brand[] } = {
     // line and is owner-approved; the eyebrow replaces the prototype's "Channel partners",
     // which asserts a commercial agreement we hold no evidence of.
     eyebrow: "Equipment we install",
-    title: "Selected technology brands we work with.",
+    title: "Brands we work with.",
     source: "prototype partners (brand list, owner-directed 2026-09-20) · eyebrow proposed",
     status: "proposed",
   },
@@ -340,7 +331,6 @@ const calculatorCta: Cta = {
  */
 const calculator: {
   copy: SectionCopy;
-  bullets: readonly string[];
   fields: Readonly<Record<"segment" | "location" | "bill" | "tariff" | "roof" | "houses", { label: string; hint?: string }>>;
   results: { title: string; size: string; generation: string; savings: string; payback: string };
   assumptionsLabel: string;
@@ -348,18 +338,11 @@ const calculator: {
   cta: Cta;
 } = {
   copy: {
-    eyebrow: "Irradiant solar calculator",
+    eyebrow: "Solar calculator",
     title: "Estimate the right solar system for your site.",
     source: "prototype calc",
     status: "owner-approved-template",
   },
-  bullets: [
-    "Indicative system size",
-    "Estimated annual generation",
-    // PROPOSED: the prototype said "Lifetime savings estimate"; the engine projects 15 years.
-    "Projected savings estimate",
-    "Home scheme guidance when relevant",
-  ],
   fields: {
     segment: { label: "Customer type" },
     // The hint no longer claims the PIN decides the tariffs, because it does not: every tariff
@@ -379,17 +362,16 @@ const calculator: {
   },
   assumptionsLabel: "What this estimate assumes",
   disclaimer:
-    "Indicative preview only. Final system size, generation, savings and eligibility depend on site assessment, design and current policy checks.",
+    "Indicative only. Final figures and eligibility depend on site assessment, design and current policy checks.",
   cta: calculatorCta,
 };
 
 const finalCta: { copy: SectionCopy; primary: Cta; secondary: Cta } = {
   copy: {
+    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (eyebrow). The title is the legacy CTA band H2.
     eyebrow: "Next step",
     title: "Ready to see your savings?",
-    // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (lead). The title is the legacy CTA band H2.
-    lead: "Start with an estimate for your roof, or talk to our team about a site consultation.",
-    source: "title P-SG-6 · lead proposed",
+    source: "title P-SG-6 · eyebrow proposed",
     status: "proposed",
   },
   primary: estimate,

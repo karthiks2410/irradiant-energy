@@ -58,7 +58,7 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
         <p className="mt-3 text-body text-ink-2">
           Your reference is{" "}
           <span className="font-mono font-medium text-carbon tabular-nums">{state.reference}</span>. Quote it if you
-          get in touch about this enquiry.
+          get in touch.
         </p>
         <ContactFallbacks whatsappHref={state.whatsappHref} />
       </div>
@@ -113,8 +113,7 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
       <input type="hidden" name="segment" value={segment} />
       <input type="hidden" name="monthlyBill" value={String(monthlyBill)} />
       {/* Only a PIN code the engine actually accepted travels: a half-typed one would come back
-          from the server as an error against a field that is not on screen. There is no estimate
-          at all until step 1 has one (owner review round 2, point 8). */}
+          from the server as an error against a field that is not on screen. */}
       <input type="hidden" name="pincode" value={estimate?.region.pincode ?? ""} />
       {/* The roof area the visitor entered (not estimate.roofAreaSqft, which is the area the
           recommended system needs). It caps the size, so the server recomputes with it too. */}
@@ -210,17 +209,6 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
           label="You can also reach me on WhatsApp about this enquiry."
         />
       </div>
-
-      {/* PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Not a blocker: the request still sends, it
-          simply carries no figures until step 1 has the PIN code it needs. */}
-      {estimate === null && (
-        <p className="text-small text-ink-2">
-          <a href="#estimate-pincode" className={linkClass}>
-            Add your PIN code in step 1
-          </a>{" "}
-          and your estimate travels with this request.
-        </p>
-      )}
 
       <SubmitButton canSend={canSend} />
     </form>
