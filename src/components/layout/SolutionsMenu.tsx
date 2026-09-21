@@ -26,11 +26,12 @@ const CLOSE_DELAY_MS = 140;
 const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
 
 /**
- * The desktop Solutions menu: three audience cards that unfold under the pointer.
+ * The desktop Solutions menu: three compact audience rows that unfold under the pointer.
  *
  * Rebuilt from the owner's previous site (owner request, 2026-09-21), which opened on hover and
  * unfolded — a fade, a short drop and a slight scale from the top, with the cards arriving one
- * after another. The old version is improved in four ways:
+ * after another. It is a compact list rather than the old site's three large cards, and the
+ * old version is improved in four ways:
  *
  * - Hover intent, both ways. It waits a moment before opening, so sweeping across the header does
  *   not flash it, and a moment before closing, with a padded "bridge" between button and panel,
@@ -163,54 +164,57 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
           the panel, hanging over the hero below the header; if it caught the pointer while
           closed, hovering the hero would open the menu and clicks there would land on nothing. */}
       <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-3 ${open ? "" : "pointer-events-none"}`}>
+        {/* Compact rows, not cards (owner, 2026-09-21: the three-card panel was 680px wide and
+            covered half the hero). Icon beside the text rather than above it, and the arrow on
+            the right instead of an "Explore" line that reserved a row of height even while
+            invisible. About 420 by 280 instead of 680 by 370 — under half the area. */}
         <div
           id={panelId}
-          className={`w-[680px] max-w-[calc(100vw-2rem)] origin-top rounded-lg border border-mist bg-white p-6 text-carbon shadow-overlay transition-[opacity,translate,scale,visibility] ${EASE} ${
+          className={`w-[420px] max-w-[calc(100vw-2rem)] origin-top rounded-lg border border-mist bg-white p-2 text-carbon shadow-overlay transition-[opacity,translate,scale,visibility] ${EASE} ${
             open
               ? "visible translate-y-0 scale-100 opacity-100 duration-[260ms]"
               : "invisible -translate-y-2 scale-[0.97] opacity-0 duration-150"
           }`}
         >
-          <p className="font-mono text-label text-grey-600 uppercase">Rooftop solar</p>
+          <p className="px-3 pt-2.5 pb-1.5 font-mono text-label text-grey-600 uppercase">Rooftop solar</p>
 
-          <ul className="mt-4 grid grid-cols-3 gap-3">
+          <ul>
             {group.items.map((item, index) => {
               const Icon = icons[item.href];
               return (
                 <li
                   key={item.href}
-                  // The cards arrive one after another once the panel has started to open, and
+                  // The rows arrive one after another once the panel has started to open, and
                   // leave together, so closing is never slower than it has to be.
-                  style={{ transitionDelay: open ? `${70 + index * 45}ms` : "0ms" }}
+                  style={{ transitionDelay: open ? `${60 + index * 40}ms` : "0ms" }}
                   className={`transition-[opacity,translate] duration-300 ${EASE} ${
-                    open ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0"
+                    open ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
                   }`}
                 >
                   <Link
                     href={item.href}
-                    className="group flex h-full flex-col rounded-md border border-mist p-5 transition-colors duration-200 hover:border-green-500/40 hover:bg-green-500/[0.04] focus-visible:border-green-500/40 focus-visible:bg-green-500/[0.04]"
+                    className="group flex items-center gap-3.5 rounded-md px-3 py-2.5 transition-colors duration-200 hover:bg-green-500/[0.06] focus-visible:bg-green-500/[0.06]"
                   >
                     {Icon && (
-                      <span className="grid size-11 place-items-center rounded-md bg-canvas text-teal-900 transition-colors duration-200 group-hover:bg-green-500/10 group-hover:text-green-700">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-md bg-canvas text-teal-900 transition-colors duration-200 group-hover:bg-green-500/15 group-hover:text-green-700">
                         <Icon className="size-5" />
                       </span>
                     )}
-                    <span className="mt-4 block font-display text-h4 font-semibold">{item.label}</span>
-                    {item.description && (
-                      <span className="mt-1.5 block text-small text-ink-2">{item.description}</span>
-                    )}
-                    <span className="mt-auto inline-flex items-center gap-1 pt-3 text-small font-medium text-green-700 opacity-0 transition-[opacity,translate] duration-200 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100">
-                      Explore
-                      <ArrowRightIcon className="size-3.5" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-display text-ui font-semibold">{item.label}</span>
+                      {item.description && (
+                        <span className="block truncate text-small text-grey-600">{item.description}</span>
+                      )}
                     </span>
+                    <ArrowRightIcon className="size-4 shrink-0 -translate-x-1 text-green-700 opacity-0 transition-[opacity,translate] duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" />
                   </Link>
                 </li>
               );
             })}
           </ul>
 
-          <div className="mt-5 flex items-center justify-between border-t border-mist pt-4">
-            <p className="text-small text-grey-600">Not sure which fits you?</p>
+          <div className="mt-1 flex items-center justify-between border-t border-mist px-3 pt-2.5 pb-1.5">
+            <p className="text-small text-grey-600">Not sure which fits?</p>
             <Link
               href="/solutions"
               className="group inline-flex items-center gap-1.5 text-small font-semibold text-green-700 hover:underline"
