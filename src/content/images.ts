@@ -83,8 +83,8 @@ export const projectImages = {
   },
   commercialHeroArray: {
     src: "/images/projects/ie-2006.webp",
-    width: 2600,
-    height: 1950,
+    width: 1950,
+    height: 2600,
     alt: "Solar panels installed on a commercial rooftop.",
     subject: "Commercial rooftop solar installation",
     focal: "center 50%",
