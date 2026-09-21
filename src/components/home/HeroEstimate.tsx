@@ -77,7 +77,7 @@ export function HeroEstimate() {
       </div>
 
       <p className="mt-2.5 text-small text-white/80">
-        A real figure on screen. No phone number, no sign-up, no waiting for a call back.
+        No phone number, no sign-up.
       </p>
     </form>
   );

@@ -53,9 +53,8 @@ export default function ContactPage() {
       {/* PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: positioning copy, no promise of a response time. */}
       <PageHero
         current="Contact"
-        eyebrow="Contact"
         title={<AccentedTitle text="Talk to us about your roof." tail={2} />}
-        lead="Call, message or write — whichever suits you. Tell us where you are and what you would like to power, and we will take it from there."
+        lead="Tell us where you are and what you would like to power."
       />
 
       <Section surface="white" aria-labelledby="contact-ways-heading">
@@ -85,7 +84,7 @@ export default function ContactPage() {
               <li className={contactRow}>
                 <Eyebrow>WhatsApp</Eyebrow>
                 <p className="mt-3 max-w-[62ch] text-body text-ink-2">
-                  Send photos of your roof or your last electricity bill and we can start from there.
+                  Send photos of your roof or your last electricity bill.
                 </p>
                 <ButtonLink
                   href={whatsappLink(whatsappPrompt)}
@@ -131,7 +130,7 @@ export default function ContactPage() {
                 rel="noopener noreferrer"
                 className="mt-5 inline-flex min-h-11 items-center font-medium text-green-700 underline underline-offset-4 transition-colors duration-200 ease-controlled hover:text-teal-900"
               >
-                Open the address in Google Maps
+                Open in Google Maps
               </a>
             </Card>
           </div>
@@ -140,13 +139,12 @@ export default function ContactPage() {
 
       <Section surface="canvas" id="grievance" aria-labelledby="contact-grievance-heading">
         <div className="max-w-prose">
-          <Eyebrow>Privacy</Eyebrow>
-          <h2 id="contact-grievance-heading" className="mt-4 font-display text-h3 font-bold text-carbon">
+          <h2 id="contact-grievance-heading" className="font-display text-h3 font-bold text-carbon">
             Grievance and privacy contact
           </h2>
           <p className="mt-4 text-body text-ink-2">
-            Write here if you want to know what personal information we hold about you, have it corrected or deleted,
-            withdraw a consent you gave us, or complain about the way we handled your details.
+            Write here to find out what personal information we hold about you, have it corrected or deleted, withdraw
+            consent, or complain about how we handled your details.
           </p>
           <p className="mt-4 text-body text-ink-2">
             {site.legal.grievanceOfficer ? (

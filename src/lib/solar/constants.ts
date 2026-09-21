@@ -92,6 +92,7 @@ export const PM_SURYA_GHAR_RESIDENTIAL = {
   },
   unit: "INR",
   source: MNRE_GUIDELINES,
+  citation: "MNRE, Operational Guidelines for the CFA component of PM Surya Ghar: Muft Bijli Yojana, notice of 2 Jul 2024, §4(h)",
   effectiveFrom: "2024-07-02",
   status: "official",
   note:
@@ -137,7 +138,7 @@ export const BESCOM_DOMESTIC_SLABS = {
   ] as readonly TariffSlab[],
   unit: "INR per kWh",
   source: "KERC tariff order for FY 2025-26, as recorded in the legacy site engine (not re-verified against kerc.gov.in)",
-  citation: "Indicative BESCOM LT-2(a) energy charges; your actual tariff is read from your bill at the site visit",
+  citation: "Indicative; your actual tariff is read from your bill at the site visit",
   effectiveFrom: "2025-04-01",
   status: "owner-accepted",
   note: "Energy charges only. Owner to supply the current official schedule, including fixed charges and taxes.",
@@ -154,7 +155,7 @@ export const DEFAULT_NON_DOMESTIC_TARIFF = {
   value: 8,
   unit: "INR per kWh",
   source: "Modelling assumption (the design prototype's default tariff input); owner to replace with the applicable BESCOM category tariff",
-  citation: "Indicative average tariff; society and business connections are priced on your own BESCOM category and bill",
+  citation: "Indicative; your actual tariff depends on your BESCOM category and bill",
   effectiveFrom: "2026-09-19",
   status: "assumption",
 } as const satisfies EngineConstant<number>;
@@ -166,7 +167,7 @@ export const SPECIFIC_YIELD = {
   value: 4.5 * 365,
   unit: "kWh per kWp per year",
   source: "Legacy site engine planning figure (about 5.0–5.5 peak sun hours a day, derated for soiling, temperature and inverter losses)",
-  citation: "Planning figure for Karnataka (about 5.0–5.5 peak sun hours a day, derated for soiling, temperature and inverter losses); your roof is modelled at the site visit",
+  citation: "Planning figure for Karnataka; your roof is modelled at the site visit",
   effectiveFrom: "2026-02-01",
   status: "owner-accepted",
   note: "Owner to confirm the figure used in proposals.",
@@ -195,7 +196,7 @@ export const INSTALL_COST_PER_KWP = {
   value: 60_000,
   unit: "INR per kWp",
   source: "Legacy site engine benchmark (residential); applied to every segment until the owner supplies per-segment pricing",
-  citation: "Indicative benchmark for a standard rooftop installation; your price comes from the site survey and the written proposal",
+  citation: "Indicative benchmark; your price comes from the site survey and the written proposal",
   effectiveFrom: "2026-02-01",
   status: "owner-accepted",
 } as const satisfies EngineConstant<number>;
@@ -207,7 +208,7 @@ export const ROOF_SQFT_PER_KWP = {
   value: 70,
   unit: "sq ft per kWp",
   source: "Legacy site engine (mainstream modules at standard tilt)",
-  citation: "Indicative area for mainstream modules at standard tilt; the usable area is measured at the site visit",
+  citation: "Indicative; the usable area is measured at the site visit",
   effectiveFrom: "2026-02-01",
   status: "owner-accepted",
 } as const satisfies EngineConstant<number>;

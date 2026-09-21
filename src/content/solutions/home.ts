@@ -33,9 +33,9 @@ export const homeSegment: Segment = {
   },
 
   hero: {
-    eyebrow: "For homeowners across Karnataka",
+    eyebrow: "For homeowners",
     title: "Solar for your home in Karnataka — designed end-to-end.",
-    lead: "From the first site visit to the last installation screw, we handle it. You see the savings every month on your bill.",
+    lead: "From site visit to installation, we handle it. You see the savings on your bill every month.",
     cta: ctas.primary,
     secondaryCta: ctas.secondary,
     source: "P-SH-2 · OLD solutions-data.ts:98-103 · place qualifier proposed (F-40 · 16 §H3)",
@@ -59,7 +59,6 @@ export const homeSegment: Segment = {
     copy: {
       eyebrow: "How it works",
       title: "Your solar journey, simplified.",
-      lead: "Four clear steps. We handle the moving parts — you handle picking up the savings.",
       source: "P-SH-4 · OLD home-segment-content.ts:59-63",
       status: "verified-live",
     },
@@ -68,7 +67,7 @@ export const homeSegment: Segment = {
         number: "01",
         title: "Free site visit & rooftop design",
         description:
-          "Our team comes to your home, measures the roof, checks shadowing and load, and designs a system that gets the most out of your space.",
+          "We measure your roof, check shading and load, and design a system that makes the most of your space.",
         source: "P-SH-4 step 01",
         status: "verified-live",
       },
@@ -77,7 +76,7 @@ export const homeSegment: Segment = {
         // "3D" trimmed from the title (CL-21); see held.
         title: "Personalised plan",
         description:
-          "You'll see exactly how the panels will sit on your roof — with savings projections in rupees, before you commit to anything.",
+          "You'll see how the panels will sit on your roof — with savings projections in rupees, before you commit to anything.",
         source: "P-SH-4 step 02",
         status: "verified-live",
       },
@@ -85,16 +84,15 @@ export const homeSegment: Segment = {
         number: "03",
         title: "We install. We handle the subsidy.",
         // "Tier-1 panels, certified installers, and" trimmed (CL-05); see held.
-        description: "All the discom + govt. paperwork done by us. You don't chase a single form.",
+        description: "We do the discom and government paperwork.",
         source: "P-SH-4 step 03 · F-53",
         status: "verified-live",
       },
       {
         number: "04",
-        title: "Switch on. Save. We maintain.",
-        description:
-          "Your system goes live, your bill drops the same month, and we handle 5 years of maintenance — cleaning, monitoring, and parts.",
-        source: "P-SH-4 step 04 (N-44, N-54 conflicts recorded in held)",
+        title: "Switch on. Save.",
+        description: "Your system goes live, your bill drops the same month.",
+        source: "P-SH-4 step 04 (N-54 conflict recorded in held)",
         status: "verified-live",
       },
     ],
@@ -120,17 +118,16 @@ export const homeSegment: Segment = {
   trust: {
     copy: {
       eyebrow: "Why us",
-      // Title is PROPOSED CONTENT — REQUIRES CLIENT APPROVAL; the legacy title held (CL-26). Lead is P-SH-5.
+      // Title is PROPOSED CONTENT — REQUIRES CLIENT APPROVAL; the legacy title held (CL-26).
       title: "Built around your roof and your bill.",
-      lead: "Solar is a 25-year decision. Here's what makes us a partner you'll still call in year 10.",
-      source: "title proposed · lead P-SH-5",
+      source: "title proposed",
       status: "proposed",
     },
     cards: [
       {
         title: "Honest savings, in rupees",
         description:
-          "We don't quote a percentage. We show you the exact rupee number you'll save every month, based on your bill and tariff slab. No surprises.",
+          "We don't quote a percentage. We show you the rupee number you'll save every month, based on your bill and tariff slab. No surprises.",
         icon: "doc",
         source: "P-SH-5 card 1",
         status: "verified-live",
@@ -138,7 +135,7 @@ export const homeSegment: Segment = {
       {
         title: "One team, end-to-end",
         description:
-          "Site visit, design, install, paperwork, subsidy, and after-sales — all done by Irradiant directly. No middlemen, no finger-pointing.",
+          "From site visit to after-sales, all done by Irradiant directly. No middlemen, no finger-pointing.",
         icon: "support",
         source: "P-SH-5 card 2 · F-53",
         status: "verified-live",
@@ -146,7 +143,7 @@ export const homeSegment: Segment = {
       {
         title: "5-year free maintenance",
         description:
-          "Cleaning, monitoring, and parts — included for 5 years. Your panels stay clean, your generation stays high, and we come to you.",
+          "Cleaning, monitoring and parts — we come to you.",
         icon: "tools",
         source: "P-SH-5 card 4 (N-44 conflict recorded in held)",
         status: "verified-live",
@@ -170,9 +167,9 @@ export const homeSegment: Segment = {
         items: [
           {
             id: "H-2",
-            q: "How much subsidy can I get, and how does the process work?",
+            q: "How much subsidy can I get?",
             // The state top-up sentence is trimmed (N-03, N-04); see held.
-            a: "Under the PM Surya Ghar scheme, residential systems get ₹30,000 to ₹78,000 in central subsidy depending on system size. We handle the entire application + tracking — you don't fill a single form.",
+            a: "Under the PM Surya Ghar scheme, residential systems get ₹30,000 to ₹78,000 in central subsidy depending on system size.",
             source: "H-2 · N-02 · 03 §4.6",
             status: "verified-live",
           },
@@ -185,14 +182,14 @@ export const homeSegment: Segment = {
           {
             id: "H-4",
             q: "How long does installation take from quote to switch-on?",
-            a: "Typically 30–45 days end-to-end. About a week for design + approval, 2–3 days for the actual installation, and the rest is discom inspection + meter changeover. We keep you updated at every step on WhatsApp.",
+            a: "Typically 30–45 days end-to-end: about a week for design and approval, 2–3 days to install, and the rest is discom inspection and meter changeover.",
             source: "H-4 · N-50 · 03 §4.6",
             status: "verified-live",
           },
           {
             id: "H-5",
             q: "How much roof space do I need?",
-            a: "Roughly 100 sq ft per kW of installed solar. So a 3 kW system needs ~300 sq ft of unshaded roof. If you're tight on space, hybrid panel layouts and elevated structures often free up more area than you think — that's what the free site visit is for.",
+            a: "Roughly 100 sq ft per kW, so a 3 kW system needs ~300 sq ft of unshaded roof. Tight on space? Elevated structures often free up more area — that's what the site visit is for.",
             source: "H-5 · N-30 (CF-06 recorded in held) · 03 §4.6",
             status: "verified-live",
           },
@@ -200,7 +197,7 @@ export const homeSegment: Segment = {
             id: "H-6",
             q: "Do you handle the discom paperwork, or do I have to?",
             // "No standing in BESCOM/MSEDCL offices." trimmed; see held.
-            a: "We handle every form — discom application, net-metering agreement, structural certification, subsidy claim, all of it. You sign two documents, we do the rest.",
+            a: "We do — the discom application, net-metering agreement, structural certification and subsidy claim. You sign two documents.",
             source: "H-6 · F-53 · 03 §4.6",
             status: "verified-live",
           },
@@ -213,7 +210,7 @@ export const homeSegment: Segment = {
           {
             id: "H-8",
             q: "Does it work in monsoon and on cloudy days?",
-            a: "Yes — modern panels still generate 10–25% of peak output on cloudy days, and rain actually helps by washing dust off the panels. Net-metering means surplus generated on sunny days carries forward to offset cloudy-day usage.",
+            a: "Yes — modern panels still generate 10–25% of peak output on cloudy days, and rain helps by washing off dust. Net-metering carries sunny-day surplus forward to offset cloudy-day usage.",
             source: "H-8 · N-27 · 03 §4.6",
             status: "verified-live",
           },
@@ -358,7 +355,7 @@ export const homeSegment: Segment = {
     },
     {
       id: "home:maintenance-vs-warranty",
-      where: "journey step 04, trust card, included list (conflict recorded; '5-year free maintenance' renders as the page value)",
+      where: "trust card (conflict recorded; '5-year free maintenance' renders as the page value)",
       text: "5-year free maintenance (this page) vs '5-year service warranty' (legacy home #contact) vs 'lifetime after-sales' (legacy meta)",
       reason: "A warranty and a maintenance plan are legally different promises. Owner confirms what the 5 years cover and for which segments.",
       ref: "N-44 · CF-04",

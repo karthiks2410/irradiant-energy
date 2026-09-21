@@ -16,7 +16,6 @@ export function AudiencePathsBand() {
         <SectionHeading
           id="audiences-heading"
           align="stacked"
-          eyebrow={audiencePaths.copy.eyebrow}
           title={<AccentTitle text={audiencePaths.copy.title} />}
         />
 
@@ -26,8 +25,7 @@ export function AudiencePathsBand() {
               key={path.slug}
               as="li"
               href={path.href}
-              eyebrow={path.label}
-              title={path.tile}
+              title={path.label}
               cta={exploreLabel(path.label)}
             >
               {path.description}

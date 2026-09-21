@@ -56,12 +56,9 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
       className="m-auto max-h-[min(44rem,calc(100dvh-2rem))] w-[min(36rem,calc(100vw-2rem))] overflow-y-auto rounded-lg bg-white p-0 text-carbon shadow-overlay backdrop:bg-teal-975/60"
     >
       <div className="flex items-start justify-between gap-4 border-b border-mist p-5 sm:p-6">
-        <div>
-          <p className="font-mono text-label text-green-700 uppercase">Your privacy</p>
-          <h2 id="consent-settings-title" className="mt-2 font-display text-h3 font-bold text-carbon">
-            Cookie and analytics preferences
-          </h2>
-        </div>
+        <h2 id="consent-settings-title" className="font-display text-h3 font-bold text-carbon">
+          Cookie and analytics preferences
+        </h2>
         <button
           type="button"
           onClick={close}
@@ -75,12 +72,7 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
       </div>
 
       <div className="p-5 sm:p-6">
-        <p className="text-small text-ink-2">
-          This is everything the site can put on your device, and what each item is for. Nothing here is set until you
-          answer.
-        </p>
-
-        <div className="mt-6 space-y-4">
+        <div className="space-y-4">
           {/* Strictly necessary is not a choice, so it is not a control. A disabled checkbox would
               look like a choice that had been taken away. */}
           <section className="rounded-md border border-mist bg-canvas p-4 sm:p-5">
@@ -93,13 +85,13 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
             <p className="mt-3 text-small text-ink-2">
               Your answer to this question, kept in a first-party cookie named{" "}
               <code className="font-mono text-ink-2">{CONSENT_COOKIE_NAME}</code> that is written only once you choose.
-              It holds your answer, the date and a version number — no name, no identifier, nothing that describes you.
-              It lasts {CONSENT_COOKIE_DAYS} days and is read only by this site. Without it we would have to ask you
-              again on every page.
+              It holds your answer, the date and a version number — no name, no identifier. It lasts{" "}
+              {CONSENT_COOKIE_DAYS} days and is read only by this site. Without it we would have to ask you again on
+              every page.
             </p>
             <p className="mt-2 text-small text-ink-2">
-              Our hosting provider may also set a short-lived cookie if it needs to check that a request comes from a
-              person rather than an automated tool. That protects the site; it is not used to follow you.
+              Our hosting provider may also set a short-lived cookie to check that a request comes from a person
+              rather than an automated tool. That protects the site; it is not used to follow you.
             </p>
           </section>
 
@@ -124,10 +116,10 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
               </label>
             </div>
             <p id={analyticsHintId} className="mt-3 text-small text-ink-2">
-              Not loaded today: no measurement script of any kind runs on this site. If we switch one on, it would
-              count page visits — which page, the broad region the visit came from, the kind of device — with no name,
-              no profile and no tracking across other websites. It will not load while this is off, and turning it off
-              later stops it again.
+              Not loaded today: no measurement script runs on this site. If we switch one on, it would count page
+              visits — which page, the broad region the visit came from, the kind of device — with no name, no profile
+              and no tracking across other websites. It will not load while this is off, and turning it off later stops
+              it again.
             </p>
           </section>
         </div>

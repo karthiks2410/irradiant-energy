@@ -1,5 +1,5 @@
 import { Reveal } from "@/components/motion/Reveal";
-import { ButtonLink, CheckIcon, SectionHeading } from "@/components/ui";
+import { ButtonLink, SectionHeading } from "@/components/ui";
 import { homePage } from "@/content/home";
 import { AccentTitle } from "./AccentTitle";
 import { HomeCalculatorPanel } from "./HomeCalculatorPanel";
@@ -43,20 +43,6 @@ export function HomeCalculator() {
                   eyebrowTone="signal"
                   title={<AccentTitle text={calculator.copy.title} />}
                 />
-
-                <ul className="mt-7 grid gap-3.5">
-                  {calculator.bullets.map((bullet) => (
-                    <li key={bullet} className="flex items-center gap-2.5 text-small text-white/80">
-                      <span
-                        aria-hidden="true"
-                        className="grid size-6 shrink-0 place-items-center rounded-full bg-yellow-400 text-teal-900"
-                      >
-                        <CheckIcon className="size-3.5" />
-                      </span>
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
 
                 <ButtonLink href={calculator.cta.href} variant="light" className="mt-8 min-h-[54px]">
                   {calculator.cta.label}

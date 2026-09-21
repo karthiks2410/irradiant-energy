@@ -19,8 +19,6 @@ const PROTO_EASE = "ease-[cubic-bezier(0.25,0.1,0.25,1)]";
 const HEADLINE =
   "font-display text-[clamp(3rem,6vw,3.625rem)] leading-[0.96] font-bold tracking-[-0.045em] text-white md:text-[clamp(3.625rem,6vw,6rem)]";
 const LEAD = "mt-5 max-w-[590px] text-[0.9375rem] leading-[1.7] text-white/90 md:text-[1.1875rem]";
-const CHIPS = "mt-[22px] flex flex-wrap gap-x-[18px] gap-y-2.5";
-const CHIP = "flex items-center gap-2 text-small text-white/90";
 
 /** Never fires: the snapshot only has to differ between the server and the client. */
 const neverChanges = () => () => {};
@@ -63,8 +61,8 @@ type HeroBackdropProps = {
  * 1.05s photo crossfade, a slow Ken Burns drift from scale 1.02 to 1.08, and a 34px active dot.
  *
  * Rules this island keeps (report §5.8 S1, §6 motion):
- * - Nothing above the fold is hidden. Scene 1's eyebrow, h1, lead and chips are in the server
- *   HTML, as is its photo with loading="eager" + fetchPriority="high" (Next 16 deprecated
+ * - Nothing above the fold is hidden. Scene 1's eyebrow, h1 and lead are in the server HTML,
+ *   as is its photo with loading="eager" + fetchPriority="high" (Next 16 deprecated
  *   `priority` in favour of `preload`; the docs recommend these two for an LCP image).
  * - Exactly one h1. Its text changes with the scene, but no heading is added or removed, and
  *   the rotation is not announced: it is decoration, not a live update.
@@ -193,14 +191,6 @@ export function HeroBackdrop({ slides, overlay, actions }: HeroBackdropProps) {
                 <p className={HEADLINE}>{slide.title}</p>
                 <p className={LEAD}>{slide.lead}</p>
                 {actions}
-                <ul className={CHIPS}>
-                  {slide.chips.map((chip) => (
-                    <li key={chip} className={CHIP}>
-                      <span className="size-2 shrink-0 rounded-full bg-green-500" />
-                      {chip}
-                    </li>
-                  ))}
-                </ul>
               </div>
             ))}
           </div>
@@ -223,15 +213,6 @@ export function HeroBackdrop({ slides, overlay, actions }: HeroBackdropProps) {
             <p className={LEAD}>{scene.lead}</p>
 
             {actions}
-
-            <ul className={CHIPS}>
-              {scene.chips.map((chip) => (
-                <li key={chip} className={CHIP}>
-                  <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-green-500" />
-                  {chip}
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </div>

@@ -35,7 +35,7 @@ export const commercialSegment: Segment = {
   },
 
   hero: {
-    eyebrow: "For businesses across Karnataka",
+    eyebrow: "For businesses",
     title: "Solar for your business in Karnataka — predictable energy costs, lower bills.",
     lead: "Shops, offices, schools, factories, warehouses. We design for your roof, your load curve, and your tariff.",
     cta: ctas.primary,
@@ -65,7 +65,6 @@ export const commercialSegment: Segment = {
       eyebrow: "How it works",
       // ", with zero business disruption" trimmed (CL-15); see held.
       title: "From load study to switch-on.",
-      lead: "We design around your operations, not the other way around. The plan is concrete, the financials are bankable, and the install fits your downtime window.",
       source: "P-SC-4 · OLD commercial-segment-content.ts:54-58",
       status: "verified-live",
     },
@@ -74,7 +73,7 @@ export const commercialSegment: Segment = {
         number: "01",
         title: "Free site visit & load study",
         description:
-          "Our team studies your facility, last 12 months of bills, sanctioned load, demand profile, and rooftop / open-area availability. You get a sized proposal grounded in your actual consumption — not a brochure number.",
+          "We study your last 12 months of bills, sanctioned load, demand profile, and rooftop / open-area availability. The proposal is sized to your actual consumption.",
         source: "P-SC-4 step 01 · N-39",
         status: "verified-live",
       },
@@ -83,7 +82,7 @@ export const commercialSegment: Segment = {
         title: "CAPEX vs OPEX financial model",
         // "depreciation impact under Section 32, GST + ITC handling," trimmed (N-12, N-14); see held.
         description:
-          "We build a side-by-side: payback, IRR, NPV, and balance-sheet treatment. Your CFO sees real numbers in their format.",
+          "We build a side-by-side: payback, IRR, NPV, and balance-sheet treatment.",
         source: "P-SC-4 step 02",
         status: "verified-live",
       },
@@ -100,7 +99,7 @@ export const commercialSegment: Segment = {
         title: "Install around your operations",
         // "Tier-1 panels, certified installers," trimmed (CL-05); see held.
         description:
-          "Scheduled around your downtime window. Grid-tie cutover happens in a single 2–4 hour planned window, weekend or off-peak — your choice.",
+          "Grid-tie cutover happens in a single 2–4 hour planned window, weekend or off-peak — your choice.",
         source: "P-SC-4 step 04 · N-38",
         status: "verified-live",
       },
@@ -138,10 +137,9 @@ export const commercialSegment: Segment = {
   trust: {
     copy: {
       eyebrow: "Why us",
-      // Title is PROPOSED CONTENT — REQUIRES CLIENT APPROVAL; the legacy title is held. Lead is P-SC-5.
+      // Title is PROPOSED CONTENT — REQUIRES CLIENT APPROVAL; the legacy title is held.
       title: "What a business gets with Irradiant.",
-      lead: "A solar system on a commercial roof is a 25-year capital decision. Here's what matters when you're putting it on the books.",
-      source: "title proposed · lead P-SC-5",
+      source: "title proposed",
       status: "proposed",
     },
     cards: [],
@@ -151,8 +149,6 @@ export const commercialSegment: Segment = {
     copy: {
       eyebrow: "Business questions, answered",
       title: "Commercial solar FAQs",
-      // "— financing models, tax treatment, payback, GST, and how it actually changes the books." trimmed; see held.
-      lead: "What CFOs and facility heads ask us before signing off.",
       source: "P-SC-6 · OLD commercial-segment-content.ts:142-145",
       status: "verified-live",
     },
@@ -179,7 +175,7 @@ export const commercialSegment: Segment = {
             id: "C-5",
             q: "Rooftop or ground-mount — what suits our facility?",
             // The customer-base sentence is trimmed (CL-16); see held.
-            a: "Rooftop is the default — uses unutilised roof area, no land cost, shorter approval cycle. Best for offices, factories, warehouses, schools, hospitals, hotels.\n\nGround-mount makes sense when (a) roof load capacity is limited, (b) the building has a lot of unused ground / parking area, or (c) the required system size exceeds what the roof can hold. Typical for larger industrial campuses (>500 kW) or facilities with adjacent open land.\n\nWe design what fits the load curve and the available area together.",
+            a: "Rooftop is the default — uses unutilised roof area, no land cost, shorter approval cycle.\n\nGround-mount makes sense when the roof can't carry or fit the system you need, or when you have plenty of unused ground or parking area. Typical for larger industrial campuses (>500 kW) or facilities with adjacent open land.",
             source: "C-5 · N-36 · 03 §6.6",
             status: "verified-live",
           },
@@ -187,7 +183,7 @@ export const commercialSegment: Segment = {
             id: "C-6",
             q: "Will installation disrupt our business operations?",
             // "Almost never." and the 7–14 day sentence are trimmed; see held.
-            a: "The grid-tie / commissioning step needs a single 2–4 hour planned shutdown, which we schedule on a weekend or off-peak window of your choice.\n\nWe coordinate the entire timeline with your facility manager — including discom inspection, net-metering changeover, and final go-live — so business-as-usual is the plan, not the exception.",
+            a: "The grid-tie / commissioning step needs a single 2–4 hour planned shutdown, which we schedule on a weekend or off-peak window of your choice.\n\nWe coordinate the timeline with your facility manager, including discom inspection, net-metering changeover and final go-live.",
             source: "C-6 · N-38 (CF-10 recorded in held) · 03 §6.6",
             status: "verified-live",
           },
@@ -368,7 +364,7 @@ export const commercialSegment: Segment = {
       id: "commercial:maintenance",
       where: "whole page",
       text: "5-year free maintenance (promised on the Homes and Society pages; absent here)",
-      reason: "Owner confirms whether the maintenance plan covers commercial systems.",
+      reason: "Owner-confirmed 2026-09-21: the maintenance plan is for homes and housing societies only.",
       ref: "P-SC-7 · N-44",
     },
   ],

@@ -78,7 +78,7 @@ export default async function GetQuotePage({
           className="col-span-4 rounded-lg bg-teal-900 p-6 sm:p-8 md:col-span-8 lg:col-span-5"
         >
           {/* Owner-approved prototype copy (D-009): calc.eyebrow and calc.title, verbatim. */}
-          <Eyebrow tone="signal">Irradiant solar calculator</Eyebrow>
+          <Eyebrow tone="signal">Solar calculator</Eyebrow>
           <h1 className="mt-4 font-display text-h2 font-extrabold text-white">
             Estimate the right solar system for your site.
           </h1>
@@ -95,10 +95,6 @@ export default async function GetQuotePage({
         <div className="col-span-4 md:col-span-8 lg:col-span-7">
           <Eyebrow>Step 1</Eyebrow>
           <h2 className="mt-4 font-display text-h3 font-bold text-carbon">Your property and usage</h2>
-          <p className="mt-2 text-body text-ink-2">
-            The more you can tell us, the closer the estimate gets. Your bill and your PIN code are the only two we
-            need — the PIN code decides which tariffs the figures use.
-          </p>
           <div className="mt-8">
             <EstimateControls />
           </div>
@@ -121,7 +117,7 @@ export default async function GetQuotePage({
                 Get your <Accent>proposal</Accent>.
               </>
             }
-            lead="Your estimate travels with your details, so we can pick up exactly where you left off."
+            lead="Your estimate is sent with your details."
           />
           <div className="mt-10">
             <LeadForm startedAt={startedAt} canSend={mailConfigured} />

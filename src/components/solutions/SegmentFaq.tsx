@@ -10,12 +10,12 @@ const faqAnchor = "faq";
 const faqItemId = (id: string) => `faq-${id.toLowerCase()}`;
 
 /**
- * Audience-page FAQs: every verified question for the segment, grouped as the content module
- * groups them. Answers are server-rendered inside the disclosure panels, so the FAQ structured
- * data mirrors visible text.
+ * Audience-page FAQs: every verified question for the segment, as one list. Answers are
+ * server-rendered inside the disclosure panels, so the FAQ structured data mirrors visible text.
  */
 export function SegmentFaq({ faq }: { faq: FaqSection }) {
   const { copy, groups, stillHaveQuestions } = faq;
+  const items = groups.flatMap((group) => group.items);
 
   return (
     <Section surface="white" id={faqAnchor} aria-labelledby="faq-heading">
@@ -47,25 +47,14 @@ export function SegmentFaq({ faq }: { faq: FaqSection }) {
         </div>
 
         <div className="col-span-4 md:col-span-8 lg:col-span-7 lg:col-start-6">
-          {groups.map((group) => (
-            <section key={group.id} aria-labelledby={`faq-group-${group.id}`} className="mt-12 first:mt-0">
-              <h3
-                id={`faq-group-${group.id}`}
-                className="font-mono text-label font-medium text-green-700 uppercase"
-              >
-                {group.label}
-              </h3>
-              <Accordion
-                className="mt-4"
-                headingLevel={4}
-                items={group.items.map((item) => ({
-                  id: faqItemId(item.id),
-                  question: item.q,
-                  answer: <FaqAnswer answer={item.a} />,
-                }))}
-              />
-            </section>
-          ))}
+          <Accordion
+            headingLevel={3}
+            items={items.map((item) => ({
+              id: faqItemId(item.id),
+              question: item.q,
+              answer: <FaqAnswer answer={item.a} />,
+            }))}
+          />
         </div>
       </div>
     </Section>

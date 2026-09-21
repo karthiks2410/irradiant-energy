@@ -15,7 +15,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Solar solutions across Karnataka",
   description:
-    "Rooftop solar for homes, housing societies and businesses across Karnataka. Choose your audience to see who it is for, how the work runs and which system fits.",
+    "Rooftop solar for homes, housing societies and businesses across Karnataka. Choose your audience to see how the work runs and which system fits.",
   path: "/solutions",
 });
 
@@ -30,8 +30,6 @@ export default function SolutionsPage() {
         current="Solutions"
         eyebrow={copy.eyebrow}
         title={<AccentedTitle text={copy.title} tail={1} />}
-        // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (navigational copy; states no fact).
-        lead="Three starting points, one way of working. Each page shows who it is for, how the project runs and which system fits."
         // The hub is a junction, so the estimate route is offered here too rather than only in the
         // closing band; the three audience pages open with the same pair.
         actions={
@@ -52,8 +50,7 @@ export default function SolutionsPage() {
                 as="li"
                 key={path.slug}
                 href={path.href}
-                eyebrow={path.label}
-                title={path.tile}
+                title={path.label}
                 headingLevel={2}
                 cta={`Explore solar for your ${segmentNoun[path.slug]}`}
               >

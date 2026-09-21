@@ -32,7 +32,7 @@ export const housingSocietySegment: Segment = {
   },
 
   hero: {
-    eyebrow: "For Karnataka RWAs and society committees",
+    eyebrow: "For RWAs and society committees",
     title: "Cut your society's common-area electricity bill in Karnataka — together.",
     // "— solar covers it all" trimmed (CL-27); see held.
     lead: "Lifts, pumps, lobby, parking lights. Lower society maintenance for every flat.",
@@ -59,9 +59,7 @@ export const housingSocietySegment: Segment = {
   journey: {
     copy: {
       eyebrow: "How it works",
-      title: "From first conversation to switch-on, in five clear steps.",
-      // "We've done this with dozens of societies." trimmed (CL-14); see held.
-      lead: "The flow is predictable, the paperwork is on us, and the committee always stays in the loop.",
+      title: "From first conversation to switch-on.",
       source: "P-SS-4 · OLD housing-society-segment-content.ts:56-60",
       status: "verified-live",
     },
@@ -70,7 +68,7 @@ export const housingSocietySegment: Segment = {
         number: "01",
         title: "Free site visit & energy audit",
         description:
-          "We visit the society, study the rooftop layout, common-area load profile, and last 12 months of electricity bills. You get a sized proposal — not a brochure.",
+          "We study the rooftop layout, common-area load profile, and last 12 months of electricity bills.",
         source: "P-SS-4 step 01 · N-39",
         status: "verified-live",
       },
@@ -79,13 +77,13 @@ export const housingSocietySegment: Segment = {
         title: "Proposal & AGM-ready package",
         // "plus a draft resolution … No legalese." trimmed (CL-32); see held.
         description:
-          "We share a detailed proposal — savings, payback, financing options — your committee can circulate ahead of the AGM.",
+          "We share a detailed proposal your committee can circulate ahead of the AGM.",
         source: "P-SS-4 step 02 · P-SS-5 card 1",
         status: "verified-live",
       },
       {
         number: "03",
-        title: "Approval, financing & subsidy filing",
+        title: "Approval & subsidy filing",
         // "Bank financing options handled if you're going EMI." trimmed; see held.
         description:
           "Once the AGM passes, we file the discom paperwork, structural NOCs, and PM Surya Ghar subsidy claim in parallel.",
@@ -97,7 +95,7 @@ export const housingSocietySegment: Segment = {
         title: "Install with minimal disruption",
         // "Tier-1 panels, certified installers," trimmed (CL-05); see held.
         description:
-          "Scheduled to avoid resident inconvenience. Lift access, water tank routing, and parking — coordinated with your facility manager.",
+          "Lift access, water tank routing, and parking — coordinated with your facility manager.",
         source: "P-SS-4 step 04",
         status: "verified-live",
       },
@@ -134,7 +132,6 @@ export const housingSocietySegment: Segment = {
     copy: {
       eyebrow: "Why us",
       title: "Why society committees pick Irradiant.",
-      lead: "Society decisions are committee decisions. Our process is built around transparency, AGM-readiness, and giving every flat owner a clear answer.",
       source: "P-SS-5 · OLD housing-society-segment-content.ts:108-112",
       status: "verified-live",
     },
@@ -143,7 +140,7 @@ export const housingSocietySegment: Segment = {
         title: "Committee-ready proposals",
         // "Includes a draft resolution." trimmed (CL-32); see held.
         description:
-          "Detailed savings model, payback timeline, and financing comparison — formatted to circulate to all flat owners ahead of your AGM.",
+          "Detailed savings model, payback timeline, and financing comparison — formatted to circulate to all flat owners.",
         icon: "doc",
         source: "P-SS-5 card 1",
         status: "verified-live",
@@ -151,23 +148,15 @@ export const housingSocietySegment: Segment = {
       {
         title: "Fair to every flat",
         description:
-          "Common-area solar benefits everyone proportionally — we model the per-flat impact on monthly maintenance so committees can show it transparently.",
+          "We model the per-flat impact on monthly maintenance so committees can show it transparently.",
         icon: "site",
         source: "P-SS-5 card 2",
         status: "verified-live",
       },
       {
-        title: "Subsidy + paperwork on us",
-        description:
-          "PM Surya Ghar registration, discom approval, structural NOCs, net-metering changeover — every form, every visit, our team handles it.",
-        icon: "shield",
-        source: "P-SS-5 card 3 · F-53",
-        status: "verified-live",
-      },
-      {
         title: "Built for shared rooftops",
         description:
-          "Water tanks, AC condensers, lift machine rooms, cell towers — we design around them with elevated mounts, not despite them.",
+          "Water tanks, AC condensers, lift machine rooms, cell towers — we design around them with elevated mounts.",
         icon: "tools",
         source: "P-SS-5 card 4",
         status: "verified-live",
@@ -179,7 +168,6 @@ export const housingSocietySegment: Segment = {
     copy: {
       eyebrow: "Society questions, answered",
       title: "Housing society FAQs",
-      lead: "Things RWAs and society committees ask us most often — costs, AGM approval, subsidy, maintenance, and how it actually works in a multi-flat building.",
       source: "P-SS-6 · OLD housing-society-segment-content.ts:144-147",
       status: "verified-live",
     },
@@ -192,7 +180,7 @@ export const housingSocietySegment: Segment = {
             id: "S-2",
             q: "Is there a government subsidy for housing societies?",
             // "Some states stack additional subsidies on top." trimmed (N-03); see held.
-            a: "Yes — under PM Surya Ghar Muft Bijli Yojana, group housing societies are eligible for subsidy on common-area / shared-use solar installations. The central subsidy is ₹18,000/kW (capped at the relevant slab) for the society's qualifying capacity.\n\nNote: the subsidy structure for societies works slightly differently from individual homes — it's tied to the society's total approved capacity rather than per-flat. We figure out the exact eligibility for your society during the site visit.",
+            a: "Yes — under PM Surya Ghar Muft Bijli Yojana, group housing societies are eligible for a central subsidy of ₹18,000/kW (capped at the relevant slab) on qualifying common-area / shared-use capacity.\n\nIt's tied to the society's total approved capacity, not per flat. We figure out the exact eligibility during the site visit.",
             source: "S-2 · N-05 (CF-07 recorded in held) · 03 §5.6",
             status: "verified-live",
           },
@@ -201,7 +189,7 @@ export const housingSocietySegment: Segment = {
             q: "How do we apply for the subsidy?",
             // The "credited within 30 days" sentence (N-06) and ", vendor empanelment" (CL-02)
             // are trimmed; see held.
-            a: "We handle the entire application — society registration on the National Portal (pmsuryaghar.gov.in), document submission, technical feasibility check, and post-installation claim filing. The society only needs to provide standard paperwork (registration certificate, electricity bill, AGM resolution, building approval).\n\nYou don't chase a single form.",
+            a: "We handle the application — society registration on the National Portal (pmsuryaghar.gov.in), document submission, technical feasibility check, and post-installation claim filing. The society only needs to provide standard paperwork (registration certificate, electricity bill, AGM resolution, building approval).",
             source: "S-3 · F-53 · F-64 · 03 §5.6",
             status: "verified-live",
           },
@@ -222,7 +210,7 @@ export const housingSocietySegment: Segment = {
           {
             id: "S-7",
             q: "What is the procedure to get permission from society to build solar?",
-            a: "Standard steps in order:\n\n1. Initial committee discussion based on our preliminary site survey + savings estimate.\n\n2. We share a detailed proposal: system size, financial model, savings forecast, vendor credentials.\n\n3. Society committee circulates the proposal to all members (typically 2–4 weeks notice).\n\n4. AGM / SGM passes the resolution authorising installation.\n\n5. Society signs the agreement with us.\n\n6. We file for discom approval, structural NOC (where required), and subsidy registration in parallel.\n\nThe whole approval-to-signed-contract phase usually takes 30–60 days depending on how quickly the society can convene the AGM.",
+            a: "1. Initial committee discussion based on our preliminary site survey + savings estimate.\n\n2. We share a detailed proposal: system size, financial model, savings forecast, vendor credentials.\n\n3. Society committee circulates the proposal to all members (typically 2–4 weeks notice).\n\n4. AGM / SGM passes the resolution authorising installation.\n\n5. Society signs the agreement with us.\n\nApproval to signed contract usually takes 30–60 days, depending on how quickly the society can convene the AGM.",
             source: "S-7 · N-51 · N-52 (CF-18 recorded in held) · 03 §5.6",
             status: "verified-live",
           },
@@ -238,7 +226,7 @@ export const housingSocietySegment: Segment = {
             id: "S-9",
             q: "How much rooftop space is needed for a solar installation?",
             // The "50 kW ≈ 5,000 sq ft" sentence is trimmed (N-32); see held.
-            a: "Rough rule: about 100 sq ft per kW of installed solar.\n\nIf the rooftop is shared between water tanks, pump rooms, AC condensers, and so on, we use elevated mounting structures that recover the area underneath — so the practical 'lost' rooftop is much smaller than people assume. The free site visit gives you an exact map of what fits.",
+            a: "Rough rule: about 100 sq ft per kW of installed solar.\n\nWater tanks, pump rooms or AC condensers in the way? Elevated mounting structures recover the area underneath. The site visit maps exactly what fits.",
             source: "S-9 · N-30 (CF-06 recorded in held) · 03 §5.6",
             status: "verified-live",
           },
@@ -248,7 +236,7 @@ export const housingSocietySegment: Segment = {
     stillHaveQuestions: {
       title: "Still have questions?",
       body: {
-        text: "Society decisions deserve thorough answers. Talk to our team on WhatsApp — we'll send you a detailed proposal you can circulate to your committee.",
+        text: "We'll send you a detailed proposal you can circulate to your committee.",
         source: "P-SS-6 · OLD housing-society-segment-content.ts:256-258",
         status: "verified-live",
       },
@@ -333,8 +321,8 @@ export const housingSocietySegment: Segment = {
     },
     {
       id: "S-7:process-model",
-      where: "faq › S-7 (conflict recorded; the 6-step procedure renders alongside the 5-step journey)",
-      text: "6 steps (S-7) vs 5 journey steps vs the brand PDF's 9-stage journey",
+      where: "faq › S-7 (conflict recorded; the procedure renders alongside the journey)",
+      text: "S-7 procedure vs 5 journey steps vs the brand PDF's 9-stage journey",
       reason: "Two process models on one page. Owner and design decide whether to merge the procedure into the journey.",
       ref: "N-60 · CF-18",
     },
@@ -438,7 +426,7 @@ export const housingSocietySegment: Segment = {
     },
     {
       id: "society:maintenance-vs-warranty",
-      where: "journey step 05 and included list (conflict recorded; '5-year free maintenance' renders as the page value)",
+      where: "journey step 05 (conflict recorded; '5 years of cleaning + monitoring + parts' renders as the page value)",
       text: "5-year free maintenance vs '5-year service warranty' vs 'lifetime after-sales'; 'the same month' vs the 30–60 day approval phase",
       reason: "Owner confirms the maintenance scope per segment and the switch-on timing.",
       ref: "N-44 · CF-04 · N-54",

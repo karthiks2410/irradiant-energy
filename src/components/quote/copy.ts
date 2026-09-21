@@ -43,17 +43,17 @@ export function parseSegment(value: string | string[] | undefined): Segment {
  */
 export const flagNotes: Record<EstimateFlag, string> = {
   "bill-defaulted": "Set your monthly bill to see figures for your own usage.",
-  "bill-clamped": "Your bill is outside the range this calculator covers, so the nearest value was used.",
-  "kwh-clamped": "Your usage is outside the range this calculator covers, so the nearest value was used.",
+  "bill-clamped": "Your bill is outside this calculator's range, so the nearest value was used.",
+  "kwh-clamped": "Your usage is outside this calculator's range, so the nearest value was used.",
   "tariff-assumed-karnataka": "This estimate uses Karnataka (BESCOM) tariffs.",
   "tariff-assumed-bescom":
-    "This PIN code is in Karnataka but may be served by another supplier; the estimate uses BESCOM tariffs.",
+    "This PIN code may be served by another supplier; the estimate uses BESCOM tariffs.",
   "tariff-assumed-flat":
-    "Society and business connections are billed on categories a bill amount alone cannot identify, so a flat average tariff is used.",
+    "Society and business tariffs depend on a connection category a bill amount can't identify, so a flat average tariff is used.",
   "size-minimum-applied": "This calculator does not size systems below 1 kWp.",
-  "size-capped-segment": "Capped at the largest system this calculator covers for this property type.",
+  "size-capped-segment": "Capped at this calculator's largest size for this property type.",
   "size-capped-roof": "Capped by the roof area you entered.",
-  "subsidy-not-applicable": "The PM Surya Ghar subsidy does not apply to commercial connections, so none is included.",
+  "subsidy-not-applicable": "The PM Surya Ghar subsidy does not apply to commercial connections.",
   "subsidy-house-count-unknown": "Shown as an upper limit: the society subsidy also depends on the number of homes.",
 };
 

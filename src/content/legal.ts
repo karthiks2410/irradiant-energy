@@ -60,12 +60,12 @@ export const legalPages: readonly LegalPage[] = [
     title: "Cookies and analytics",
     status: "draft-for-counsel",
     basis:
-      "Required if any non-essential tracker is used (17 §2.6, §6.5); sized to the trackers actually deployed, no cookie wall. A banner is shown by owner instruction (review 2) even though nothing non-essential loads today, so the copy has to describe the question we ask — permission in advance — and never imply measurement is running (18 §9.5.7).",
+      "Required if any non-essential tracker is used (17 §2.6, §6.5); sized to the trackers actually deployed. A banner is shown by owner instruction (review 2), and since 2026-09-20 it holds the page until answered — a cookie wall, also by owner instruction, which counsel should review against 17 §2.6; even though nothing non-essential loads today, so the copy has to describe the question we ask — permission in advance — and never imply measurement is running (18 §9.5.7).",
     outline: [
       "What cookies and similar technologies we use",
       "Strictly necessary items (the consent preference cookie: name, contents, lifetime)",
       "Analytics, only if enabled, with the provider named",
-      "What the consent banner asks, that it never blocks the page, and that refusing costs nothing",
+      "What the consent banner asks, that it holds the page until answered, and that refusing costs nothing",
       "How to change your choice: the footer 'Cookie settings' link and /cookies#cookie-settings",
       "Contact",
     ],

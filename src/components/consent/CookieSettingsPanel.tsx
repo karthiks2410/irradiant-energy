@@ -19,9 +19,9 @@ export function CookieSettingsPanel() {
   const answer = !hydrated
     ? "Reading your saved choice…"
     : record === null
-      ? "You have not answered yet. Until you do, nothing optional is loaded — refusing is the state you are already in."
+      ? "You have not answered yet, so nothing optional is loaded."
       : record.analytics
-        ? "Analytics: allowed. Nothing is loaded today, so nothing is being measured; if measurement is switched on, this answer lets it run."
+        ? "Analytics: allowed. Nothing is measured today; if measurement is switched on, this answer lets it run."
         : "Analytics: refused. Nothing is loaded, and nothing will load while this answer stands.";
 
   const decidedAt =

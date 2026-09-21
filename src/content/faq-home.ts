@@ -17,7 +17,6 @@ const items: readonly Faq[] = picked.map((id) => {
 });
 
 const copy: SectionCopy = {
-  eyebrow: "Questions, answered",
   title: "Frequently asked questions",
   lead: homeSegment.faq.copy.lead,
   source: "P-SH-6",

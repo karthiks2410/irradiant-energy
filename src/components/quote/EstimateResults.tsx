@@ -123,13 +123,16 @@ export function EstimateResults() {
             <ChevronDownIcon className="size-4 shrink-0 transition-transform duration-200 ease-controlled group-open:rotate-180" />
           </summary>
           <dl className="mt-4 grid gap-4">
-            {estimate.assumptions.map((assumption) => (
-              <div key={assumption.label}>
-                <dt className="font-mono text-label text-on-dark-muted uppercase">{assumption.label}</dt>
-                <dd className="mt-1 text-small text-white/90">{assumption.value}</dd>
-                <dd className="mt-1 text-small text-on-dark-muted">{assumption.source}</dd>
-              </div>
-            ))}
+            {/* No figure on this page is projected, so the projection assumption is left out here. */}
+            {estimate.assumptions
+              .filter((assumption) => assumption.label !== "Projection")
+              .map((assumption) => (
+                <div key={assumption.label}>
+                  <dt className="font-mono text-label text-on-dark-muted uppercase">{assumption.label}</dt>
+                  <dd className="mt-1 text-small text-white/90">{assumption.value}</dd>
+                  <dd className="mt-1 text-small text-on-dark-muted">{assumption.source}</dd>
+                </div>
+              ))}
           </dl>
         </details>
       )}

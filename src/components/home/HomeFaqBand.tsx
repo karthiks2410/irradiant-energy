@@ -26,7 +26,6 @@ export function HomeFaqBand() {
         <SectionHeading
           id="faq-heading"
           align="stacked"
-          eyebrow={homeFaq.copy.eyebrow}
           title={homeFaq.copy.title}
           lead={homeFaq.copy.lead}
         />

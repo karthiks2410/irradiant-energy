@@ -13,7 +13,7 @@ import { RadioCards, RangeField, TextField } from "@/components/ui";
 import { formatInr } from "@/lib/solar/format";
 import { billBounds } from "@/lib/solar/calc";
 import { parseSegment, segmentOptions } from "./copy";
-import { FieldRow, fieldCell } from "./FieldRow";
+import { FieldRow, fieldCell, fieldCellNoHelper } from "./FieldRow";
 import { useEstimate } from "./EstimateProvider";
 
 /** Keeps a numeric field to digits and a sane length while it is being typed. */
@@ -78,7 +78,7 @@ export function EstimateControls() {
           hint="Confirms which supplier serves you."
         />
         <TextField
-          className={fieldCell}
+          className={fieldCellNoHelper}
           id="estimate-roof"
           name="estimate-roof"
           label="Usable roof area (sq ft)"
@@ -89,7 +89,6 @@ export function EstimateControls() {
           maxLength={7}
           value={roofArea}
           onChange={(event) => setRoofArea(digits(event.target.value, 7))}
-          hint="Leave empty if you are not sure."
         />
       </FieldRow>
     </div>

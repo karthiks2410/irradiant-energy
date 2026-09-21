@@ -40,7 +40,7 @@ export const site = {
   legacyName: "Irradiant Energie",
   tagline: "Energy Made Intelligent", // brand PDF p.5
   description:
-    "Rooftop solar for homes, housing societies and businesses across Karnataka — designed, installed and supported by Irradiant Energy.",
+    "Rooftop solar for homes, housing societies and businesses across Karnataka — designed, installed and supported.",
 
   contact: {
     // Both numbers confirmed by the owner on 2026-09-19. Primary = the WhatsApp line used on the old site.
@@ -125,16 +125,16 @@ export interface NavGroup {
 export const solutions: NavGroup = {
   label: "Solutions",
   items: [
-    { label: "Homes", href: "/solutions/solar/home", description: "Rooftop solar for individual homes and villas" },
+    { label: "Homes", href: "/solutions/solar/home", description: "Individual homes and villas" },
     {
       label: "Housing societies",
       href: "/solutions/solar/housing-society",
-      description: "Shared rooftop solar for apartments and gated communities",
+      description: "Apartments and gated communities",
     },
     {
       label: "Business",
       href: "/solutions/solar/commercial",
-      description: "Solar for shops, offices, factories and warehouses",
+      description: "Shops, offices, factories and warehouses",
     },
   ],
 };

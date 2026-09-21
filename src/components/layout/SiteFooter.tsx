@@ -118,7 +118,7 @@ export function SiteFooter() {
       <div className="border-t-2 border-yellow-400 bg-teal-975">
         <div className="container-page flex flex-col gap-2 py-6 text-small text-on-dark-muted sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {year} {site.name}. {entity.entityName ?? <Placeholder>legal entity name</Placeholder>}{" "}
+            © {year} {entity.entityName ?? site.name}{" "}
             {entity.gstin ? `GSTIN ${entity.gstin}` : <Placeholder>GSTIN</Placeholder>}
           </p>
           <p className="font-mono text-label uppercase">{site.tagline}</p>
