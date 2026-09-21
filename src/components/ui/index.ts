@@ -4,7 +4,7 @@ export { Button, ButtonLink } from "./Button";
 export { Card, CardGrid, LinkCard, cardSurface, type CardTag } from "./Card";
 export { Eyebrow, type EyebrowTone } from "./Eyebrow";
 export { FeatureCard } from "./FeatureCard";
-export { ArrowRightIcon, ChatIcon, CheckIcon, ChevronDownIcon, ErrorIcon, FeatureIcon, PhoneIcon } from "./Icons";
+export { ArrowRightIcon, BusinessAudienceIcon, ChatIcon, CheckIcon, ChevronDownIcon, ErrorIcon, FeatureIcon, HomeAudienceIcon, PhoneIcon, SocietyAudienceIcon } from "./Icons";
 export { PlaceholderPanel } from "./PlaceholderPanel";
 export { Section, type Surface } from "./Section";
 export { SectionHeading } from "./SectionHeading";

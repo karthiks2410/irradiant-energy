@@ -18,6 +18,8 @@
 
 import {
   Activity,
+  Briefcase,
+  Building2,
   MessageCircle,
   Phone,
   ArrowRight,
@@ -100,4 +102,17 @@ export function PhoneIcon({ className }: IconProps) {
  */
 export function ChatIcon({ className }: IconProps) {
   return <MessageCircle aria-hidden="true" strokeWidth={strokeWidth} className={className} />;
+}
+
+/** Audience marks for the Solutions menu: a house, an apartment block, a business. */
+export function HomeAudienceIcon({ className }: IconProps) {
+  return <House aria-hidden="true" strokeWidth={strokeWidth} className={className} />;
+}
+
+export function SocietyAudienceIcon({ className }: IconProps) {
+  return <Building2 aria-hidden="true" strokeWidth={strokeWidth} className={className} />;
+}
+
+export function BusinessAudienceIcon({ className }: IconProps) {
+  return <Briefcase aria-hidden="true" strokeWidth={strokeWidth} className={className} />;
 }
