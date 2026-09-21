@@ -94,7 +94,7 @@ export const site = {
     {
       platform: "instagram",
       label: "Instagram",
-      href: "https://www.instagram.com/irradiant.energy?stkn=MXd5b3ZucTNlZnZxdw==",
+      href: "https://www.instagram.com/irradiant.energy/",
     },
     { platform: "facebook", label: "Facebook", href: "https://www.facebook.com/share/1BBwhFwtQx/?mibextid=wwXIfr" },
   ] as SocialProfile[],
