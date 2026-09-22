@@ -8,7 +8,7 @@ export default function RouteError({ retry }: { error: Error & { digest?: string
   return (
     <section className="container-page section-y">
       <div className="max-w-2xl">
-        <p className="flex items-center gap-3 font-mono text-eyebrow font-medium text-green-700 uppercase">
+        <p className="flex items-center gap-3 font-label text-eyebrow font-medium text-green-700 uppercase">
           <span aria-hidden="true" className="h-px w-8 bg-green-700" />
           Something went wrong
         </p>

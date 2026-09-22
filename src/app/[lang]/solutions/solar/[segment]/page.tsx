@@ -10,9 +10,11 @@ import { SystemTypesSection } from "@/components/solutions/SystemTypes";
 import { CardGrid, FeatureCard, FeatureIcon, Section, SectionHeading } from "@/components/ui";
 import { closingCta, getSegment, proofFallback, segmentSlugs, whatsappPrompts } from "@/content/solutions";
 import type { SegmentSlug } from "@/content/types";
+import { langParams, type RouteKey } from "@/i18n/registry";
+import { getLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 
-type SegmentPageProps = PageProps<"/solutions/solar/[segment]">;
+type SegmentPageProps = PageProps<"/[lang]/solutions/solar/[segment]">;
 
 /**
  * The single Solar Yellow node on each Energy Path (brand PDF p.54): the step where the decision
@@ -25,8 +27,16 @@ const keyStepIndex: Record<SegmentSlug, number> = {
   commercial: 4,
 };
 
+/**
+ * Publishing gate for all three audience pages at once. A page's generateStaticParams may also
+ * generate the segments above it (Next 16.3.5 docs, generate-static-params.md), so this returns
+ * the locale/segment pairs the registry publishes — and `dynamicParams = false` on the [lang]
+ * layout 404s everything else, including an unknown segment.
+ */
 export function generateStaticParams() {
-  return segmentSlugs.map((segment) => ({ segment }));
+  return segmentSlugs.flatMap((segment) =>
+    langParams(`solutions-${segment}` as RouteKey).map(({ lang }) => ({ lang, segment })),
+  );
 }
 
 export async function generateMetadata({ params }: SegmentPageProps): Promise<Metadata> {
@@ -37,6 +47,7 @@ export async function generateMetadata({ params }: SegmentPageProps): Promise<Me
     title: data.meta.title,
     description: data.meta.description,
     path: `/solutions/solar/${data.slug}`,
+    locale: await getLocale(),
   });
 }
 

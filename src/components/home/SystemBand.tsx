@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { ArrowRightIcon, Card, FeatureIcon, Section, SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
 import { homePage } from "@/content/home";
@@ -50,7 +50,7 @@ function SystemCard({ card, comingNextLabel }: { card: (typeof system.cards)[num
           <ArrowRightIcon className="size-4 transition-transform duration-200 ease-controlled group-hover:translate-x-0.5" />
         </span>
       ) : card.comingNext ? (
-        <span className="mt-auto pt-6 font-mono text-label text-ink-2 uppercase">{comingNextLabel}</span>
+        <span className="mt-auto pt-6 font-label text-label text-ink-2 uppercase">{comingNextLabel}</span>
       ) : null}
     </Card>
   );

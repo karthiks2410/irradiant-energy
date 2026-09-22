@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { AccentedTitle } from "@/components/pages/AccentedTitle";
 import { PageHero } from "@/components/pages/PageHero";
 import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
@@ -7,14 +7,21 @@ import { ClosingCtaBand } from "@/components/solutions/ClosingCta";
 import { ButtonLink, Card, Eyebrow, Section } from "@/components/ui";
 import { primaryCta, site, whatsappLink } from "@/content/site";
 import type { SectionCopy } from "@/content/types";
+import { langParams } from "@/i18n/registry";
+import { getLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
-  title: "Contact us",
-  description:
-    "Call, WhatsApp or email Irradiant Energy about rooftop solar for your home, housing society or business — or ask us to call you back.",
-  path: "/contact",
-});
+export const generateStaticParams = () => langParams("contact");
+
+export async function generateMetadata() {
+  return pageMetadata({
+    title: "Contact us",
+    description:
+      "Call, WhatsApp or email Irradiant Energy about rooftop solar for your home, housing society or business — or ask us to call you back.",
+    path: "/contact",
+    locale: await getLocale(),
+  });
+}
 
 const { address, email, phonePrimary, phoneSecondary } = site.contact;
 

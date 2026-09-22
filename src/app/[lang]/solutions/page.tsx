@@ -8,16 +8,23 @@ import { ButtonLink, CardGrid, LinkCard, Section } from "@/components/ui";
 import { homePage } from "@/content/home";
 import { closingCta, segmentNoun } from "@/content/solutions";
 import { primaryCta } from "@/content/site";
+import { langParams } from "@/i18n/registry";
+import { getLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 
 // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (place qualifier). Karnataka is owner-stated
 // (content-inventory F-40); docs/discovery/16-seo-deep-dive.md H3 prescribes it on this page.
-export const metadata = pageMetadata({
-  title: "Solar solutions across Karnataka",
-  description:
-    "Rooftop solar for homes, housing societies and businesses across Karnataka. Choose your audience to see how the work runs and which system fits.",
-  path: "/solutions",
-});
+export const generateStaticParams = () => langParams("solutions");
+
+export async function generateMetadata() {
+  return pageMetadata({
+    title: "Solar solutions across Karnataka",
+    description:
+      "Rooftop solar for homes, housing societies and businesses across Karnataka. Choose your audience to see how the work runs and which system fits.",
+    path: "/solutions",
+    locale: await getLocale(),
+  });
+}
 
 export default function SolutionsPage() {
   const { copy, items } = homePage.audiencePaths;

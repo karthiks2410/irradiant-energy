@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import type { ReactNode } from "react";
 import { isConfirmed, primaryCta, site, solutions, whatsappLink } from "@/content/site";
 import { showPlaceholders } from "@/lib/env";
@@ -20,7 +20,7 @@ const legal = [
 
 function Placeholder({ children }: { children: string }) {
   if (!showPlaceholders) return null;
-  return <span className="font-mono text-label text-yellow-400 uppercase">[{children}]</span>;
+  return <span className="font-label text-label text-yellow-400 uppercase">[{children}]</span>;
 }
 
 const footerLink =
@@ -38,7 +38,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="font-mono text-eyebrow font-medium text-yellow-400 uppercase">{title}</h2>
+      <h2 className="font-label text-eyebrow font-medium text-yellow-400 uppercase">{title}</h2>
       <ul className="mt-4 space-y-1">
         {links.map((l) => (
           <li key={l.href}>
@@ -68,7 +68,11 @@ export function SiteFooter() {
           <SocialLinks className="mt-6" />
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-5">
+        {/* M11: at 1024 the Kannada column headings wrap to two lines and the links below them
+            wrap from 360 up. Nothing is clipped — the columns simply need more width — so
+            Kannada takes 6 of the 12 columns instead of 5, and drops to two columns per row at
+            lg so a heading has twice the measure. English is untouched. */}
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-5 kn:lg:col-span-6 kn:lg:grid-cols-2">
           <FooterColumn title={solutions.label} links={solutions.items} />
           <FooterColumn title="Company" links={company} />
           <FooterColumn title="Legal" links={legal}>
@@ -80,8 +84,8 @@ export function SiteFooter() {
           </FooterColumn>
         </div>
 
-        <address className="not-italic lg:col-span-3">
-          <h2 className="font-mono text-eyebrow font-medium text-yellow-400 uppercase">Connect</h2>
+        <address className="not-italic lg:col-span-3 kn:lg:col-span-2">
+          <h2 className="font-label text-eyebrow font-medium text-yellow-400 uppercase">Connect</h2>
           <ul className="mt-4 space-y-3 text-white/85">
             <li>
               <a href={`tel:${contact.phonePrimary.value.tel}`} className="hover:text-white">
@@ -121,7 +125,7 @@ export function SiteFooter() {
             © {year} {entity.entityName ?? site.name}{" "}
             {entity.gstin ? `GSTIN ${entity.gstin}` : <Placeholder>GSTIN</Placeholder>}
           </p>
-          <p className="font-mono text-label uppercase">{site.tagline}</p>
+          <p className="font-label text-label uppercase">{site.tagline}</p>
         </div>
       </div>
     </footer>

@@ -7,15 +7,22 @@ import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { ClosingCtaBand } from "@/components/solutions/ClosingCta";
 import { Card, CardGrid, Eyebrow, FeatureCard, Section, SectionHeading } from "@/components/ui";
 import { aboutPage } from "@/content/about";
+import { langParams } from "@/i18n/registry";
+import { getLocale } from "@/i18n/server";
 import { showPlaceholders } from "@/lib/env";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
-  title: "About us",
-  description:
-    "How Irradiant Energy works — understand, design, deliver, support — plus the mission, values and people behind the company.",
-  path: "/about",
-});
+export const generateStaticParams = () => langParams("about");
+
+export async function generateMetadata() {
+  return pageMetadata({
+    title: "About us",
+    description:
+      "How Irradiant Energy works — understand, design, deliver, support — plus the mission, values and people behind the company.",
+    path: "/about",
+    locale: await getLocale(),
+  });
+}
 
 const { mission, story, brand, facts, values, team, closingCta } = aboutPage;
 

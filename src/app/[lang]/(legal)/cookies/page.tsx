@@ -17,21 +17,28 @@
 //
 // The page is noindex until counsel approves it.
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { CookieSettingsPanel } from "@/components/consent/CookieSettingsPanel";
 import { LegalPageShell } from "@/components/pages/LegalPageShell";
 import { isLegalPageIndexable } from "@/content/legal";
 import { CONSENT_COOKIE_DAYS, CONSENT_COOKIE_NAME } from "@/lib/consent";
+import { langParams } from "@/i18n/registry";
+import { getLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
-  title: "Cookies and analytics",
-  description:
-    "This site loads no analytics and no advertising cookies. What we ask you in the privacy banner, what your answer stores, and what would change if we ever add measurement.",
-  path: "/cookies",
-  // Draft until counsel approves it (src/content/legal.ts); the sitemap reads the same flag.
-  noindex: !isLegalPageIndexable("cookies"),
-});
+export const generateStaticParams = () => langParams("cookies");
+
+export async function generateMetadata() {
+  return pageMetadata({
+    title: "Cookies and analytics",
+    description:
+      "This site loads no analytics and no advertising cookies. What we ask you in the privacy banner, what your answer stores, and what would change if we ever add measurement.",
+    path: "/cookies",
+    locale: await getLocale(),
+    // Draft until counsel approves it (src/content/legal.ts); the sitemap reads the same flag.
+    noindex: !isLegalPageIndexable("cookies"),
+  });
+}
 
 export default function CookiesPage() {
   return (

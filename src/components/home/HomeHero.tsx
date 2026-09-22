@@ -1,6 +1,8 @@
 import { ArrowRightIcon } from "@/components/ui";
 import { HeroEstimate } from "./HeroEstimate";
 import { homePage } from "@/content/home";
+import { localizePath } from "@/i18n/paths";
+import { getLocale } from "@/i18n/server";
 import { HeroBackdrop } from "./HeroBackdrop";
 
 const { hero } = homePage;
@@ -45,13 +47,21 @@ const { hero } = homePage;
  * Re-measure all slides at both Ken Burns scales whenever the photography changes:
  * `node .qa/hero-contrast.mjs` against a production build does it.
  */
-export function HomeHero() {
+export async function HomeHero() {
+  // A plain <a>, not <Link>, so Lenis applies the header offset — which means the locale prefix
+  // has to be added here rather than by the <Link> wrapper.
+  const locale = await getLocale();
   return (
     <section
       aria-labelledby="hero-title"
       aria-roledescription="carousel"
       data-surface="dark"
-      className="relative isolate -mt-(--header-h) flex min-h-svh flex-col justify-center overflow-hidden bg-teal-900 text-white md:h-[min(960px,100svh)]"
+      // No definite height (layout-risks.md B2). `min-h-svh` already won every comparison against
+      // `h-[min(960px,100svh)]` — min-height beats height — so the rendered height is unchanged at
+      // every viewport, but the stage can now grow instead of clipping: at 1280x800 the tallest
+      // Kannada scene measured 692px against 644px of usable height and `overflow-hidden` cut 24px
+      // off the eyebrow row and 24px off the proof chips.
+      className="relative isolate -mt-(--header-h) flex min-h-svh flex-col justify-center overflow-hidden bg-teal-900 text-white"
     >
       <HeroBackdrop
         slides={hero.slides}
@@ -84,7 +94,7 @@ export function HomeHero() {
             <HeroEstimate />
             {hero.secondaryCta && (
               <a
-                href={hero.secondaryCta.href}
+                href={localizePath(hero.secondaryCta.href, locale)}
                 className="group mt-5 inline-flex min-h-11 items-center gap-2 text-ui font-semibold text-white underline-offset-4 transition-colors duration-200 hover:underline"
               >
                 {hero.secondaryCta.label}

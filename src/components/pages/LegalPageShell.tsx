@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import type { ReactNode } from "react";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { Section } from "@/components/ui";

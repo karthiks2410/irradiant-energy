@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { useEffect, useId, useRef } from "react";
 import { acceptButton, inlineLink, rejectButton } from "@/components/consent/styles";
 import { CONSENT_COOKIE_DAYS, CONSENT_COOKIE_NAME, REJECT_ALL, type ConsentChoice } from "@/lib/consent";
@@ -78,7 +78,7 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
           <section className="rounded-md border border-mist bg-canvas p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-display text-h4 font-semibold text-carbon">Strictly necessary</h3>
-              <span className="rounded-full bg-soft-green px-3 py-1 font-mono text-label text-green-700 uppercase">
+              <span className="rounded-full bg-soft-green px-3 py-1 font-label text-label text-green-700 uppercase">
                 Always on
               </span>
             </div>

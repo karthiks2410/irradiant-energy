@@ -6,21 +6,28 @@
 // visitor's statutory rights. Counsel to confirm the governing-law and jurisdiction wording and
 // the liability limits. The page is noindex until counsel approves it.
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { LegalPageShell } from "@/components/pages/LegalPageShell";
 import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
 import { isLegalPageIndexable } from "@/content/legal";
 import { site } from "@/content/site";
+import { langParams } from "@/i18n/registry";
+import { getLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
-  title: "Terms of use",
-  description:
-    "The terms for using the Irradiant Energy website, including why the savings calculator gives an estimate rather than a quotation or a guarantee.",
-  path: "/terms",
-  // Draft until counsel approves it (src/content/legal.ts); the sitemap reads the same flag.
-  noindex: !isLegalPageIndexable("terms"),
-});
+export const generateStaticParams = () => langParams("terms");
+
+export async function generateMetadata() {
+  return pageMetadata({
+    title: "Terms of use",
+    description:
+      "The terms for using the Irradiant Energy website, including why the savings calculator gives an estimate rather than a quotation or a guarantee.",
+    path: "/terms",
+    locale: await getLocale(),
+    // Draft until counsel approves it (src/content/legal.ts); the sitemap reads the same flag.
+    noindex: !isLegalPageIndexable("terms"),
+  });
+}
 
 export default function TermsPage() {
   return (

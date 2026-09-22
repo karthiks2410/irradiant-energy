@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { connection } from "next/server";
 import { parseSegment } from "@/components/quote/copy";
 import { EstimateControls } from "@/components/quote/EstimateControls";
@@ -10,14 +10,21 @@ import { MobileSummaryBar } from "@/components/quote/MobileSummaryBar";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { Accent, Card, Eyebrow, Section, SectionHeading } from "@/components/ui";
 import { site, whatsappLink } from "@/content/site";
+import { langParams } from "@/i18n/registry";
+import { getLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
-  title: "Solar estimate calculator",
-  description:
-    "Size a rooftop solar system for your home, housing society or business, see the estimated cost, savings and payback, then ask us for a proposal.",
-  path: "/get-quote",
-});
+export const generateStaticParams = () => langParams("get-quote");
+
+export async function generateMetadata() {
+  return pageMetadata({
+    title: "Solar estimate calculator",
+    description:
+      "Size a rooftop solar system for your home, housing society or business, see the estimated cost, savings and payback, then ask us for a proposal.",
+    path: "/get-quote",
+    locale: await getLocale(),
+  });
+}
 
 const linkClass = "font-medium text-green-700 underline underline-offset-2 hover:no-underline";
 

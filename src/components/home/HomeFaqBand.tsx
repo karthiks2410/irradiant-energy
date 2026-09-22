@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { Accordion, ArrowRightIcon, Section, SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
 import { FaqJsonLd } from "@/components/seo/JsonLd";

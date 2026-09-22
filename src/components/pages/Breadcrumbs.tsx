@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 
 export interface Crumb {
   name: string;
@@ -16,7 +16,7 @@ export function Breadcrumbs({ trail = [], current }: { trail?: readonly Crumb[];
   const links: readonly Crumb[] = [{ name: "Home", href: "/" }, ...trail];
   return (
     <nav aria-label="Breadcrumb">
-      <ol className="flex flex-wrap items-center gap-x-2 font-mono text-label text-grey-600 in-data-[surface=dark]:text-white/70">
+      <ol className="flex flex-wrap items-center gap-x-2 font-label text-label text-grey-600 in-data-[surface=dark]:text-white/70">
         {links.map((crumb) => (
           <li key={crumb.href} className="flex items-center gap-x-2">
             <Link

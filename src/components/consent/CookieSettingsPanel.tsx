@@ -34,7 +34,7 @@ export function CookieSettingsPanel() {
   return (
     <div className="mt-6 rounded-md border border-mist bg-canvas p-5 sm:p-6">
       <p className="text-small text-ink-2">{answer}</p>
-      {decidedAt && <p className="mt-2 font-mono text-label text-grey-600 uppercase">Answered {decidedAt}</p>}
+      {decidedAt && <p className="mt-2 font-label text-label text-grey-600 uppercase">Answered {decidedAt}</p>}
       <button type="button" onClick={() => openConsentSettings()} className={`${secondaryButton} mt-4 sm:w-auto`}>
         Open cookie settings
       </button>

@@ -1,5 +1,5 @@
 /**
- * Action-state contract between `submitLead` (src/app/get-quote/actions.ts) and the quote form.
+ * Action-state contract between `submitLead` (src/lib/leads/submit-lead.ts) and the quote form.
  * Lives outside the "use server" module because that file may only export async functions.
  */
 

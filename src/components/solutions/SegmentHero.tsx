@@ -1,5 +1,7 @@
 import Image from "next/image";
 import { PageHero } from "@/components/pages/PageHero";
+import { localizePath } from "@/i18n/paths";
+import { getLocale } from "@/i18n/server";
 import { ArrowRightIcon, ButtonLink, PlaceholderPanel } from "@/components/ui";
 import { projectImages, type ProjectImage } from "@/content/images";
 import { whatsappPrompts } from "@/content/solutions";
@@ -54,8 +56,10 @@ function HeroMedia({ slug }: { slug: SegmentSlug }) {
 }
 
 /** Audience-page opener: breadcrumb, audience eyebrow, H1, lead, estimate CTA and WhatsApp. */
-export function SegmentHero({ segment }: { segment: Segment }) {
+export async function SegmentHero({ segment }: { segment: Segment }) {
   const { hero } = segment;
+  // Plain anchor below (Lenis header offset), so the prefix is applied by hand.
+  const locale = await getLocale();
   // No photo and no placeholder means no media column at all, so <PageHero> draws its brand
   // device rather than reserving a column for an empty block.
   const hasMedia = Boolean(heroPhoto[segment.slug]) || showPlaceholders;
@@ -79,7 +83,7 @@ export function SegmentHero({ segment }: { segment: Segment }) {
         hero.secondaryCta && (
           // Plain anchor, so Lenis applies the header offset (ui-kit README § Motion islands).
           <a
-            href={hero.secondaryCta.href}
+            href={localizePath(hero.secondaryCta.href, locale)}
             className="group inline-flex min-h-11 items-center gap-2 text-ui font-semibold text-green-300 underline-offset-4 transition-colors duration-200 hover:text-white hover:underline"
           >
             {hero.secondaryCta.label}

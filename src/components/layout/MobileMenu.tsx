@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { isNavGroup, nav, primaryCta, site, whatsappLink } from "@/content/site";
+import { LanguageSwitch } from "@/components/i18n/LanguageSwitch";
 import { LogoLockup } from "@/components/brand/Logo";
 
 /**
@@ -26,6 +27,7 @@ export function MobileMenu() {
         type="button"
         onClick={() => dialogRef.current?.showModal()}
         aria-haspopup="dialog"
+        data-header-menu
         className="inline-grid size-11 shrink-0 place-items-center rounded-full border border-white/30 lg:hidden"
       >
         <span className="sr-only">Open menu</span>
@@ -41,8 +43,12 @@ export function MobileMenu() {
         data-lenis-prevent
         className="m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-teal-900 text-white backdrop:bg-teal-975/60"
       >
-        <div className="container-page flex h-(--header-h) items-center justify-between">
+        <div className="container-page flex min-h-(--header-h) items-center justify-between gap-3 py-1.5">
           <LogoLockup className="h-10 w-auto" />
+          {/* The switch is the first thing in the sheet, not an afterthought at the bottom: below
+              lg this is the ONLY place a visitor can change language (layout-risks.md B1 budgets
+              ~24px of slack in the bar itself at 390px). */}
+          <LanguageSwitch className="ml-auto" />
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
@@ -60,7 +66,7 @@ export function MobileMenu() {
             {nav.map((item) =>
               isNavGroup(item) ? (
                 <li key={item.label} className="py-4">
-                  <p className="font-mono text-label text-green-300 uppercase">{item.label} · Rooftop solar</p>
+                  <p className="font-label text-label text-green-300 uppercase">{item.label} · Rooftop solar</p>
                   <ul className="mt-2">
                     {item.items.map((sub) => (
                       <li key={sub.href}>

@@ -9,10 +9,10 @@
  * action's minimum-fill-time check and stays immune to a wrong clock on the visitor's device.
  */
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { submitLead } from "@/app/get-quote/actions";
+import { submitLead } from "@/lib/leads/submit-lead";
 import { Button, CheckboxField, controlClass, FieldShell, TextField } from "@/components/ui";
 import { site, whatsappLink } from "@/content/site";
 import { initialLeadState, type LeadFieldErrors } from "@/lib/leads/state";

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import type { MouseEvent, ReactNode } from "react";
 import { openConsentSettings } from "@/lib/consent";
 

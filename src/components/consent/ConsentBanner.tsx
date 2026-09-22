@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { useEffect, useRef } from "react";
 import { acceptButton, inlineLink, rejectButton, secondaryButton } from "@/components/consent/styles";
 

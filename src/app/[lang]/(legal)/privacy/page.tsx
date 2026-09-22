@@ -2,7 +2,7 @@
 //
 // Written by the build team so counsel has something concrete to mark up, and so the site is not
 // live without a notice. It describes what this codebase actually does today: the lead form in
-// src/lib/leads/schema.ts, the server action in src/app/get-quote/actions.ts and the processors in
+// src/lib/leads/schema.ts, the server action in src/lib/leads/submit-lead.ts and the processors in
 // src/lib/leads/emails.ts. Nothing here cites a statute; the mapping to the DPDP Act, the DPDP
 // Rules and the SPDI Rules is in the two discovery notes above, for counsel to apply.
 //
@@ -10,21 +10,28 @@
 // periods. They are placeholders (src/content/site.ts) and must be filled before launch.
 // The page is noindex until counsel approves it.
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { LegalPageShell } from "@/components/pages/LegalPageShell";
 import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
 import { isLegalPageIndexable } from "@/content/legal";
 import { site } from "@/content/site";
+import { langParams } from "@/i18n/registry";
+import { getLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
-  title: "Privacy notice",
-  description:
-    "What personal information Irradiant Energy collects through this website, why we collect it, who else sees it and how to ask us to change or delete it.",
-  path: "/privacy",
-  // Draft until counsel approves it (src/content/legal.ts); the sitemap reads the same flag.
-  noindex: !isLegalPageIndexable("privacy"),
-});
+export const generateStaticParams = () => langParams("privacy");
+
+export async function generateMetadata() {
+  return pageMetadata({
+    title: "Privacy notice",
+    description:
+      "What personal information Irradiant Energy collects through this website, why we collect it, who else sees it and how to ask us to change or delete it.",
+    path: "/privacy",
+    locale: await getLocale(),
+    // Draft until counsel approves it (src/content/legal.ts); the sitemap reads the same flag.
+    noindex: !isLegalPageIndexable("privacy"),
+  });
+}
 
 const { address, email, phonePrimary } = site.contact;
 
