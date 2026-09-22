@@ -16,8 +16,14 @@ const COPY_FADE_OUT_MS = 240;
 const PROTO_EASE = "ease-[cubic-bezier(0.25,0.1,0.25,1)]";
 
 /* Shared between the live scene and the hidden sizer behind it, so the two measure the same. */
-const HEADLINE =
-  "font-display text-[clamp(3rem,6vw,3.625rem)] leading-[0.96] font-bold tracking-[-0.045em] text-white md:text-[clamp(3.625rem,6vw,6rem)]";
+/*
+ * The size, leading and tracking are the `text-hero` / `text-hero-md` tokens rather than
+ * arbitrary values: the token values in globals.css are byte-for-byte the ones that used to be
+ * inline here, so English renders identically, but Kannada can retune them from one place. With
+ * arbitrary utilities it could not — `leading-[0.96]` would survive every :lang(kn) rule and
+ * Kannada lines overlap by 0.37em at that leading (typography.md §5.1, §6.4 item 1).
+ */
+const HEADLINE = "font-display text-hero font-bold text-white md:text-hero-md";
 const LEAD = "mt-5 max-w-[590px] text-[0.9375rem] leading-[1.7] text-white/90 md:text-[1.1875rem]";
 const CHIPS = "mt-[22px] flex flex-wrap gap-x-[18px] gap-y-2.5";
 const CHIP = "flex items-center gap-2 text-small text-white/90";
@@ -178,7 +184,11 @@ export function HeroBackdrop({ slides, overlay, actions }: HeroBackdropProps) {
             which is exactly what CLS counts. Every scene is laid out in the cell and all but
             the live one is hidden, so the cell is always as tall as the tallest scene and the
             rotation changes nothing but pixels. */}
-        <div className="grid max-w-[690px] pt-[calc(var(--header-h)+4.5rem)] md:pt-[calc(var(--header-h)+5.25rem)] [@media(max-height:720px)]:pt-[calc(var(--header-h)+2rem)] [@media(max-height:720px)]:pb-16">
+        {/* B2 again: Kannada takes back some of the 5.25rem top clearance and reserves a row at
+            the foot, because the carousel dots are absolutely positioned at `bottom-2` and the
+            taller Kannada chip row ran underneath them (chips bottom 750 vs dots top 748 at 1280).
+            English keeps its exact padding. */}
+        <div className="grid max-w-[690px] pt-[calc(var(--header-h)+4.5rem)] md:pt-[calc(var(--header-h)+5.25rem)] kn:md:pt-[calc(var(--header-h)+3.5rem)] kn:pb-14 [@media(max-height:720px)]:pt-[calc(var(--header-h)+2rem)] [@media(max-height:720px)]:pb-16">
           {/* The sizer: every scene, laid out and measured, shown to nobody. It carries no
               heading and no landmark, so it adds nothing for assistive technology to find, and
               it is `inert` because `actions` now contains a real form — `visibility: hidden`
