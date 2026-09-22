@@ -10,7 +10,7 @@ import { showPlaceholders } from "@/lib/env";
 export function PlaceholderTag({ children }: { children: string }) {
   if (!showPlaceholders) return null;
   return (
-    <span className="inline-block rounded-sm bg-yellow-400 px-1.5 py-0.5 align-middle font-mono text-label font-medium text-teal-900 uppercase">
+    <span className="inline-block rounded-sm bg-yellow-400 px-1.5 py-0.5 align-middle font-label text-label font-medium text-teal-900 uppercase">
       [{children}]
     </span>
   );

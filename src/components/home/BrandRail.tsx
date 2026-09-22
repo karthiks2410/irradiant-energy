@@ -55,7 +55,7 @@ function BrandCard({ brand }: { brand: Brand }) {
         </span>
       )}
       <span className="min-w-0">
-        <span className="block font-mono text-label text-green-700 uppercase">{brand.category}</span>
+        <span className="block font-label text-label text-green-700 uppercase">{brand.category}</span>
         <span className="mt-1.5 block truncate font-display text-h4 font-bold text-teal-900">{brand.name}</span>
       </span>
     </div>

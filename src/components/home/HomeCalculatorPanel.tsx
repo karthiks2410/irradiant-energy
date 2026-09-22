@@ -213,7 +213,7 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
         )}
       </div>
 
-      <h3 className="mt-7 font-mono text-label text-grey-600 uppercase">{results.title}</h3>
+      <h3 className="mt-7 font-label text-label text-grey-600 uppercase">{results.title}</h3>
 
       {/* Polite, so the figures are announced once the visitor stops typing rather than per keystroke. */}
       <div aria-live="polite" className="mt-3">
@@ -255,7 +255,7 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
           <dl className="mt-3 grid gap-3">
             {estimate.assumptions.map((assumption) => (
               <div key={assumption.label}>
-                <dt className="font-mono text-label text-grey-600 uppercase">{assumption.label}</dt>
+                <dt className="font-label text-label text-grey-600 uppercase">{assumption.label}</dt>
                 <dd className="mt-1 text-small text-ink-2">{assumption.value}</dd>
                 <dd className="mt-1 text-small text-grey-600">{assumption.source}</dd>
               </div>

@@ -23,7 +23,7 @@ export function Eyebrow({ as: Tag = "p", rule = true, tone = "green", id, classN
   return (
     <Tag
       id={id}
-      className={`${Tag === "span" ? "inline-flex" : "flex"} items-center gap-3 font-mono text-eyebrow font-medium uppercase ${tones[tone]} ${
+      className={`${Tag === "span" ? "inline-flex" : "flex"} items-center gap-3 font-label text-eyebrow font-medium uppercase ${tones[tone]} ${
         rule ? "before:h-0.5 before:w-7 before:shrink-0 before:bg-current before:content-['']" : ""
       } ${className}`}
     >

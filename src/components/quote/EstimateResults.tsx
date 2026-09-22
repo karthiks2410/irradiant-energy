@@ -87,7 +87,7 @@ export function EstimateResults() {
           says it again — read as doubt about our own engine rather than as candour. The
           substance is untouched: the assumptions stay one click away and the disclaimer stays
           below. */}
-      <h2 className="font-mono text-label text-on-dark-muted uppercase">Your estimate</h2>
+      <h2 className="font-label text-label text-on-dark-muted uppercase">Your estimate</h2>
 
       <div aria-live="polite" className="mt-3">
         <ul className="grid grid-cols-2 gap-3">
@@ -128,7 +128,7 @@ export function EstimateResults() {
               .filter((assumption) => assumption.label !== "Projection")
               .map((assumption) => (
                 <div key={assumption.label}>
-                  <dt className="font-mono text-label text-on-dark-muted uppercase">{assumption.label}</dt>
+                  <dt className="font-label text-label text-on-dark-muted uppercase">{assumption.label}</dt>
                   <dd className="mt-1 text-small text-white/90">{assumption.value}</dd>
                   <dd className="mt-1 text-small text-on-dark-muted">{assumption.source}</dd>
                 </div>

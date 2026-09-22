@@ -86,7 +86,7 @@ export function AboutBand() {
             <ul className="mt-7 grid gap-3.5 md:grid-cols-2">
               {about.points.map((point) => (
                 <Card key={point.label} as="li" padding="none" className="p-5 shadow-[0_4px_20px_rgba(2,52,43,0.03)]">
-                  <p className="font-mono text-label font-bold text-green-700">{point.label}</p>
+                  <p className="font-label text-label font-bold text-green-700">{point.label}</p>
                   <p className="mt-2.5 font-display text-h4 font-bold">{point.value}</p>
                 </Card>
               ))}

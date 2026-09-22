@@ -28,7 +28,7 @@ export function SystemTypesSection({ slug }: { slug: SegmentSlug }) {
             // Same green top rule and mono label-above-title order as <FeatureCard>, so the three
             // card families on an audience page read as one set (owner review round 2, point 13).
             <Card as="li" key={type.id} padding="lg" className="flex flex-col border-t-2 border-t-green-500">
-              <span className="font-mono text-label font-medium text-green-700 uppercase">{type.name}</span>
+              <span className="font-label text-label font-medium text-green-700 uppercase">{type.name}</span>
               <h3 className="mt-4 font-display text-h3 font-semibold">{type.plainName}</h3>
               {plain && <p className="mt-3 text-body text-ink-2">{type.plainDescription}</p>}
             </Card>

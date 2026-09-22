@@ -79,7 +79,7 @@ export function PageHero({ trail, current, eyebrow, title, lead, meta, actions, 
               </h1>
               {/* 62ch keeps the lead inside the 60–72ch measure the rest of the site reads at. */}
               {lead && <p className="mt-6 max-w-[62ch] text-lead text-white/85">{lead}</p>}
-              {meta && <p className="mt-6 font-mono text-label text-on-dark-muted uppercase">{meta}</p>}
+              {meta && <p className="mt-6 font-label text-label text-on-dark-muted uppercase">{meta}</p>}
               {actions && <div className="mt-8 flex flex-wrap items-center gap-4">{actions}</div>}
               {support && <div className="mt-6">{support}</div>}
             </div>

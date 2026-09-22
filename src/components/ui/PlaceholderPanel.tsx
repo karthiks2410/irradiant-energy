@@ -34,7 +34,7 @@ export function PlaceholderPanel({ subject, aspect = "16/9", fallback = "none", 
       className={`relative overflow-hidden ${shape}`}
       style={{ backgroundImage: hatch }}
     >
-      <p className="absolute inset-x-4 bottom-4 font-mono text-label text-on-dark-muted">[APPROVED PHOTOGRAPHY] · {subject}</p>
+      <p className="absolute inset-x-4 bottom-4 font-label text-label text-on-dark-muted">[APPROVED PHOTOGRAPHY] · {subject}</p>
     </div>
   );
 }

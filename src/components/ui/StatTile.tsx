@@ -48,7 +48,7 @@ export function StatTile({
     >
       <span className={`block text-small ${muted}`}>
         {label}
-        {estimated && labelEstimated && <span className="font-mono text-label uppercase"> (estimated)</span>}
+        {estimated && labelEstimated && <span className="font-label text-label uppercase"> (estimated)</span>}
       </span>
       <span
         className={`mt-2 block font-mono font-medium tabular-nums ${size === "xl" ? "text-data-xl" : "text-data"} ${
