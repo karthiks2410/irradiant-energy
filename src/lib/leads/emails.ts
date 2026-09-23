@@ -20,10 +20,9 @@
  */
 
 import { isConfirmed, site, whatsappLink } from "@/content/site";
-import { DEFAULT_LOCALE, LOCALE_NAME, type Locale } from "@/i18n/config";
+import { DEFAULT_LOCALE, HTML_LANG, LOCALE_NAME, type Locale } from "@/i18n/config";
 import { getContent } from "@/i18n/content";
 import { fill } from "@/i18n/format";
-import { HTML_LANG } from "@/i18n/config";
 import { siteUrl } from "@/lib/env";
 import type { Estimate } from "@/lib/solar/calc";
 import { SEGMENT_LABELS } from "@/lib/solar/constants";
