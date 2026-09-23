@@ -19,3 +19,4 @@ export { projectImages } from "./images";
 export { homeFaq } from "./faq-home";
 export { faqCardLabels } from "./faq-card-labels";
 export { ui } from "./ui";
+export { quotePage } from "./quote";

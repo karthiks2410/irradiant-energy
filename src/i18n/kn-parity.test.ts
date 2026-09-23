@@ -43,6 +43,13 @@ const SAME_IN_BOTH: Readonly<Record<string, string>> = {
   "home.calculator.fields.tariff.hint": "input withdrawn at owner review round 2",
   "images.duskSkyline.alt": 'hero slide 1: decoration behind fixed copy, rendered with alt=""',
   "socialPending[0].label": "the network's own name",
+  "quote.summary.kwp": "a figure and a unit symbol, nothing to translate; the reviewers' row (u136) repeats it",
+  "quote.summary.waitingNote":
+    "the mobile bar's empty state; the bill is a slider, so the engine always has a figure and this never renders",
+  "quote.assumptions.tariffEntered.value":
+    "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
+  "quote.citations.enteredTariff":
+    "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
   "ui.meta.socialImageAlt":
     "both holes are Latin \u2014 the brand name and the brand line \u2014 so the reviewers' row (u248) repeats the English",
   "ui.footer.gstin": "the statutory identifier: label and number both stay Latin, to match the certificate (glossary #77)",
@@ -90,6 +97,7 @@ function comparable(content: Content) {
     faq: content.faq,
     images: content.images,
     faqCardLabels: content.faqCardLabels,
+    quote: content.quote,
     ui: content.ui,
   };
 }

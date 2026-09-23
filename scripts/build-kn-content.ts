@@ -178,6 +178,13 @@ const MODULES: readonly ModuleSpec[] = [
     why: 'The two buttons on the "Still have questions?" card, also used by the home page\'s closing band.',
   },
   {
+    file: "quote.ts",
+    from: "@/content/quote",
+    en: "quotePage",
+    kn: "quotePage",
+    why: "The calculator and /get-quote: controls, tiles, assumptions, the lead form and the customer email.",
+  },
+  {
     file: "ui.ts",
     from: "@/content/ui",
     en: "ui",
@@ -203,6 +210,12 @@ const UNTRANSLATED: Readonly<Record<string, string>> = {
   "homePage.calculator.fields.tariff.hint": "input withdrawn at owner review round 2; kept for the engine's API",
   "projectImages.duskSkyline.alt": "hero slide 1: decoration behind fixed copy, rendered with alt=\"\"",
   "ui.calculator.flags.kwh-clamped": "the kWh input is not offered, so the engine cannot raise this flag here",
+  "quotePage.summary.waitingNote":
+    "the mobile bar's empty state; the bill is a slider, so the engine always has a figure and this never renders",
+  "quotePage.assumptions.tariffEntered.value":
+    "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
+  "quotePage.citations.enteredTariff":
+    "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
 };
 
 // ---------------------------------------------------------------------------------------------

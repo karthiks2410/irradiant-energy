@@ -14,7 +14,6 @@ import {
   ANNUAL_TARIFF_INFLATION,
   BESCOM_DOMESTIC_SLABS,
   BILL_BOUNDS,
-  citationFor,
   DEFAULT_NON_DOMESTIC_TARIFF,
   ENGINE_VERSION,
   GRID_EMISSION_FACTOR,
@@ -70,11 +69,62 @@ export type EstimateFlag =
   /** Society subsidy shown without a house count, so only the 500 kW cap applied. */
   | "subsidy-house-count-unknown";
 
+/**
+ * One line of the assumptions panel, as keys and figures rather than as a sentence.
+ *
+ * The engine runs in the browser on an English page and on a Kannada one, and in the Server
+ * Action that recomputes the estimate for the sales alert. If it returned prose, one of those
+ * three would always be in the wrong language, and the only way to fix it would be to ship both
+ * languages' copy to every visitor. So it returns what it knows — which assumption this is, the
+ * figures that went into it, and which citation belongs under it — and the page renders it from
+ * templates it was handed (docs/kannada/research/architecture.md §6.7).
+ *
+ * `params` is plain data for the same reason: it crosses the RSC boundary as props.
+ */
 export interface Assumption {
-  label: string;
-  value: string;
-  source: string;
+  key: AssumptionKey;
+  /** `{placeholder}` values for the key's template, formatted en-IN in both locales (§6.7). */
+  params: Readonly<Record<string, string | number>>;
+  citation: CitationKey;
 }
+
+/**
+ * Which assumption a line is. One key per sentence, so the tariff and the subsidy have a key per
+ * branch rather than one key whose template hides a choice.
+ */
+export type AssumptionKey =
+  | "tariffSlabs"
+  | "tariffFlat"
+  | "tariffEntered"
+  | "offset"
+  | "exportCredit"
+  | "generation"
+  | "installedCost"
+  | "subsidyHome"
+  | "subsidySociety"
+  | "subsidyCommercial"
+  | "roofArea"
+  | "projection";
+
+/**
+ * Which provenance line sits under an assumption.
+ *
+ * Every one of these resolves to `citationFor(<constant>)` in `src/content/quote.ts`, except
+ * `enteredTariff` and `exportCredit`, which describe what the estimate did rather than where a
+ * figure came from. Internal provenance ("legacy site engine", "owner to supply…") stays in
+ * constants.ts and never reaches a visitor.
+ */
+export type CitationKey =
+  | "bescomSlabs"
+  | "nonDomesticTariff"
+  | "enteredTariff"
+  | "offsetCap"
+  | "exportCredit"
+  | "specificYield"
+  | "installCost"
+  | "subsidy"
+  | "roofSqft"
+  | "tariffInflation";
 
 export interface Region {
   pincode: string | null;
@@ -280,80 +330,102 @@ function resolveTariff(input: EstimateInput): ResolvedTariff {
 }
 
 /**
- * The assumptions panel is customer-facing copy, so every `source` line here comes from
- * `citationFor`, never from a constant's internal `source`. Internal provenance ("legacy site
- * engine", "to be confirmed", "owner to supply…") stays in constants.ts and the repo.
+ * The assumptions behind an estimate, as keys and figures.
+ *
+ * Figures are formatted here rather than in the page, because the grouping is the same in both
+ * locales: `Intl.NumberFormat("en-IN")` gives the lakh/crore grouping a reader in Karnataka
+ * expects, and `kn-IN` gives the international one (VERIFIED, architecture.md §6.7). So the
+ * number is data, the sentence around it is copy, and the two meet in `describeAssumption`.
+ *
+ * `citation` names the provenance line. It is a key for the same reason the sentence is: every
+ * one of them is customer-facing prose, and prose cannot come out of the engine.
  */
 function buildAssumptions(input: EstimateInput, tariff: ResolvedTariff, roofCapUsed: boolean): Assumption[] {
   const list: Assumption[] = [];
 
   if (tariff.basis === "bescom-domestic-slabs") {
     list.push({
-      label: "Tariff",
-      value: `${BESCOM_DOMESTIC_SLABS.label} only (average ₹${inr2.format(tariff.averageInrPerKwh)} per unit at your usage)`,
-      source: citationFor(BESCOM_DOMESTIC_SLABS),
+      key: "tariffSlabs",
+      params: { rate: inr2.format(tariff.averageInrPerKwh) },
+      citation: "bescomSlabs",
     });
   } else if (tariff.basis === "flat-default") {
     list.push({
-      label: "Tariff",
-      value: `₹${inr2.format(tariff.averageInrPerKwh)} per unit (flat average)`,
-      source: citationFor(DEFAULT_NON_DOMESTIC_TARIFF),
+      key: "tariffFlat",
+      params: { rate: inr2.format(tariff.averageInrPerKwh) },
+      citation: "nonDomesticTariff",
     });
   } else {
     list.push({
-      label: "Tariff",
-      value: `₹${inr2.format(tariff.averageInrPerKwh)} per unit`,
-      source: "Average tariff entered by you",
+      key: "tariffEntered",
+      params: { rate: inr2.format(tariff.averageInrPerKwh) },
+      citation: "enteredTariff",
     });
   }
 
   list.push({
-    label: "Solar offset",
-    value: `Up to ${Math.round(OFFSET_CAP.value * 100)}% of your monthly units; fixed charges and taxes stay payable`,
-    source: citationFor(OFFSET_CAP),
+    key: "offset",
+    params: { offsetPct: Math.round(OFFSET_CAP.value * 100) },
+    citation: "offsetCap",
+  });
+  list.push({ key: "exportCredit", params: {}, citation: "exportCredit" });
+  list.push({
+    key: "generation",
+    params: { yield: inr.format(Math.round(SPECIFIC_YIELD.value)) },
+    citation: "specificYield",
   });
   list.push({
-    label: "Export credit",
-    value: "Not included for surplus units",
-    source: "Any surplus you export is settled by BESCOM under your metering arrangement",
-  });
-  list.push({
-    label: "Generation",
-    value: `${inr.format(Math.round(SPECIFIC_YIELD.value))} kWh per kWp per year`,
-    source: citationFor(SPECIFIC_YIELD),
-  });
-  list.push({
-    label: "Installed cost",
-    value: `₹${inr.format(INSTALL_COST_PER_KWP.value)} per kWp before subsidy`,
-    source: citationFor(INSTALL_COST_PER_KWP),
+    key: "installedCost",
+    params: { costPerKwp: inr.format(INSTALL_COST_PER_KWP.value) },
+    citation: "installCost",
   });
 
   const r = PM_SURYA_GHAR_RESIDENTIAL.value;
   const s = PM_SURYA_GHAR_SOCIETY.value;
-  const subsidyValue =
-    input.segment === "home"
-      ? `₹${inr.format(r.inrPerKwFirstBand)} per kW for the first ${r.firstBandKw} kW and ₹${inr.format(r.inrPerKwSecondBand)} per kW for the next ${r.secondBandKw} kW, up to ₹${inr.format(r.capInr)}, for eligible residential connections`
-      : input.segment === "housing-society"
-        ? `₹${inr.format(s.inrPerKw)} per kW for common facilities, up to ${s.maxKwPerHouse} kW per house and ${inr.format(s.maxKw)} kW in total`
-        : "Not applicable to commercial connections";
-  list.push({
-    label: "PM Surya Ghar subsidy",
-    value: input.segment === "commercial" ? subsidyValue : `${subsidyValue}; decided and paid by the Government after DISCOM inspection; scheme period to ${PM_SURYA_GHAR_SCHEME_END}`,
-    source: citationFor(PM_SURYA_GHAR_RESIDENTIAL),
-  });
+  if (input.segment === "home") {
+    list.push({
+      key: "subsidyHome",
+      params: {
+        firstRate: inr.format(r.inrPerKwFirstBand),
+        firstKw: r.firstBandKw,
+        secondRate: inr.format(r.inrPerKwSecondBand),
+        secondKw: r.secondBandKw,
+        cap: inr.format(r.capInr),
+        schemeEnd: PM_SURYA_GHAR_SCHEME_END,
+      },
+      citation: "subsidy",
+    });
+  } else if (input.segment === "housing-society") {
+    list.push({
+      key: "subsidySociety",
+      params: {
+        ratePerKw: inr.format(s.inrPerKw),
+        kwPerHouse: s.maxKwPerHouse,
+        maxKw: inr.format(s.maxKw),
+        schemeEnd: PM_SURYA_GHAR_SCHEME_END,
+      },
+      citation: "subsidy",
+    });
+  } else {
+    list.push({ key: "subsidyCommercial", params: {}, citation: "subsidy" });
+  }
 
   if (roofCapUsed) {
     list.push({
-      label: "Roof area",
-      value: `${ROOF_SQFT_PER_KWP.value} sq ft per kWp`,
-      source: citationFor(ROOF_SQFT_PER_KWP),
+      key: "roofArea",
+      params: { sqftPerKwp: ROOF_SQFT_PER_KWP.value },
+      citation: "roofSqft",
     });
   }
 
   list.push({
-    label: "Projection",
-    value: `${PROJECTION_HORIZON_YEARS.value} years, ${(ANNUAL_TARIFF_INFLATION.value * 100).toFixed(0)}% tariff increase and ${(ANNUAL_DEGRADATION.value * 100).toFixed(1)}% panel degradation per year`,
-    source: citationFor(ANNUAL_TARIFF_INFLATION),
+    key: "projection",
+    params: {
+      years: PROJECTION_HORIZON_YEARS.value,
+      tariffPct: (ANNUAL_TARIFF_INFLATION.value * 100).toFixed(0),
+      degradationPct: (ANNUAL_DEGRADATION.value * 100).toFixed(1),
+    },
+    citation: "tariffInflation",
   });
 
   return list;

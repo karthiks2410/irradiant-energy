@@ -22,6 +22,7 @@ import { homePage as enHomePage } from "@/content/home";
 import { projectImages as enProjectImages } from "@/content/images";
 import { nav as enNav, primaryCta as enPrimaryCta, site as enSite, socialPending as enSocialPending } from "@/content/site";
 import { faqCardLabels as enFaqCardLabels } from "@/content/solutions/shared";
+import { quotePage as enQuotePage } from "@/content/quote";
 import { ui as enUi } from "@/content/ui";
 import * as kn from "@/content/kn";
 import type { Locale } from "./config";
@@ -47,6 +48,8 @@ export interface Content {
   readonly images: typeof enProjectImages;
   /** The two buttons on the "Still have questions?" card. */
   readonly faqCardLabels: typeof enFaqCardLabels;
+  /** The calculator and /get-quote, including the customer acknowledgement email. */
+  readonly quote: typeof enQuotePage;
   readonly ui: typeof enUi;
 }
 
@@ -71,6 +74,7 @@ function build(locale: Locale): Content {
     faq: overlay ? localize(enHomeFaq, kn.homeFaq, "faq") : enHomeFaq,
     images: overlay ? localize(enProjectImages, kn.projectImages, "images") : enProjectImages,
     faqCardLabels: overlay ? localize(enFaqCardLabels, kn.faqCardLabels, "faqCardLabels") : enFaqCardLabels,
+    quote: overlay ? localize(enQuotePage, kn.quotePage, "quotePage") : enQuotePage,
     ui: overlay ? localize(enUi, kn.ui, "ui") : enUi,
   };
 }
