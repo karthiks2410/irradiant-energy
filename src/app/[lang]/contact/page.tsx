@@ -5,8 +5,9 @@ import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { ClosingCtaBand } from "@/components/solutions/ClosingCta";
 import { ButtonLink, Card, Eyebrow, Section } from "@/components/ui";
-import { primaryCta, site, whatsappLink } from "@/content/site";
-import type { SectionCopy } from "@/content/types";
+import { site, whatsappLink } from "@/content/site";
+import { getContent } from "@/i18n/content";
+import { fill } from "@/i18n/format";
 import { langParams } from "@/i18n/registry";
 import { getLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
@@ -14,21 +15,14 @@ import { pageMetadata } from "@/lib/seo";
 export const generateStaticParams = () => langParams("contact");
 
 export async function generateMetadata() {
-  return pageMetadata({
-    title: "Contact us",
-    description:
-      "Call, WhatsApp or email Irradiant Energy about rooftop solar for your home, housing society or business — or ask us to call you back.",
-    path: "/contact",
-    locale: await getLocale(),
-  });
+  const locale = await getLocale();
+  const { meta } = getContent(locale).contact;
+  return pageMetadata({ title: meta.title, description: meta.description, path: "/contact", locale });
 }
 
 const { address, email, phonePrimary, phoneSecondary } = site.contact;
 
 const phones = [phonePrimary.value, phoneSecondary.value];
-
-/** Legacy global WhatsApp prefill (report §11.2), with the rename applied (D-001). */
-const whatsappPrompt = `Hi! I'm interested in learning more about ${site.name} solar solutions.`;
 
 /**
  * A plain Google Maps search link, never an embedded map: an iframe would load third-party code
@@ -44,24 +38,37 @@ const inlineLink = "font-medium text-green-700 underline underline-offset-2 hove
 /** Each way in is one row on a shared hairline rhythm, so no route looks more official than another. */
 const contactRow = "border-t border-mist pt-8 first:border-t-0 first:pt-0";
 
-// PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: positioning copy, no promise of a response time.
-const callBackCta: SectionCopy = {
-  title: "Prefer a call back?",
-  lead: "Send us your PIN code and a rough idea of your monthly electricity bill, and we will come back to you about your roof.",
-  source: "proposed",
-  status: "proposed",
-};
+/**
+ * The text on either side of a `{hole}` in a sentence that wraps an ELEMENT — a link, a phone
+ * number that has to stay clickable — with the space that abuts the hole taken off.
+ *
+ * The page then writes `{before}{" "}<a …/>{" "}{after}`, which is the same child sequence React
+ * emitted when the sentence was three JSX children with the link welded into the middle: the
+ * space stays its own child, so the `<!-- -->` separators in the English markup do not move.
+ * What changes is that each locale now decides where in its own sentence the hole sits.
+ */
+function around(template: string, name: string): [string, string] {
+  const [before = "", after = ""] = template.split(`{${name}}`);
+  return [before.replace(/ $/, ""), after.replace(/^ /, "")];
+}
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const content = getContent(await getLocale());
+  const { breadcrumb, hero, ways, grievance, callBack } = content.contact;
+  const whatsappPrompt = fill(ways.whatsapp.prefill, { siteName: site.name });
+  const [noticeBefore, noticeAfter] = around(grievance.privacyNotice, "privacyNoticeLink");
+  const [fallbackHead, fallbackTail] = around(grievance.fallback, "email");
+  const [fallbackMiddle, fallbackEnd] = around(fallbackTail, "phone");
+
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: "Contact", path: "/contact" }]} />
+      <BreadcrumbJsonLd items={[{ name: breadcrumb, path: "/contact" }]} />
 
       {/* PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: positioning copy, no promise of a response time. */}
       <PageHero
-        current="Contact"
-        title={<AccentedTitle text="Talk to us about your roof." tail={2} />}
-        lead="Tell us where you are and what you would like to power."
+        current={breadcrumb}
+        title={<AccentedTitle text={hero.title} tail={2} accent={hero.accent} />}
+        lead={hero.lead}
       />
 
       <Section surface="white" aria-labelledby="contact-ways-heading">
@@ -70,12 +77,12 @@ export default function ContactPage() {
             {/* The heading used to be screen-reader-only, which left the column opening on a bare
                 list of numbers. It is the section's subject, so it is on the page now. */}
             <h2 id="contact-ways-heading" className="font-display text-h2 font-bold">
-              Ways to reach us
+              {ways.heading}
             </h2>
 
             <ul className="mt-10 space-y-8">
               <li className={contactRow}>
-                <Eyebrow>Call us</Eyebrow>
+                <Eyebrow>{ways.callEyebrow}</Eyebrow>
                 {/* One tel: link per number — the legacy site wrapped both numbers in a single link. */}
                 <ul className="mt-3">
                   {phones.map((phone) => (
@@ -89,10 +96,8 @@ export default function ContactPage() {
               </li>
 
               <li className={contactRow}>
-                <Eyebrow>WhatsApp</Eyebrow>
-                <p className="mt-3 max-w-[62ch] text-body text-ink-2">
-                  Send photos of your roof or your last electricity bill.
-                </p>
+                <Eyebrow>{ways.whatsapp.eyebrow}</Eyebrow>
+                <p className="mt-3 max-w-[62ch] text-body text-ink-2">{ways.whatsapp.body}</p>
                 <ButtonLink
                   href={whatsappLink(whatsappPrompt)}
                   target="_blank"
@@ -100,12 +105,12 @@ export default function ContactPage() {
                   className="mt-5"
                   arrow={false}
                 >
-                  Message us on WhatsApp
+                  {ways.whatsapp.button}
                 </ButtonLink>
               </li>
 
               <li className={contactRow}>
-                <Eyebrow>Email</Eyebrow>
+                <Eyebrow>{ways.emailEyebrow}</Eyebrow>
                 <p className="mt-3">
                   <a href={`mailto:${email.value}`} className={contactLink}>
                     {email.value}
@@ -123,7 +128,7 @@ export default function ContactPage() {
              * says only where we are.
              */}
             <Card padding="lg" className="border-t-2 border-t-green-500">
-              <Eyebrow rule={false}>Our office</Eyebrow>
+              <Eyebrow rule={false}>{ways.office.eyebrow}</Eyebrow>
               <address className="mt-4 text-body not-italic text-ink-2">
                 {address.value.lines.map((line) => (
                   <span key={line} className="block">
@@ -137,7 +142,7 @@ export default function ContactPage() {
                 rel="noopener noreferrer"
                 className="mt-5 inline-flex min-h-11 items-center font-medium text-green-700 underline underline-offset-4 transition-colors duration-200 ease-controlled hover:text-teal-900"
               >
-                Open in Google Maps
+                {ways.office.mapsLink}
               </a>
             </Card>
           </div>
@@ -147,14 +152,13 @@ export default function ContactPage() {
       <Section surface="canvas" id="grievance" aria-labelledby="contact-grievance-heading">
         <div className="max-w-prose">
           <h2 id="contact-grievance-heading" className="font-display text-h3 font-bold text-carbon">
-            Grievance and privacy contact
+            {grievance.heading}
           </h2>
-          <p className="mt-4 text-body text-ink-2">
-            Write here to find out what personal information we hold about you, have it corrected or deleted, withdraw
-            consent, or complain about how we handled your details.
-          </p>
+          <p className="mt-4 text-body text-ink-2">{grievance.body}</p>
           <p className="mt-4 text-body text-ink-2">
             {site.legal.grievanceOfficer ? (
+              // A name and an address, not a sentence: the em dash is punctuation between two
+              // facts, so there is nothing here to translate.
               <>
                 {site.legal.grievanceOfficer.name} —{" "}
                 <a href={`mailto:${site.legal.grievanceOfficer.email}`} className={inlineLink}>
@@ -163,30 +167,39 @@ export default function ContactPage() {
               </>
             ) : (
               <>
-                <PlaceholderTag>Grievance contact to be named</PlaceholderTag> Email{" "}
+                {/* Development scaffolding; nothing in this branch renders while site.ts names an
+                    officer, but the sentence is translated all the same. */}
+                <PlaceholderTag>Grievance contact to be named</PlaceholderTag>{" "}
+                {fallbackHead}{" "}
                 <a href={`mailto:${email.value}`} className={inlineLink}>
                   {email.value}
                 </a>{" "}
-                or call{" "}
+                {fallbackMiddle}{" "}
                 <a href={`tel:${phonePrimary.value.tel}`} className={inlineLink}>
                   {phonePrimary.value.display}
                 </a>{" "}
-                and say that it is a privacy request.
+                {fallbackEnd}
               </>
             )}
           </p>
           <p className="mt-4 text-body text-ink-2">
-            Our{" "}
+            {noticeBefore}{" "}
             <Link href="/privacy" className={inlineLink}>
-              privacy notice
+              {grievance.privacyNoticeLink}
             </Link>{" "}
-            sets out what we collect through this site and why.
+            {noticeAfter}
           </p>
         </div>
       </Section>
 
       {/* The phone numbers are the subject of this page, so the shared band drops its call link. */}
-      <ClosingCtaBand copy={callBackCta} primary={primaryCta} whatsappText={whatsappPrompt} showCall={false} />
+      <ClosingCtaBand
+        content={content}
+        copy={callBack}
+        primary={content.primaryCta}
+        whatsappText={whatsappPrompt}
+        showCall={false}
+      />
     </>
   );
 }

@@ -8,7 +8,10 @@ import type { Cta, Faq, FaqSection, SectionCopy } from "@/content/types";
 
 const picked = ["H-4", "H-5", "H-2", "H-10", "H-8"] as const;
 
-const allHomeFaqs = homeSegment.faq.groups.flatMap((group) => group.items);
+// `flatMap<Faq>`: the groups are `as const` tuples now (so the Kannada overlay keeps their
+// lengths), and without the type argument TypeScript infers the first group's literal type for
+// the whole list.
+const allHomeFaqs = homeSegment.faq.groups.flatMap<Faq>((group) => [...group.items]);
 
 const items: readonly Faq[] = picked.map((id) => {
   const faq = allHomeFaqs.find((item) => item.id === id);

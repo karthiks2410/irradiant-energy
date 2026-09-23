@@ -43,6 +43,9 @@ const SAME_IN_BOTH: Readonly<Record<string, string>> = {
   "home.calculator.fields.tariff.hint": "input withdrawn at owner review round 2",
   "images.duskSkyline.alt": 'hero slide 1: decoration behind fixed copy, rendered with alt=""',
   "socialPending[0].label": "the network's own name",
+  "ui.meta.socialImageAlt":
+    "both holes are Latin \u2014 the brand name and the brand line \u2014 so the reviewers' row (u248) repeats the English",
+  "ui.footer.gstin": "the statutory identifier: label and number both stay Latin, to match the certificate (glossary #77)",
   "quote.summary.kwp": "a figure and a unit symbol, nothing to translate; the reviewers' row (u136) repeats it",
   "quote.summary.waitingNote":
     "the mobile bar's empty state; the bill is a slider, so the engine always has a figure and this never renders",
@@ -50,9 +53,22 @@ const SAME_IN_BOTH: Readonly<Record<string, string>> = {
     "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
   "quote.citations.enteredTariff":
     "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
-  "ui.meta.socialImageAlt":
-    "both holes are Latin \u2014 the brand name and the brand line \u2014 so the reviewers' row (u248) repeats the English",
-  "ui.footer.gstin": "the statutory identifier: label and number both stay Latin, to match the certificate (glossary #77)",
+  "contactPage.ways.whatsapp.eyebrow": "the network's own name",
+  "about.brand.tagline.text": "the brand line, kept Latin (brand PDF p.5); the reviewers' row repeats it verbatim",
+  "about.brand.purposeShort.text": "brand PDF purpose line; the rebuilt About page renders positioning and promise only",
+  "about.brand.introduction.text": "brand PDF 10-word introduction; nothing on the site renders it",
+  // <SegmentFaq> flattens the groups into one list and never prints a group heading.
+  "segments.home.faq.groups[0].label": "FAQ group headings are not rendered",
+  "segments.home.faq.groups[1].label": "FAQ group headings are not rendered",
+  "segments.home.faq.groups[2].label": "FAQ group headings are not rendered",
+  "segments.home.faq.groups[3].label": "FAQ group headings are not rendered",
+  "segments.housing-society.faq.groups[0].label": "FAQ group headings are not rendered",
+  "segments.housing-society.faq.groups[1].label": "FAQ group headings are not rendered",
+  "segments.commercial.faq.groups[0].label": "FAQ group headings are not rendered",
+  "segments.commercial.faq.groups[1].label": "FAQ group headings are not rendered",
+  "solutionsShared.systemTypes.items[0].description": "audience-neutral one-liner; the cards render `plainDescription` or nothing",
+  "solutionsShared.systemTypes.items[1].description": "audience-neutral one-liner; the cards render `plainDescription` or nothing",
+  "solutionsShared.systemTypes.items[2].description": "audience-neutral one-liner; the cards render `plainDescription` or nothing",
 };
 
 /**
@@ -61,7 +77,18 @@ const SAME_IN_BOTH: Readonly<Record<string, string>> = {
  * Read from `FIXED_KEYS` rather than retyped, plus the per-module additions declared in
  * scripts/build-kn-content.ts. If the type's list grows, this walk follows it.
  */
-const FACT_KEYS = new Set<string>([...FIXED_KEYS, "contact", "legal", "social", "legacyName"]);
+const FACT_KEYS = new Set<string>([
+  ...FIXED_KEYS,
+  "contact",
+  "legal",
+  "social",
+  "legacyName",
+  // The three sections of an audience page that no component renders (see the segments entry in
+  // scripts/build-kn-content.ts). They are English-owned there, so there is nothing to compare.
+  "whoItsFor",
+  "included",
+  "leadForm",
+]);
 
 interface Leaf {
   path: string;
@@ -87,7 +114,16 @@ function leaves(en: unknown, kn: unknown, path = ""): Leaf[] {
 /** `held` never renders, so it is not translated and must not be measured. */
 function comparable(content: Content) {
   const { held, ...home } = content.home;
+  const { held: aboutHeld, ...about } = content.about;
+  // Each segment carries its own `held`; strip all three the same way.
+  const segments = Object.fromEntries(
+    Object.entries(content.segments).map(([slug, { held: segmentHeld, ...rest }]) => {
+      void segmentHeld;
+      return [slug, rest];
+    }),
+  );
   void held;
+  void aboutHeld;
   return {
     site: content.site,
     nav: content.nav,
@@ -98,6 +134,13 @@ function comparable(content: Content) {
     images: content.images,
     faqCardLabels: content.faqCardLabels,
     quote: content.quote,
+    about,
+    // `contactPage`, not `contact`: "contact" is a FACT key (site.ts business facts), and the
+    // walk skips fact keys by name at any depth — so calling it that would have quietly skipped
+    // the whole /contact page.
+    contactPage: content.contact,
+    segments,
+    solutionsShared: content.solutionsShared,
     ui: content.ui,
   };
 }
@@ -170,7 +213,7 @@ describe("the overlay cannot move a fact", () => {
 describe("accents", () => {
   it("names a run that is actually part of its own heading", () => {
     for (const locale of ["en", "kn"] as const) {
-      const { home } = getContent(locale);
+      const { home, about, contact, solutionsShared } = getContent(locale);
       const headings = [
         home.audiencePaths.copy,
         home.about.copy,
@@ -180,6 +223,13 @@ describe("accents", () => {
         home.projects.copy,
         home.calculator.copy,
         home.finalCta.copy,
+        about.mission,
+        about.story.copy,
+        about.values.copy,
+        about.closingCta.copy,
+        contact.hero,
+        contact.callBack,
+        solutionsShared.closingCta,
       ];
       for (const copy of headings) {
         expect(copy.accent, `${locale}: ${copy.title}`).not.toBe("");

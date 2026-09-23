@@ -140,7 +140,15 @@ export type SystemTypeId = "on-grid" | "off-grid" | "hybrid";
 
 export interface SystemType extends Sourced {
   id: SystemTypeId;
-  name: string;
+  /**
+   * The mono label above the card headline ("On-Grid").
+   *
+   * `label`, not `name`: `name` is English-owned at every depth of a Kannada overlay
+   * (FIXED_KEYS in src/i18n/translation.ts) because it holds proper names — the brand, a team
+   * member. These three are translated technical labels, and the home page's system tags already
+   * carry the same words in Kannada.
+   */
+  label: string;
   /** Card headline. */
   plainName: string;
   /** Audience-neutral one-liner: use it on the housing-society and business pages. */

@@ -26,7 +26,7 @@ function positional(text: string, words: number): { before: string; accent: stri
 
 /** Every English heading that used the positional rule, with the `words`/`tail` it passed. */
 const HEADINGS: readonly { where: string; title: string; accent: string; words: number }[] = (() => {
-  const { home } = getContent("en");
+  const { home, about, contact, solutionsShared } = getContent("en");
   return [
     { where: "home/audiencePaths", ...home.audiencePaths.copy, words: 2 },
     { where: "home/about", ...home.about.copy, words: 2 },
@@ -36,6 +36,16 @@ const HEADINGS: readonly { where: string; title: string; accent: string; words: 
     { where: "home/projects", ...home.projects.copy, words: 2 },
     { where: "home/calculator", ...home.calculator.copy, words: 2 },
     { where: "home/finalCta", ...home.finalCta.copy, words: 2 },
+    // The inner pages. <AccentedTitle> defaults to the LAST word, so `words: 1` where the call
+    // site passed no `tail`; the closing bands all passed 2.
+    { where: "about/mission", ...about.mission, words: 1 },
+    { where: "about/story", ...about.story.copy, words: 1 },
+    { where: "about/values", ...about.values.copy, words: 2 },
+    { where: "about/closingCta", ...about.closingCta.copy, words: 2 },
+    { where: "contact/hero", ...contact.hero, words: 2 },
+    { where: "contact/callBack", ...contact.callBack, words: 2 },
+    // The closing band on /solutions and on all three audience pages.
+    { where: "solutions/closingCta", ...solutionsShared.closingCta, words: 2 },
     // /solutions renders the same audiencePaths title through <AccentedTitle tail={1}>, whose
     // last word is "Karnataka." — a different split from the home page's "in Karnataka.".
   ].map(({ where, title, accent, words }) => ({ where, title, accent, words }));

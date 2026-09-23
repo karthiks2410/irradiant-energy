@@ -178,6 +178,40 @@ const MODULES: readonly ModuleSpec[] = [
     why: 'The two buttons on the "Still have questions?" card, also used by the home page\'s closing band.',
   },
   {
+    file: "about.ts",
+    from: "@/content/about",
+    en: "aboutPage",
+    kn: "aboutPage",
+    why: "/about, top to bottom. Team members' names are English-owned (FIXED_KEYS `name`).",
+  },
+  {
+    file: "contact.ts",
+    from: "@/content/contact",
+    en: "contactPage",
+    kn: "contactPage",
+    why: "/contact. The numbers, the address and the officer are facts in site.ts and are not here at all.",
+  },
+  {
+    file: "solutions-shared.ts",
+    from: "@/content/solutions/shared",
+    en: "solutionsShared",
+    kn: "solutionsShared",
+    why: "The /solutions hub plus the frames and the bare nouns the three audience pages share.",
+  },
+  {
+    file: "solutions-segments.ts",
+    from: "@/content/solutions/segments",
+    en: "segments",
+    kn: "segments",
+    // Three whole sections of each segment module that NO component renders: the rebuilt audience
+    // page (app/[lang]/solutions/solar/[segment]/page.tsx) shows hero, journey, system types,
+    // trust, FAQ and the closing band, and the lead form lives on /get-quote with its own copy.
+    // They stay in the English modules as the record of that page's copy. If a page starts
+    // rendering one, delete it from this list — the overlay type will then demand the Kannada.
+    fixed: ["whoItsFor", "included", "leadForm"],
+    why: "The three audience pages. `held` is skipped by FIXED_KEYS, as on every other module.",
+  },
+  {
     file: "quote.ts",
     from: "@/content/quote",
     en: "quotePage",
@@ -216,6 +250,21 @@ const UNTRANSLATED: Readonly<Record<string, string>> = {
     "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
   "quotePage.citations.enteredTariff":
     "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
+  "contactPage.ways.whatsapp.eyebrow": "the network's own name",
+  "solutionsShared.systemTypes.items[0].description": "audience-neutral one-liner; the cards render `plainDescription` or nothing",
+  "solutionsShared.systemTypes.items[1].description": "audience-neutral one-liner; the cards render `plainDescription` or nothing",
+  "solutionsShared.systemTypes.items[2].description": "audience-neutral one-liner; the cards render `plainDescription` or nothing",
+  // <SegmentFaq> flattens the groups into one list and never prints a group heading.
+  "segments.home.faq.groups[0].label": "FAQ group headings are not rendered",
+  "segments.home.faq.groups[1].label": "FAQ group headings are not rendered",
+  "segments.home.faq.groups[2].label": "FAQ group headings are not rendered",
+  "segments.home.faq.groups[3].label": "FAQ group headings are not rendered",
+  "segments.housing-society.faq.groups[0].label": "FAQ group headings are not rendered",
+  "segments.housing-society.faq.groups[1].label": "FAQ group headings are not rendered",
+  "segments.commercial.faq.groups[0].label": "FAQ group headings are not rendered",
+  "segments.commercial.faq.groups[1].label": "FAQ group headings are not rendered",
+  "aboutPage.brand.purposeShort.text": "brand PDF purpose line; the rebuilt About page renders positioning and promise only",
+  "aboutPage.brand.introduction.text": "brand PDF 10-word introduction; nothing on the site renders it",
 };
 
 // ---------------------------------------------------------------------------------------------

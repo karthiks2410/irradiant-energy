@@ -20,3 +20,7 @@ export { homeFaq } from "./faq-home";
 export { faqCardLabels } from "./faq-card-labels";
 export { ui } from "./ui";
 export { quotePage } from "./quote";
+export { aboutPage } from "./about";
+export { contactPage } from "./contact";
+export { segments } from "./solutions-segments";
+export { solutionsShared } from "./solutions-shared";

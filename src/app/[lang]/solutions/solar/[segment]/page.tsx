@@ -8,8 +8,9 @@ import { SegmentFaq } from "@/components/solutions/SegmentFaq";
 import { SegmentHero } from "@/components/solutions/SegmentHero";
 import { SystemTypesSection } from "@/components/solutions/SystemTypes";
 import { CardGrid, FeatureCard, FeatureIcon, Section, SectionHeading } from "@/components/ui";
-import { closingCta, getSegment, proofFallback, segmentSlugs, whatsappPrompts } from "@/content/solutions";
-import type { SegmentSlug } from "@/content/types";
+import { isSegmentSlug, segmentSlugs } from "@/content/solutions";
+import type { Faq, Segment, SegmentSlug } from "@/content/types";
+import { getContent, type Content } from "@/i18n/content";
 import { langParams, type RouteKey } from "@/i18n/registry";
 import { getLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
@@ -28,6 +29,17 @@ const keyStepIndex: Record<SegmentSlug, number> = {
 };
 
 /**
+ * This page's copy in the locale being rendered, or undefined for a slug the site does not have.
+ *
+ * Typed as `Segment` rather than as the literal each module exports: the page reads fields that
+ * only some segments set (`journey.copy.lead`), and the interface is where "some pages have a
+ * lead" is written down.
+ */
+function segmentFor(content: Content, slug: string): Segment | undefined {
+  return isSegmentSlug(slug) ? content.segments[slug] : undefined;
+}
+
+/**
  * Publishing gate for all three audience pages at once. A page's generateStaticParams may also
  * generate the segments above it (Next 16.3.5 docs, generate-static-params.md), so this returns
  * the locale/segment pairs the registry publishes — and `dynamicParams = false` on the [lang]
@@ -41,38 +53,42 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: SegmentPageProps): Promise<Metadata> {
   const { segment } = await params;
-  const data = getSegment(segment);
+  const locale = await getLocale();
+  const data = segmentFor(getContent(locale), segment);
   if (!data) return {};
   return pageMetadata({
     title: data.meta.title,
     description: data.meta.description,
     path: `/solutions/solar/${data.slug}`,
-    locale: await getLocale(),
+    locale,
   });
 }
 
 export default async function SegmentPage({ params }: SegmentPageProps) {
   const { segment } = await params;
-  const data = getSegment(segment);
+  // One read of the merged content for the whole page: the segment's own copy, the shared
+  // solutions copy and the chrome labels all come from the same locale.
+  const content = getContent(await getLocale());
+  const data = segmentFor(content, segment);
   if (!data) notFound();
 
   const { slug, journey, trust, faq } = data;
   // The status filter leaves the business page without trust cards, so it falls back to the
-  // owner-approved prototype proof cards (src/content/solutions/index.ts).
-  const trustCards = trust.cards.length > 0 ? trust.cards : proofFallback.cards;
-  const faqs = faq.groups.flatMap((group) => group.items);
+  // owner-approved prototype proof cards, which are the home page's "Why us" set.
+  const trustCards = trust.cards.length > 0 ? trust.cards : content.home.why.cards;
+  const faqs = faq.groups.flatMap<Faq>((group) => [...group.items]);
 
   return (
     <>
       <BreadcrumbJsonLd
         items={[
-          { name: "Solutions", path: "/solutions" },
+          { name: content.solutionsShared.hub.breadcrumb, path: "/solutions" },
           { name: data.label, path: `/solutions/solar/${slug}` },
         ]}
       />
       <FaqJsonLd faqs={faqs.map((item) => ({ question: item.q, answer: item.a }))} />
 
-      <SegmentHero segment={data} />
+      <SegmentHero content={content} segment={data} />
 
       <Section surface="white" aria-labelledby="journey-heading">
         <SectionHeading
@@ -89,7 +105,7 @@ export default async function SegmentPage({ params }: SegmentPageProps) {
         />
       </Section>
 
-      <SystemTypesSection slug={slug} />
+      <SystemTypesSection content={content} slug={slug} />
 
       <Section surface="dark" aria-labelledby="trust-heading">
         <SectionHeading
@@ -120,9 +136,11 @@ export default async function SegmentPage({ params }: SegmentPageProps) {
       <SegmentFaq faq={faq} />
 
       <ClosingCtaBand
-        copy={closingCta.copy}
-        primary={closingCta.primary(slug)}
-        whatsappText={whatsappPrompts[slug].text}
+        content={content}
+        copy={content.solutionsShared.closingCta}
+        // The hero's own estimate button: same label, same `?segment=` href (shared.ts heroCtas).
+        primary={data.hero.cta}
+        whatsappText={content.solutionsShared.whatsappPrompts[slug].text}
       />
     </>
   );

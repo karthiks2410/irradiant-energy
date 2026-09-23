@@ -17,11 +17,14 @@
  * would be two places to keep right instead of one.
  */
 
+import { aboutPage as enAboutPage } from "@/content/about";
+import { contactPage as enContactPage } from "@/content/contact";
 import { homeFaq as enHomeFaq } from "@/content/faq-home";
 import { homePage as enHomePage } from "@/content/home";
 import { projectImages as enProjectImages } from "@/content/images";
 import { nav as enNav, primaryCta as enPrimaryCta, site as enSite, socialPending as enSocialPending } from "@/content/site";
-import { faqCardLabels as enFaqCardLabels } from "@/content/solutions/shared";
+import { segments as enSegments } from "@/content/solutions/segments";
+import { faqCardLabels as enFaqCardLabels, solutionsShared as enSolutionsShared } from "@/content/solutions/shared";
 import { quotePage as enQuotePage } from "@/content/quote";
 import { ui as enUi } from "@/content/ui";
 import * as kn from "@/content/kn";
@@ -48,6 +51,14 @@ export interface Content {
   readonly images: typeof enProjectImages;
   /** The two buttons on the "Still have questions?" card. */
   readonly faqCardLabels: typeof enFaqCardLabels;
+  /** /about, top to bottom. */
+  readonly about: typeof enAboutPage;
+  /** /contact, top to bottom. */
+  readonly contact: typeof enContactPage;
+  /** The three audience pages, by slug. */
+  readonly segments: typeof enSegments;
+  /** Copy the /solutions hub and the three audience pages share. */
+  readonly solutionsShared: typeof enSolutionsShared;
   /** The calculator and /get-quote, including the customer acknowledgement email. */
   readonly quote: typeof enQuotePage;
   readonly ui: typeof enUi;
@@ -74,6 +85,10 @@ function build(locale: Locale): Content {
     faq: overlay ? localize(enHomeFaq, kn.homeFaq, "faq") : enHomeFaq,
     images: overlay ? localize(enProjectImages, kn.projectImages, "images") : enProjectImages,
     faqCardLabels: overlay ? localize(enFaqCardLabels, kn.faqCardLabels, "faqCardLabels") : enFaqCardLabels,
+    about: overlay ? localize(enAboutPage, kn.aboutPage, "about") : enAboutPage,
+    contact: overlay ? localize(enContactPage, kn.contactPage, "contact") : enContactPage,
+    segments: overlay ? localize(enSegments, kn.segments, "segments") : enSegments,
+    solutionsShared: overlay ? localize(enSolutionsShared, kn.solutionsShared, "solutionsShared") : enSolutionsShared,
     quote: overlay ? localize(enQuotePage, kn.quotePage, "quotePage") : enQuotePage,
     ui: overlay ? localize(enUi, kn.ui, "ui") : enUi,
   };
