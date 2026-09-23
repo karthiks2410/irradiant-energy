@@ -14,6 +14,7 @@ export { homePage } from "./home";
 export { site } from "./site";
 export { nav } from "./nav";
 export { primaryCta } from "./primary-cta";
+export { socialPending } from "./social-pending";
 export { projectImages } from "./images";
 export { homeFaq } from "./faq-home";
 export { faqCardLabels } from "./faq-card-labels";

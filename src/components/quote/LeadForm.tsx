@@ -14,7 +14,6 @@ import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { submitLead } from "@/lib/leads/submit-lead";
 import { Button, CheckboxField, controlClass, FieldShell, TextField } from "@/components/ui";
-import { site, whatsappLink } from "@/content/site";
 import { initialLeadState, type LeadFieldErrors } from "@/lib/leads/state";
 import { fieldLimits } from "./copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "./FieldRow";
@@ -36,7 +35,27 @@ const errorAnchors: Record<string, { id: string; label: string }> = {
   monthlyBill: { id: "estimate-bill", label: "Monthly electricity bill" },
 };
 
-export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: boolean }) {
+/**
+ * The two ways through that are not this form: WhatsApp and the phone.
+ *
+ * They arrive as props rather than from `@/content/site`, because this module hydrates and a
+ * client bundle may not import copy (scripts/check-client-content.ts).
+ */
+export type ContactFallbackProps = {
+  phone: { display: string; tel: string };
+  /** The default WhatsApp link; a failed submission replaces it with one carrying a reference. */
+  whatsappHref: string;
+};
+
+export function LeadForm({
+  startedAt,
+  canSend,
+  contact,
+}: {
+  startedAt: number;
+  canSend: boolean;
+  contact: ContactFallbackProps;
+}) {
   const { segment, monthlyBill, estimate, roofArea } = useEstimate();
   const [state, formAction] = useActionState(submitLead, initialLeadState);
   const noticeRef = useRef<HTMLDivElement>(null);
@@ -60,7 +79,7 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
           <span className="font-mono font-medium text-carbon tabular-nums">{state.reference}</span>. Quote it if you
           get in touch.
         </p>
-        <ContactFallbacks whatsappHref={state.whatsappHref} />
+        <ContactFallbacks contact={contact} whatsappHref={state.whatsappHref} />
       </div>
     );
   }
@@ -105,7 +124,7 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
               we can pick up from your details.
             </p>
           )}
-          <ContactFallbacks whatsappHref={state.ok === false ? state.whatsappHref : undefined} />
+          <ContactFallbacks contact={contact} whatsappHref={state.ok === false ? state.whatsappHref : undefined} />
         </div>
       )}
 
@@ -243,12 +262,12 @@ function SubmitButton({ canSend }: { canSend: boolean }) {
 }
 
 /** Always offered beside an error and after a success: the form is never the only way through. */
-function ContactFallbacks({ whatsappHref }: { whatsappHref?: string }) {
-  const phone = site.contact.phonePrimary.value;
+function ContactFallbacks({ contact, whatsappHref }: { contact: ContactFallbackProps; whatsappHref?: string }) {
+  const phone = contact.phone;
   return (
     <p className="mt-4 text-body text-ink-2">
       Prefer to talk?{" "}
-      <a href={whatsappHref ?? whatsappLink()} target="_blank" rel="noopener noreferrer" className={linkClass}>
+      <a href={whatsappHref ?? contact.whatsappHref} target="_blank" rel="noopener noreferrer" className={linkClass}>
         WhatsApp us
       </a>{" "}
       or call{" "}

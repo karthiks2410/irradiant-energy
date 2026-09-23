@@ -20,7 +20,7 @@
 import { homeFaq as enHomeFaq } from "@/content/faq-home";
 import { homePage as enHomePage } from "@/content/home";
 import { projectImages as enProjectImages } from "@/content/images";
-import { nav as enNav, primaryCta as enPrimaryCta, site as enSite } from "@/content/site";
+import { nav as enNav, primaryCta as enPrimaryCta, site as enSite, socialPending as enSocialPending } from "@/content/site";
 import { faqCardLabels as enFaqCardLabels } from "@/content/solutions/shared";
 import { ui as enUi } from "@/content/ui";
 import * as kn from "@/content/kn";
@@ -40,6 +40,8 @@ export interface Content {
    */
   readonly solutions: SolutionsGroup;
   readonly primaryCta: typeof enPrimaryCta;
+  /** Profiles shown but not linked yet, with the reason each one is inert. */
+  readonly socialPending: typeof enSocialPending;
   readonly home: typeof enHomePage;
   readonly faq: typeof enHomeFaq;
   readonly images: typeof enProjectImages;
@@ -64,6 +66,7 @@ function build(locale: Locale): Content {
     nav,
     solutions,
     primaryCta: overlay ? localize(enPrimaryCta, kn.primaryCta, "primaryCta") : enPrimaryCta,
+    socialPending: overlay ? localize(enSocialPending, kn.socialPending, "socialPending") : enSocialPending,
     home: overlay ? localize(enHomePage, kn.homePage, "home") : enHomePage,
     faq: overlay ? localize(enHomeFaq, kn.homeFaq, "faq") : enHomeFaq,
     images: overlay ? localize(enProjectImages, kn.projectImages, "images") : enProjectImages,

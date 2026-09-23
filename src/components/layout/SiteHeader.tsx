@@ -1,6 +1,8 @@
 import { Link } from "@/components/i18n/LocaleLink";
 import { LanguageSwitch } from "@/components/i18n/LanguageSwitch";
-import { isNavGroup, nav, primaryCta } from "@/content/site";
+import { isNavGroup, site, whatsappLink } from "@/content/site";
+import type { Content } from "@/i18n/content";
+import { fill } from "@/i18n/format";
 import { LogoLockup } from "@/components/brand/Logo";
 import { ButtonLink } from "@/components/ui/Button";
 import { HeaderContact } from "./HeaderContact";
@@ -9,7 +11,9 @@ import { MobileMenu } from "./MobileMenu";
 import { NavLinkItem } from "./NavLinkItem";
 import { SolutionsMenu } from "./SolutionsMenu";
 
-export function SiteHeader() {
+export function SiteHeader({ content }: { content: Content }) {
+  const { nav, primaryCta, ui } = content;
+
   return (
     <HeaderShell>
       <div className="container-page flex min-h-(--header-h) items-center justify-between gap-3 py-1.5 lg:gap-5">
@@ -32,18 +36,22 @@ export function SiteHeader() {
          * place English rendering changes beyond the URL prefix, and it changes from clipped to
          * not clipped.
          */}
-        <nav aria-label="Main" className="hidden xl:block">
+        <nav aria-label={ui.header.navLabel} className="hidden xl:block">
           <ul className="flex items-center gap-1">
             {nav.map((item) => (
               <li key={item.label}>
-                {isNavGroup(item) ? <SolutionsMenu group={item} /> : <NavLinkItem href={item.href} label={item.label} />}
+                {isNavGroup(item) ? (
+                  <SolutionsMenu group={item} labels={ui.solutionsMenu} />
+                ) : (
+                  <NavLinkItem href={item.href} label={item.label} />
+                )}
               </li>
             ))}
           </ul>
         </nav>
 
         <div className="flex items-center gap-1 md:gap-2 lg:gap-2.5">
-          <HeaderContact />
+          <HeaderContact phone={content.site.contact.phonePrimary.value} srLabel={ui.header.callSrLabel} />
 
           {/*
            * From xl the switch sits in the bar, beside the phone and the CTA; below that it is the
@@ -66,7 +74,17 @@ export function SiteHeader() {
           <span className="hidden sm:inline-flex">
             <ButtonLink href={primaryCta.href}>{primaryCta.label}</ButtonLink>
           </span>
-          <MobileMenu />
+          <MobileMenu
+            copy={{
+              nav,
+              primaryCta,
+              labels: ui.mobileMenu,
+              phone: content.site.contact.phonePrimary.value,
+              // Built here, where the merged copy is: the sheet hydrates and must not reach for a
+              // content module of its own.
+              whatsappHref: whatsappLink(fill(ui.mobileMenu.whatsappPrefill, { siteName: site.name })),
+            }}
+          />
         </div>
       </div>
     </HeaderShell>

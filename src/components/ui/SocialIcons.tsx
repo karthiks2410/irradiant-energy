@@ -17,7 +17,8 @@
  * disabled control) and says where it goes, e.g. "Irradiant Energy on LinkedIn".
  */
 
-import { site, socialPending, type SocialPlatform } from "@/content/site";
+import { site, type PendingSocialProfile, type SocialPlatform } from "@/content/site";
+import { fill } from "@/i18n/format";
 
 /** Official marks, 24×24 viewBox, single path, even-odd safe. */
 const marks: Record<SocialPlatform, string> = {
@@ -59,21 +60,33 @@ const pendingTile =
  * Row of brand marks: one link per live profile, plus any profile the owner wants shown but not
  * linked yet. Renders nothing while `site.social` is empty, so a page never shows a lone dead tile.
  */
-export function SocialLinks({ className = "" }: { className?: string }) {
+export function SocialLinks({
+  className = "",
+  labels,
+  siteName = site.name,
+  pending,
+}: {
+  className?: string;
+  /** Accessible names, as templates: the brand and the network are holes, not a suffix. */
+  labels: { listLabel: string; profileLink: string; pendingLabel: string };
+  siteName?: string;
+  /** Profiles shown but not linked yet; the reason is read out with the name. */
+  pending: readonly PendingSocialProfile[];
+}) {
   if (site.social.length === 0) return null;
 
   return (
-    <ul aria-label={`${site.name} on social media`} className={`flex flex-wrap gap-2 ${className}`}>
+    <ul aria-label={fill(labels.listLabel, { siteName })} className={`flex flex-wrap gap-2 ${className}`}>
       {site.social.map((profile) => (
         <li key={profile.href}>
           <a href={profile.href} target="_blank" rel="noopener noreferrer" className={linkTile}>
             <BrandMark platform={profile.platform} />
             {/* Says where the link goes, not just which logo it is (WCAG 2.4.4). */}
-            <span className="sr-only">{`${site.name} on ${profile.label}`}</span>
+            <span className="sr-only">{fill(labels.profileLink, { siteName, platform: profile.label })}</span>
           </a>
         </li>
       ))}
-      {socialPending.map((profile) => (
+      {pending.map((profile) => (
         <li key={profile.platform}>
           {/*
            * A disabled <button> rather than an <a href="#">: it can never navigate, it is out of
@@ -82,7 +95,7 @@ export function SocialLinks({ className = "" }: { className?: string }) {
            */}
           <button type="button" disabled aria-disabled="true" className={pendingTile}>
             <BrandMark platform={profile.platform} />
-            <span className="sr-only">{`${profile.label} — ${profile.note}`}</span>
+            <span className="sr-only">{fill(labels.pendingLabel, { platform: profile.label, note: profile.note })}</span>
           </button>
         </li>
       ))}

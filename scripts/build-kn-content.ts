@@ -148,6 +148,15 @@ const MODULES: readonly ModuleSpec[] = [
     why: "The site-wide CTA, quoted by the header, the footer and three home bands.",
   },
   {
+    file: "social-pending.ts",
+    from: "@/content/site",
+    en: "socialPending",
+    kn: "socialPending",
+    // The network's own name is a name in any language; only the reason it is not a link is copy.
+    fixed: ["label"],
+    why: 'Profiles shown but not linked yet: the "coming soon" note is read out as part of the accessible name.',
+  },
+  {
     file: "images.ts",
     from: "@/content/images",
     en: "projectImages",
@@ -307,6 +316,16 @@ class Generator {
 // ---------------------------------------------------------------------------------------------
 
 const check = process.argv.includes("--check");
+
+// `docs/` is not in the repository (it is the working folder for the redesign), so the source
+// rows are only on a machine that has them. The generated overlays ARE committed, which is what
+// lets the build, the type check and kn-parity.test.ts run anywhere. Without the rows there is
+// nothing to compare against, so say so and stop rather than fail a CI run.
+if (!existsSync(TRANSLATIONS)) {
+  console.log(`${path.relative(ROOT, TRANSLATIONS)} is not present; skipping (the overlays in src/content/kn are committed).`);
+  process.exit(0);
+}
+
 const rows = loadRows();
 const generator = new Generator(rows);
 const written: { file: string; body: string }[] = [];

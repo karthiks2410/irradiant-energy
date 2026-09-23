@@ -127,7 +127,11 @@ export default async function GetQuotePage({
             lead="Your estimate is sent with your details."
           />
           <div className="mt-10">
-            <LeadForm startedAt={startedAt} canSend={mailConfigured} />
+            <LeadForm
+              startedAt={startedAt}
+              canSend={mailConfigured}
+              contact={{ phone: site.contact.phonePrimary.value, whatsappHref: whatsappLink() }}
+            />
           </div>
         </div>
 

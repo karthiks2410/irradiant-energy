@@ -1,7 +1,4 @@
-import { site } from "@/content/site";
 import { PhoneIcon } from "@/components/ui";
-
-const { phonePrimary } = site.contact;
 
 /**
  * Call and WhatsApp, kept on screen at every width.
@@ -19,18 +16,25 @@ const { phonePrimary } = site.contact;
  * WhatsApp is not here: it is the floating bubble (<WhatsAppBubble>), which is where the owner's
  * previous site put it and where this buyer looks for it.
  */
-export function HeaderContact() {
+export function HeaderContact({
+  phone,
+  srLabel,
+}: {
+  phone: { display: string; tel: string };
+  /** The link's accessible name; the visible text is the number itself. */
+  srLabel: string;
+}) {
   return (
     <>
       <a
-        href={`tel:${phonePrimary.value.tel}`}
+        href={`tel:${phone.tel}`}
         className="grid size-11 shrink-0 place-items-center rounded-full text-white transition-colors duration-200 ease-controlled hover:bg-white/15 md:w-auto md:gap-2 md:px-4 md:[grid-auto-flow:column]"
       >
         <PhoneIcon className="size-[18px]" />
         <span className="sr-only md:not-sr-only md:font-mono md:text-small md:tabular-nums">
-          {phonePrimary.value.display}
+          {phone.display}
         </span>
-        <span className="sr-only">Call Irradiant Energy</span>
+        <span className="sr-only">{srLabel}</span>
       </a>
 
     </>

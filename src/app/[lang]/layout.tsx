@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { site } from "@/content/site";
 import { HTML_LANG, OG_LOCALE } from "@/i18n/config";
+import { getContent } from "@/i18n/content";
 import { getLocale } from "@/i18n/server";
 import { allowIndexing, siteUrl } from "@/lib/env";
 import "../globals.css";
@@ -81,6 +82,9 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
   const locale = await getLocale();
+  // The chrome reads the same merged content the page does, and hands it to the header, the
+  // footer and the two client islands below as props.
+  const content = getContent(locale);
 
   return (
     <html lang={HTML_LANG[locale]} className={`${inter.variable} ${plexMono.variable} h-full antialiased`}>
@@ -92,17 +96,17 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-100 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-teal-900"
         >
-          Skip to content
+          {content.ui.layout.skipLink}
         </a>
         <ScrollProgress />
-        <SiteHeader />
+        <SiteHeader content={content} />
         {/* Pages sit below the fixed header; the home hero pulls itself up with -mt-(--header-h). */}
         <main id="main" className="flex-1 pt-(--header-h)">
           {children}
         </main>
-        <SiteFooter />
+        <SiteFooter content={content} />
         {/* Consent UI mounts last: it renders nothing until a choice is needed. */}
-        <WhatsAppBubble />
+        <WhatsAppBubble label={content.ui.whatsappBubble.srLabel} />
         <ConsentManager />
         <SmoothScroll />
         <JsonLd />

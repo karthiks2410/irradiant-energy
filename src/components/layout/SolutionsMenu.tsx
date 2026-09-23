@@ -50,7 +50,17 @@ const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
  * order and the accessibility tree without unmounting them. Under a reduced-motion preference the
  * global rule in globals.css collapses the transitions, so it simply appears and disappears.
  */
-export function SolutionsMenu({ group }: { group: NavGroup }) {
+export function SolutionsMenu({
+  group,
+  labels,
+}: {
+  group: NavGroup;
+  /**
+   * The panel's own wording. A client island may not import a content module, so it arrives from
+   * <SiteHeader> with the rest of the merged copy.
+   */
+  labels: { panelLabel: string; notSure: string; compareAll: string };
+}) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -184,7 +194,7 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
               : "invisible -translate-y-2 scale-[0.97] opacity-0 duration-150"
           }`}
         >
-          <p className="px-3 pt-2.5 pb-1.5 font-label text-label text-on-dark-muted uppercase">Rooftop solar</p>
+          <p className="px-3 pt-2.5 pb-1.5 font-label text-label text-on-dark-muted uppercase">{labels.panelLabel}</p>
 
           <ul>
             {group.items.map((item, index) => {
@@ -226,7 +236,7 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
           </ul>
 
           <div className="mt-1 flex items-center justify-between border-t border-white/10 px-3 pt-2.5 pb-1.5">
-            <p className="text-small text-white/75">Not sure which fits?</p>
+            <p className="text-small text-white/75">{labels.notSure}</p>
             <Link
               href="/solutions"
               // White, not green-300: over the frosted panel green-300 measured 2.99:1 at worst
@@ -234,7 +244,7 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
               // measures 7.6:1 there. The green survives on the arrow, which is decoration.
               className="group inline-flex items-center gap-1.5 text-small font-semibold text-white hover:underline"
             >
-              Compare all three
+              {labels.compareAll}
               <ArrowRightIcon className="size-3.5 text-green-300 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
           </div>
