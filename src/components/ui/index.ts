@@ -1,4 +1,4 @@
-export { Accent } from "./Accent";
+export { Accent, AccentRun } from "./Accent";
 export { Accordion, type AccordionItem } from "./Accordion";
 export { Button, ButtonLink } from "./Button";
 export { Card, CardGrid, LinkCard, cardSurface, type CardTag } from "./Card";

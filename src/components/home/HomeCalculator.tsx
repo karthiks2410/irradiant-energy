@@ -1,10 +1,8 @@
 import { Reveal } from "@/components/motion/Reveal";
 import { ButtonLink, CheckIcon, SectionHeading } from "@/components/ui";
-import { homePage } from "@/content/home";
+import type { Content } from "@/i18n/content";
 import { AccentTitle } from "./AccentTitle";
 import { HomeCalculatorPanel } from "./HomeCalculatorPanel";
-
-const { calculator } = homePage;
 
 /**
  * The calculator band, rebuilt from the prototype's `.calc-shell`: one white panel floating on the
@@ -19,7 +17,9 @@ const { calculator } = homePage;
  * Server Component: only <HomeCalculatorPanel> hydrates, and the copy reaches it as props so the
  * content module stays out of the client bundle.
  */
-export function HomeCalculator() {
+export function HomeCalculator({ content }: { content: Content }) {
+  const { calculator } = content.home;
+
   return (
     <section id="calculator" aria-labelledby="calculator-heading" className="section-y bg-teal-900">
       <div className="container-page">
@@ -41,7 +41,7 @@ export function HomeCalculator() {
                   align="stacked"
                   eyebrow={calculator.copy.eyebrow}
                   eyebrowTone="signal"
-                  title={<AccentTitle text={calculator.copy.title} />}
+                  title={<AccentTitle text={calculator.copy.title} accent={calculator.copy.accent} />}
                 />
 
                 <ul className="mt-7 grid gap-3.5">
@@ -68,6 +68,8 @@ export function HomeCalculator() {
                 results={calculator.results}
                 assumptionsLabel={calculator.assumptionsLabel}
                 disclaimer={calculator.disclaimer}
+                ui={content.ui.calculator}
+                optionalMarker={content.ui.fields.optionalMarker}
               />
             </div>
           </div>

@@ -122,7 +122,7 @@ export interface NavGroup {
 }
 
 /** Offerings live today (D-009: rooftop solar only). Batteries, VPP etc. are added here later. */
-export const solutions: NavGroup = {
+export const solutions = {
   label: "Solutions",
   items: [
     { label: "Homes", href: "/solutions/solar/home", description: "Individual homes and villas" },
@@ -137,17 +137,20 @@ export const solutions: NavGroup = {
       description: "Shops, offices, factories and warehouses",
     },
   ],
-};
+  // `as const satisfies`, not an annotation: the Kannada overlay's shape is derived from this
+  // literal (src/i18n/translation.ts), and an annotation would hide which optional keys are
+  // actually set — `description` here, absent on the plain nav links below.
+} as const satisfies NavGroup;
 
 /** Header order mirrors the design prototype: Home · About · Solutions · Calculator · Contact. */
-export const nav: (NavLink | NavGroup)[] = [
+export const nav = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   solutions,
   { label: "Calculator", href: "/get-quote" },
   { label: "Contact", href: "/contact" },
-];
+] as const satisfies readonly (NavLink | NavGroup)[];
 
 export const isNavGroup = (item: NavLink | NavGroup): item is NavGroup => "items" in item;
 
-export const primaryCta: NavLink = { label: "Get a free estimate", href: "/get-quote" };
+export const primaryCta = { label: "Get a free estimate", href: "/get-quote" } as const satisfies NavLink;

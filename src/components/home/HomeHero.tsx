@@ -1,11 +1,9 @@
 import { ArrowRightIcon } from "@/components/ui";
 import { HeroEstimate } from "./HeroEstimate";
-import { homePage } from "@/content/home";
+import type { Content } from "@/i18n/content";
 import { localizePath } from "@/i18n/paths";
 import { getLocale } from "@/i18n/server";
 import { HeroBackdrop } from "./HeroBackdrop";
-
-const { hero } = homePage;
 
 /**
  * Full-bleed photo hero, rebuilt to the prototype's proportions (owner override, 2026-09-20:
@@ -47,14 +45,16 @@ const { hero } = homePage;
  * Re-measure all slides at both Ken Burns scales whenever the photography changes:
  * `node .qa/hero-contrast.mjs` against a production build does it.
  */
-export async function HomeHero() {
+export async function HomeHero({ content }: { content: Content }) {
+  const { hero } = content.home;
+  const ui = content.ui.home;
   // A plain <a>, not <Link>, so Lenis applies the header offset — which means the locale prefix
   // has to be added here rather than by the <Link> wrapper.
   const locale = await getLocale();
   return (
     <section
       aria-labelledby="hero-title"
-      aria-roledescription="carousel"
+      aria-roledescription={ui.heroCarousel}
       data-surface="dark"
       // No definite height (layout-risks.md B2). `min-h-svh` already won every comparison against
       // `h-[min(960px,100svh)]` — min-height beats height — so the rendered height is unchanged at
@@ -65,6 +65,7 @@ export async function HomeHero() {
     >
       <HeroBackdrop
         slides={hero.slides}
+        labels={{ dot: ui.heroDot, pause: ui.heroPause, play: ui.heroPlay }}
         overlay={
           <>
             {/* Vertical wash: keeps the transparent header's white nav legible over sky and
@@ -91,7 +92,11 @@ export async function HomeHero() {
            * as the quieter second path for someone not ready to type numbers.
            */
           <>
-            <HeroEstimate />
+            <HeroEstimate
+              billLabel={ui.heroBillLabel}
+              submitLabel={ui.heroSubmit}
+              note={ui.heroNoSignup}
+            />
             {hero.secondaryCta && (
               <a
                 href={localizePath(hero.secondaryCta.href, locale)}

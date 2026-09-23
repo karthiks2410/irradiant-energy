@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useInView, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Eyebrow } from "@/components/ui";
+import { Template } from "@/components/i18n/Template";
 import type { HeroSlide } from "@/content/home";
 import { PauseIcon, PlayIcon } from "./Icons";
 
@@ -54,6 +55,12 @@ function useTabVisible() {
 
 type HeroBackdropProps = {
   slides: readonly HeroSlide[];
+  /**
+   * The transport controls' accessible names, handed in by the server parent. This island must
+   * not import a content module: it would put both languages' copy in the browser bundle, and
+   * the Kannada copy in an English page's payload.
+   */
+  labels: { dot: string; pause: string; play: string };
   /** Server-rendered scrims (HomeHero.tsx). They sit at z-10, between photo and copy. */
   overlay: ReactNode;
   /** Server-rendered CTAs. They do not change with the scene, so they stay out of this bundle. */
@@ -83,7 +90,7 @@ type HeroBackdropProps = {
  *   and each scene is named on its own dot instead.
  * - Only transform and opacity animate.
  */
-export function HeroBackdrop({ slides, overlay, actions }: HeroBackdropProps) {
+export function HeroBackdrop({ slides, labels, overlay, actions }: HeroBackdropProps) {
   const reducedMotion = useReducedMotion();
   const hydrated = useHydrated();
   const tabVisible = useTabVisible();
@@ -264,7 +271,10 @@ export function HeroBackdrop({ slides, overlay, actions }: HeroBackdropProps) {
                     }`}
                   />
                   <span className="sr-only">
-                    Show slide {position + 1} of {slides.length}: {slide.eyebrow}
+                    <Template
+                      text={labels.dot}
+                      values={{ n: position + 1, total: slides.length, eyebrow: slide.eyebrow }}
+                    />
                   </span>
                 </button>
               </li>
@@ -280,9 +290,7 @@ export function HeroBackdrop({ slides, overlay, actions }: HeroBackdropProps) {
               {playing ? <PauseIcon className="size-4" /> : <PlayIcon className="size-4" />}
               {/* The icon swaps, so this is an action button: the name states the action, and
                   aria-pressed is omitted (it would read "Play … pressed" once paused). */}
-              <span className="sr-only">
-                {playing ? "Pause the hero slideshow" : "Play the hero slideshow"}
-              </span>
+              <span className="sr-only">{playing ? labels.pause : labels.play}</span>
             </button>
           )}
         </div>

@@ -1,4 +1,4 @@
-import { Accent } from "@/components/ui";
+import { Accent, AccentRun } from "@/components/ui";
 import { splitOnAccent } from "@/components/ui/accent-split";
 
 /**
@@ -13,15 +13,7 @@ import { splitOnAccent } from "@/components/ui/accent-split";
  */
 export function AccentedTitle({ text, tail = 1, accent }: { text: string; tail?: number; accent?: string }) {
   const explicit = splitOnAccent(text, accent);
-  if (explicit) {
-    return (
-      <>
-        {explicit.before}
-        <Accent>{explicit.accent}</Accent>
-        {explicit.after}
-      </>
-    );
-  }
+  if (explicit) return <AccentRun split={explicit} />;
 
   const words = text.split(" ");
   if (words.length <= tail) return <Accent>{text}</Accent>;

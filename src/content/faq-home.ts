@@ -16,20 +16,22 @@ const items: readonly Faq[] = picked.map((id) => {
   return faq;
 });
 
-const copy: SectionCopy = {
+const copy = {
   title: "Frequently asked questions",
   lead: homeSegment.faq.copy.lead,
   source: "P-SH-6",
   status: "verified-live",
-};
+  // `as const satisfies`: the overlay's shape comes from this literal, so the keys that are
+  // actually set (no eyebrow, no accent) are the keys Kannada has to supply.
+} as const satisfies SectionCopy;
 
-const moreLink: Cta = {
+const moreLink = {
   // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (UX link label).
   label: "All home solar questions",
   href: `${homeSegment.href}#faq`,
   source: "proposed",
   status: "proposed",
-};
+} as const satisfies Cta;
 
 export const homeFaq = {
   copy,

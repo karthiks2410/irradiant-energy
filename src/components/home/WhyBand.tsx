@@ -1,20 +1,19 @@
 import { CardGrid, FeatureCard, FeatureIcon, Section, SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
-import { homePage } from "@/content/home";
+import type { Content } from "@/i18n/content";
 import { AccentTitle } from "./AccentTitle";
 
-const { why } = homePage;
-
 /** Six proof cards, numbered 01–06 as in the prototype. No numbers or credentials: positioning only. */
-export function WhyBand() {
+export function WhyBand({ content }: { content: Content }) {
+  const { why } = content.home;
+
   return (
     <Section surface="white" aria-labelledby="why-heading">
       <Reveal>
         <SectionHeading
           id="why-heading"
           eyebrow={why.copy.eyebrow}
-          title={<AccentTitle text={why.copy.title} words={3} />}
-          lead={why.copy.lead}
+          title={<AccentTitle text={why.copy.title} accent={why.copy.accent} />}
         />
 
         <CardGrid columns={3} as="ul" className="mt-12">

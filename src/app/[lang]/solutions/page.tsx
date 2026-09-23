@@ -35,8 +35,7 @@ export default function SolutionsPage() {
 
       <PageHero
         current="Solutions"
-        eyebrow={copy.eyebrow}
-        title={<AccentedTitle text={copy.title} tail={1} />}
+        title={<AccentedTitle text={copy.title} accent={copy.accent} />}
         // The hub is a junction, so the estimate route is offered here too rather than only in the
         // closing band; the three audience pages open with the same pair.
         actions={

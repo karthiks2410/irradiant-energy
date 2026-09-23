@@ -1,11 +1,9 @@
 import { LogoSymbol } from "@/components/brand/Logo";
 import { Reveal } from "@/components/motion/Reveal";
 import { ButtonLink, Card, Section, SectionHeading } from "@/components/ui";
-import { homePage } from "@/content/home";
+import type { Content } from "@/i18n/content";
 import { AccentTitle } from "./AccentTitle";
 import styles from "./AboutBand.module.css";
-
-const { about } = homePage;
 
 /** Prototype tag-a … tag-d, in the order the copy lists them. */
 const tagPositions = [styles.tagA, styles.tagB, styles.tagC, styles.tagD];
@@ -27,7 +25,9 @@ const tagPositions = [styles.tagA, styles.tagB, styles.tagC, styles.tagD];
  * canvas → white → canvas around it, so it stays white and the tiles rely on their border plus
  * the prototype's faint lift for separation.
  */
-export function AboutBand() {
+export function AboutBand({ content }: { content: Content }) {
+  const { about } = content.home;
+
   return (
     <Section surface="white" aria-labelledby="about-heading">
       <Reveal>
@@ -74,7 +74,7 @@ export function AboutBand() {
               id="about-heading"
               align="stacked"
               eyebrow={about.copy.eyebrow}
-              title={<AccentTitle text={about.copy.title} />}
+              title={<AccentTitle text={about.copy.title} accent={about.copy.accent} />}
               lead={about.copy.lead}
             />
 

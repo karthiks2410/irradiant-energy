@@ -56,6 +56,21 @@ export interface SectionCopy extends Sourced {
   /** Sentence case (report §6). */
   title: string;
   lead?: string;
+  /**
+   * The run of `title` that renders in the accent green, written out rather than derived.
+   *
+   * The two-tone headline used to take the last N words, which only works in a language whose
+   * emphasised phrase lands last. Kannada puts the verb there, so a positional rule paints the
+   * verb green and leaves the noun phrase in ink, and because Kannada compounds, two words can
+   * be the whole line (docs/kannada/research/layout-risks.md M9). Each locale therefore names
+   * its own run: English repeats what the positional rule produced (accent-split.test.ts
+   * proves it, character for character), and the Kannada overlay carries the reviewer's
+   * `accentPhrase`.
+   *
+   * Optional because not every heading is two-tone. Where it is set, the Kannada overlay must
+   * set it too — `Translation<T>` sees the key on the `as const` literal and requires it.
+   */
+  accent?: string;
 }
 
 export interface HeroCopy extends SectionCopy {

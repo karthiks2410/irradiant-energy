@@ -25,11 +25,12 @@
  */
 
 import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
-import { enIn, flagNotes, parseSegment } from "@/components/quote/copy";
+import { enIn, parseSegment } from "@/components/quote/copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "@/components/quote/FieldRow";
 import { ChevronDownIcon, SelectField, StatTile, TextField } from "@/components/ui";
-import { buildEstimate } from "@/lib/solar/calc";
-import { SEGMENTS, SEGMENT_LABELS } from "@/lib/solar/constants";
+import { fill } from "@/i18n/format";
+import { buildEstimate, type EstimateFlag } from "@/lib/solar/calc";
+import { SEGMENTS, type Segment } from "@/lib/solar/constants";
 import { TickerNumber } from "@/components/motion/TickerNumber";
 import { useHomeEstimate } from "./HomeEstimateProvider";
 import { formatInr } from "@/lib/solar/format";
@@ -38,12 +39,24 @@ import { formatInr } from "@/lib/solar/format";
 const PINCODE_RE = /(?:^|\D)([1-9][0-9]{5})(?!\d)/;
 
 /**
- * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Validation and empty-state microcopy: it describes
- * what the calculator does, and makes no claim about solar, tariffs or the business.
+ * Every word this panel prints, handed down by <HomeCalculator>.
+ *
+ * It is a client island, so it may not import a content module: that would put both languages'
+ * copy in the browser bundle, and Kannada strings in an English page's payload. The engine keeps
+ * the keys — segment ids, flag ids — and this carries the wording for them.
  */
-const PINCODE_ERROR = "Enter a 6-digit PIN code, for example 560001.";
-
-const segmentOptions = SEGMENTS.map((value) => ({ value, label: SEGMENT_LABELS[value] }));
+export type CalculatorUi = {
+  pincodePlaceholder: string;
+  pincodeError: string;
+  /** "Over {years} years" — the horizon is a hole, because Kannada puts it first. */
+  savingsNote: string;
+  subsidyNote: string;
+  yearsUnit: string;
+  kwpUnit: string;
+  kwhUnit: string;
+  segments: Record<Segment, string>;
+  flags: Record<EstimateFlag, string>;
+};
 
 const digitsOnly = (value: string, max: number) => value.replace(/\D/g, "").slice(0, max);
 
@@ -70,10 +83,22 @@ export type HomeCalculatorPanelProps = {
   results: { title: string; size: string; generation: string; savings: string; payback: string };
   assumptionsLabel: string;
   disclaimer: string;
+  ui: CalculatorUi;
+  /** The "(optional)" marker beside an optional field's label. */
+  optionalMarker: string;
   className?: string;
 };
 
-export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclaimer, className = "" }: HomeCalculatorPanelProps) {
+export function HomeCalculatorPanel({
+  fields,
+  results,
+  assumptionsLabel,
+  disclaimer,
+  ui,
+  optionalMarker,
+  className = "",
+}: HomeCalculatorPanelProps) {
+  const segmentOptions = SEGMENTS.map((value) => ({ value, label: ui.segments[value] }));
   // Segment, bill and PIN come from the page-level provider, so the hero's estimate entry and
   // this panel are working on the same numbers rather than two copies of them.
   const { segment, setSegment, bill, setBill, location, setLocation } = useHomeEstimate();
@@ -109,20 +134,20 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
         {
           label: results.savings,
           value: ticker(estimate.projection.cumulativeSavingsInr, (n) => formatInr(Math.round(n))),
-          note: `Over ${estimate.projection.horizonYears} years`,
+          note: fill(ui.savingsNote, { years: estimate.projection.horizonYears }),
         },
         {
           label: results.payback,
           // Payback can be genuinely unavailable, and an em dash is not a number to count to.
           value: payback === null ? "—" : ticker(payback, (n) => n.toFixed(1)),
-          unit: payback === null ? undefined : "years",
-          note: estimate.subsidyInr > 0 ? "After the estimated subsidy" : undefined,
+          unit: payback === null ? undefined : ui.yearsUnit,
+          note: estimate.subsidyInr > 0 ? ui.subsidyNote : undefined,
         },
-        { label: results.size, value: ticker(estimate.systemKwp, (n) => n.toFixed(1)), unit: "kWp" },
+        { label: results.size, value: ticker(estimate.systemKwp, (n) => n.toFixed(1)), unit: ui.kwpUnit },
         {
           label: results.generation,
           value: ticker(estimate.annualGenerationKwh, (n) => enIn.format(Math.round(n))),
-          unit: "kWh",
+          unit: ui.kwhUnit,
         },
       ]
     : // Placeholders, so the panel keeps its shape while it waits for a PIN code and nothing
@@ -150,17 +175,18 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
             name="home-calc-location"
             label={fields.location.label}
             optional
+            optionalLabel={optionalMarker}
             hint={fields.location.hint}
             required
             type="text"
             inputMode="text"
             autoComplete="postal-code"
             maxLength={48}
-            placeholder="e.g. 560001"
+            placeholder={ui.pincodePlaceholder}
             value={location}
             onChange={(event) => setLocation(event.target.value)}
             onBlur={() => setLocationTouched(true)}
-            error={locationTouched && pincode === undefined ? PINCODE_ERROR : undefined}
+            error={locationTouched && pincode === undefined ? ui.pincodeError : undefined}
           />
         </FieldRow>
 
@@ -187,6 +213,7 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
             label={fields.roof.label}
             hint={fields.roof.hint}
             optional
+            optionalLabel={optionalMarker}
             type="text"
             inputMode="numeric"
             autoComplete="off"
@@ -203,6 +230,7 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
             label={fields.houses.label}
             hint={fields.houses.hint}
             optional
+            optionalLabel={optionalMarker}
             type="text"
             inputMode="numeric"
             autoComplete="off"
@@ -239,7 +267,7 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
           <ul className="mt-4 grid gap-2">
             {estimate.flags.map((flag) => (
               <li key={flag} className="text-small text-ink-2">
-                {flagNotes[flag]}
+                {ui.flags[flag]}
               </li>
             ))}
           </ul>

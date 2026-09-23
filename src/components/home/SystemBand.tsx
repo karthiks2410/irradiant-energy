@@ -1,13 +1,9 @@
 import { Link } from "@/components/i18n/LocaleLink";
 import { ArrowRightIcon, Card, FeatureIcon, Section, SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
-import { homePage } from "@/content/home";
+import type { Feature } from "@/content/types";
+import type { Content } from "@/i18n/content";
 import { AccentTitle } from "./AccentTitle";
-
-const { system } = homePage;
-
-/** Link line on the one card with an href (Generate). */
-const generateCta = "Explore rooftop solar";
 
 /**
  * Icon-led card with three states. The linked one repeats the kit's whole-card link
@@ -15,7 +11,16 @@ const generateCta = "Explore rooftop solar";
  * the card) because <LinkCard> has no icon slot above the title; a card not sold yet carries
  * a mono "Coming next" label and, per D-009, no call to action; the rest carry neither.
  */
-function SystemCard({ card, comingNextLabel }: { card: (typeof system.cards)[number]; comingNextLabel: string }) {
+function SystemCard({
+  card,
+  comingNextLabel,
+  generateCta,
+}: {
+  card: Feature & { href?: string };
+  comingNextLabel: string;
+  /** Link line on the one card with an href (Generate). */
+  generateCta: string;
+}) {
   const href = card.comingNext ? null : (card.href ?? null);
 
   return (
@@ -57,7 +62,9 @@ function SystemCard({ card, comingNextLabel }: { card: (typeof system.cards)[num
 }
 
 /** Generate · Store · Charge · Monitor. Only Charge (EV) is marked "Coming next": it is not confirmed. */
-export function SystemBand() {
+export function SystemBand({ content }: { content: Content }) {
+  const { system } = content.home;
+
   return (
     <Section surface="canvas" aria-labelledby="system-heading">
       <Reveal>
@@ -65,14 +72,19 @@ export function SystemBand() {
           id="system-heading"
           align="stacked"
           eyebrow={system.copy.eyebrow}
-          title={<AccentTitle text={system.copy.title} words={4} />}
+          title={<AccentTitle text={system.copy.title} accent={system.copy.accent} />}
         />
 
         {/* Not <CardGrid columns={4}>: its 4-up layout is 2-up on phones, which leaves these
             cards about 100px of text width. One per row below sm reads properly. */}
         <ul className="mt-12 grid gap-x-(--grid-gutter) gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
           {system.cards.map((card) => (
-            <SystemCard key={card.title} card={card} comingNextLabel={system.comingNextLabel} />
+            <SystemCard
+              key={card.title}
+              card={card}
+              comingNextLabel={system.comingNextLabel}
+              generateCta={content.ui.home.systemGenerateCta}
+            />
           ))}
         </ul>
       </Reveal>

@@ -24,12 +24,25 @@ export type FieldShellProps = {
   error?: string;
   /** Optional fields are marked; required is the default and carries no mark. */
   optional?: boolean;
+  /** The marker's own wording, so a localised page can pass its own. */
+  optionalLabel?: string;
   className?: string;
   children: (a11y: ControlA11y) => ReactNode;
 };
 
 /** Visible label above, hint below the label, error below the control, all linked by aria-describedby. */
-export function FieldShell({ id, label, hint, error, optional = false, className = "", children }: FieldShellProps) {
+export function FieldShell({
+  id,
+  label,
+  hint,
+  error,
+  optional = false,
+  // Localised callers pass `ui.fields.optionalMarker`; the default keeps every other call site
+  // rendering exactly what it rendered before this prop existed.
+  optionalLabel = "(optional)",
+  className = "",
+  children,
+}: FieldShellProps) {
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [errorId, hintId].filter(Boolean).join(" ") || undefined;
@@ -38,7 +51,7 @@ export function FieldShell({ id, label, hint, error, optional = false, className
     <div className={`grid gap-2 ${className}`}>
       <label htmlFor={id} className={labelClass}>
         {label}
-        {optional && <span className={`ml-2 font-normal ${hintClass}`}>(optional)</span>}
+        {optional && <span className={`ml-2 font-normal ${hintClass}`}>{optionalLabel}</span>}
       </label>
       {hint && (
         <p id={hintId} className={`-mt-1 ${hintClass}`}>
