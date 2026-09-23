@@ -42,9 +42,14 @@ export function watchForErrors(page: Page) {
   return errors;
 }
 
-/** Answer the consent dialog so it stops covering the page. */
+/**
+ * Answer the consent dialog so it stops covering the page.
+ *
+ * Found by attribute, not by accessible name: the banner's buttons are localised, and this helper
+ * runs on both locales' routes.
+ */
 export async function dismissConsent(page: Page) {
-  const reject = page.getByRole("button", { name: /reject/i });
+  const reject = page.locator("[data-consent-reject]");
   if (await reject.isVisible().catch(() => false)) {
     await reject.click();
     await expect(page.getByRole("dialog")).toBeHidden();

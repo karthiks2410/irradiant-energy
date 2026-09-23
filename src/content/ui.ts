@@ -30,6 +30,28 @@ export const ui = {
     skipLink: "Skip to content",
   },
 
+  meta: {
+    /**
+     * The root layout's `title.default`, used by any route that sets no title of its own.
+     * `{siteName}` is a template hole rather than a concatenation because Kannada does not put
+     * the brand where English does.
+     */
+    defaultTitle: "{siteName} | Rooftop solar for homes, housing societies and businesses",
+    /**
+     * Alt text for the Open Graph and Twitter cards. The card artwork itself stays Latin — it is
+     * the wordmark and the brand line (brand PDF p.30/p.40) — but the text that describes it is
+     * read out in the reader's language.
+     */
+    socialImageAlt: "{siteName} — {tagline}",
+  },
+
+  breadcrumbs: {
+    /** `aria-label` on the trail. */
+    ariaLabel: "Breadcrumb",
+    /** The first crumb, added by <Breadcrumbs> and by <BreadcrumbJsonLd> so the two agree. */
+    home: "Home",
+  },
+
   header: {
     /** `aria-label` on the desktop nav. */
     navLabel: "Main",
@@ -66,6 +88,8 @@ export const ui = {
     /** The persistent way to change the consent answer; it opens the preferences dialog. */
     cookieSettings: "Cookie settings",
     whatsapp: "WhatsApp us",
+    /** Base-band registration line. Rendered only once the GSTIN is known (site.legal.gstin). */
+    gstin: "GSTIN {gstin}",
   },
 
   social: {
@@ -81,6 +105,100 @@ export const ui = {
 
   fields: {
     optionalMarker: "(optional)",
+  },
+
+  /**
+   * The two system pages.
+   *
+   * `notFound` is `src/app/[lang]/not-found.tsx`, which answers a `notFound()` call inside the
+   * locale tree. The 404 for a URL that matches no route at all is `src/app/global-not-found.tsx`,
+   * which Next renders without a layout and therefore without a locale: it stays bilingual and
+   * static (docs/kannada/research/architecture.md §6.14) and does not read this module.
+   *
+   * `error` is the route error boundary, which Next requires to be a Client Component. It reads
+   * these through <UiProvider> rather than importing them, because a client module that imported
+   * this file would ship both locales' copy (scripts/check-client-content.ts).
+   */
+  notFound: {
+    metaTitle: "Page not found",
+    eyebrow: "Error 404",
+    heading: "We can’t find that page.",
+    body: "The link may be out of date, or the page may have moved while the site was being rebuilt. These are good places to start again.",
+    homeCta: "Go to the home page",
+    solutionsCta: "See our solutions",
+    contactCta: "Contact us",
+  },
+
+  error: {
+    eyebrow: "Something went wrong",
+    heading: "This page didn’t load properly.",
+    body: "Please try again. If it keeps happening, the home page and the contact page still work.",
+    retryCta: "Try again",
+    homeCta: "Go to the home page",
+  },
+
+  /**
+   * The consent banner and the preferences dialog (architecture §6.13).
+   *
+   * DPDP §6(3) requires the consent request itself to be available in the language the reader
+   * chose, so on /kn every one of these renders in Kannada — the question, both answers and the
+   * per-category detail, not just the surrounding page.
+   *
+   * Three of them carry inline markup as named slots rather than as HTML: `<lead>` is the opening
+   * emphasis, `<cookieLink>` and `<privacyLink>` are the two notices, and `<code>` is the cookie's
+   * own name. <RichText> (src/components/i18n/RichText.tsx) substitutes the element, so a
+   * translator moves the link inside the sentence without touching a className or an href.
+   */
+  consent: {
+    banner: {
+      /** Visually hidden: the dialog still needs a name. */
+      title: "We value your privacy",
+      body: "<lead>This site loads no analytics and sets no tracking cookies.</lead> Accept and we may count page visits — no name, no profile, no tracking across other sites. Refuse and nothing loads. <cookieLink>Cookie notice</cookieLink>.",
+      accept: "Accept",
+      /** The whole accessible name, not a suffix: Kannada does not append to a verb. */
+      acceptAria: "Accept analytics",
+      reject: "Reject",
+      rejectAria: "Reject analytics",
+      manage: "Manage preferences",
+    },
+    settings: {
+      title: "Cookie and analytics preferences",
+      closeAria: "Close preferences without saving",
+      necessary: {
+        heading: "Strictly necessary",
+        badge: "Always on",
+        body: "Your answer to this question, kept in a first-party cookie named <code>{cookieName}</code> that is written only once you choose. It holds your answer, the date and a version number — no name, no identifier. It lasts {days} days and is read only by this site. Without it we would have to ask you again on every page.",
+        security: "Our hosting provider may also set a short-lived cookie to check that a request comes from a person rather than an automated tool. That protects the site; it is not used to follow you.",
+      },
+      analytics: {
+        heading: "Analytics",
+        label: "Allow analytics",
+        hint: "Not loaded today: no measurement script runs on this site. If we switch one on, it would count page visits — which page, the broad region the visit came from, the kind of device — with no name, no profile and no tracking across other websites. It will not load while this is off, and turning it off later stops it again.",
+      },
+      save: "Save preferences",
+      rejectAll: "Reject all",
+      moreDetail: "More detail in our <cookieLink>cookie notice</cookieLink> and <privacyLink>privacy notice</privacyLink>.",
+    },
+    /**
+     * Announced by the manager's polite status region after a choice is saved.
+     *
+     * Named `saved` and not `status`: `status` is a FIXED_KEY (src/i18n/translation.ts), because
+     * everywhere else in the content it marks a claim's approval state — so an overlay may never
+     * carry it, and a section called `status` would be silently dropped from the Kannada file.
+     */
+    saved: {
+      accepted: "Saved. Analytics is allowed. You can change this any time from Cookie settings in the footer.",
+      refused: "Saved. Analytics is refused, so nothing is measured. You can change this any time from Cookie settings in the footer.",
+    },
+    /** The stored answer, shown on /cookies before the control that changes it. */
+    panel: {
+      loading: "Reading your saved choice…",
+      unanswered: "You have not answered yet, so nothing optional is loaded.",
+      allowed: "Analytics: allowed. Nothing is measured today; if measurement is switched on, this answer lets it run.",
+      refused: "Analytics: refused. Nothing is loaded, and nothing will load while this answer stands.",
+      answeredAt: "Answered {date}",
+      open: "Open cookie settings",
+    },
   },
 
   home: {

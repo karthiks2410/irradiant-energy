@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { site } from "@/content/site";
 import { HREFLANG, OG_LOCALE, type Locale } from "@/i18n/config";
+import { getContent } from "@/i18n/content";
+import { fill } from "@/i18n/format";
 import { localizePath } from "@/i18n/paths";
 import { publishedLocales, routeForPath } from "@/i18n/registry";
 import { siteUrl } from "@/lib/env";
@@ -52,7 +54,14 @@ export interface PageMetadataInput {
   noindex?: boolean;
 }
 
-/** Route and dimensions of the site-wide social images; the image routes read these too. */
+/**
+ * Route and dimensions of the site-wide social images; the image routes read these too.
+ *
+ * The artwork is the wordmark and the brand line, which stay Latin in both locales (brand PDF
+ * p.30/p.40), so there is one card and a Kannada page references this same route. `alt` here is
+ * the fallback for the two image routes, which sit outside the `[lang]` tree and have no locale
+ * to read; `pageMetadata` writes the reader's own language into the card's alt text instead.
+ */
 export const socialImage = {
   openGraphPath: "/opengraph-image",
   twitterPath: "/twitter-image",
@@ -77,9 +86,11 @@ export function pageMetadata({ title, description, path, locale, image, noindex 
     ...alternateLocales.map((l) => [HREFLANG[l], localizePath(path, l)]),
     ["x-default", localizePath(path, "en")],
   ]);
+  const { ui, site: localizedSite } = getContent(locale);
   const ogImage = image ?? {
     url: socialImage.openGraphPath,
-    alt: socialImage.alt,
+    // The card is the same picture in both locales; the sentence that describes it is not.
+    alt: fill(ui.meta.socialImageAlt, { siteName: site.name, tagline: localizedSite.tagline }),
     width: socialImage.width,
     height: socialImage.height,
   };

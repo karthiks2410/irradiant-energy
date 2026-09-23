@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useChromeUi } from "@/components/i18n/UiProvider";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ConsentSettings } from "@/components/consent/ConsentSettings";
 import { useConsentRecord, useIsHydrated } from "@/components/consent/useConsent";
@@ -36,6 +37,9 @@ import {
  *   rather than by a focus move to a message nobody asked to read.
  */
 export function ConsentManager() {
+  // The consent question is the one thing on the page DPDP §6(3) requires in the language the
+  // reader chose, so it reads the same per-locale chrome the rest of the page does.
+  const { consent } = useChromeUi();
   const record = useConsentRecord();
   const hydrated = useIsHydrated();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -79,17 +83,14 @@ export function ConsentManager() {
   const decide = (choice: ConsentChoice) => {
     saveConsent(choice);
     setSettingsOpen(false);
-    setStatus(
-      choice.analytics
-        ? "Saved. Analytics is allowed. You can change this any time from Cookie settings in the footer."
-        : "Saved. Analytics is refused, so nothing is measured. You can change this any time from Cookie settings in the footer.",
-    );
+    setStatus(choice.analytics ? consent.saved.accepted : consent.saved.refused);
   };
 
   return (
     <>
       {locked && (
         <ConsentBanner
+          copy={consent.banner}
           onAccept={() => decide(ACCEPT_ALL)}
           onReject={() => decide(REJECT_ALL)}
           onManage={openSettings}
@@ -98,6 +99,7 @@ export function ConsentManager() {
 
       {hydrated && (
         <ConsentSettings
+          copy={consent.settings}
           open={settingsOpen}
           value={draft}
           onChange={setDraft}

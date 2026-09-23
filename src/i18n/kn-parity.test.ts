@@ -15,7 +15,7 @@
 
 import { describe, expect, it } from "vitest";
 import { getContent, type Content } from "./content";
-import { placeholdersIn } from "./format";
+import { placeholdersIn, slotsIn } from "./format";
 import { FIXED_KEYS } from "./translation";
 
 /**
@@ -43,6 +43,9 @@ const SAME_IN_BOTH: Readonly<Record<string, string>> = {
   "home.calculator.fields.tariff.hint": "input withdrawn at owner review round 2",
   "images.duskSkyline.alt": 'hero slide 1: decoration behind fixed copy, rendered with alt=""',
   "socialPending[0].label": "the network's own name",
+  "ui.meta.socialImageAlt":
+    "both holes are Latin \u2014 the brand name and the brand line \u2014 so the reviewers' row (u248) repeats the English",
+  "ui.footer.gstin": "the statutory identifier: label and number both stay Latin, to match the certificate (glossary #77)",
 };
 
 /**
@@ -123,6 +126,17 @@ describe("the Kannada overlay covers the English copy", () => {
     const drifted = pairs
       .filter((leaf) => placeholdersIn(leaf.en).join() !== placeholdersIn(leaf.kn).join())
       .map((leaf) => `${leaf.path}: {${placeholdersIn(leaf.en)}} vs {${placeholdersIn(leaf.kn)}}`);
+    expect(drifted).toEqual([]);
+  });
+
+  it("keeps the same markup slots on both sides of a rich sentence", () => {
+    // The consent copy carries its links and its opening emphasis as named slots rather than as
+    // JSX children, so the translator can move them inside the sentence. A dropped
+    // <privacyLink> would take a link a DPDP notice has to offer with it, and nothing on screen
+    // would say so; an invented tag throws in <RichText>.
+    const drifted = pairs
+      .filter((leaf) => slotsIn(leaf.en).join() !== slotsIn(leaf.kn).join())
+      .map((leaf) => `${leaf.path}: <${slotsIn(leaf.en)}> vs <${slotsIn(leaf.kn)}>`);
     expect(drifted).toEqual([]);
   });
 });

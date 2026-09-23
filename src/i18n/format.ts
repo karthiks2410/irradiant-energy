@@ -58,3 +58,18 @@ export function fillParts(template: string, values: TemplateValues): string[] {
 export function placeholdersIn(template: string): string[] {
   return [...template.matchAll(PLACEHOLDER)].map((m) => m[1]).sort();
 }
+
+/**
+ * `<name>…</name>` markup slots, the same idea one level up: a few sentences carry an inline
+ * element rather than a value — a link, an emphasised opening, a cookie name in `<code>` — and
+ * <RichText> (src/components/i18n/RichText.tsx) substitutes the element for the tag.
+ *
+ * Exported here, beside `placeholdersIn`, so kn-parity.test.ts can assert that a translated
+ * sentence still carries the same slots. A dropped `<privacyLink>` would quietly lose a link a
+ * consent notice is required to offer, and an invented tag throws at render.
+ */
+const MARKUP_SLOT = /<([A-Za-z][\w-]*)>[\s\S]*?<\/\1>/g;
+
+export function slotsIn(template: string): string[] {
+  return [...template.matchAll(MARKUP_SLOT)].map((m) => m[1]).sort();
+}

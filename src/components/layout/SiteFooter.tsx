@@ -2,6 +2,7 @@ import { Link } from "@/components/i18n/LocaleLink";
 import type { ReactNode } from "react";
 import { isConfirmed, whatsappLink } from "@/content/site";
 import type { Content } from "@/i18n/content";
+import { fill } from "@/i18n/format";
 import { showPlaceholders } from "@/lib/env";
 import { LogoLockup } from "@/components/brand/Logo";
 import { CookieSettingsLink } from "@/components/consent";
@@ -125,7 +126,7 @@ export function SiteFooter({ content }: { content: Content }) {
         <div className="container-page flex flex-col gap-2 py-6 text-small text-on-dark-muted sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {year} {entity.entityName ?? site.name}{" "}
-            {entity.gstin ? `GSTIN ${entity.gstin}` : <Placeholder>GSTIN</Placeholder>}
+            {entity.gstin ? fill(ui.footer.gstin, { gstin: entity.gstin }) : <Placeholder>GSTIN</Placeholder>}
           </p>
           <p className="font-label text-label uppercase">{site.tagline}</p>
         </div>

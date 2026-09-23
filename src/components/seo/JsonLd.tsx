@@ -1,5 +1,6 @@
 import { isConfirmed, site, type Fact } from "@/content/site";
 import { HREFLANG, type Locale } from "@/i18n/config";
+import { getContent } from "@/i18n/content";
 import { localizePath } from "@/i18n/paths";
 import { getLocale } from "@/i18n/server";
 import { absoluteUrl, socialImage } from "@/lib/seo";
@@ -116,7 +117,11 @@ export interface BreadcrumbItem {
  */
 export async function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
   const locale = await getLocale();
-  const trail: BreadcrumbItem[] = [{ name: "Home", path: "/" }, ...items];
+  // The same string the visible trail starts with (components/pages/Breadcrumbs.tsx), so the
+  // graph mirrors what is on the page — which is what Google's breadcrumb guidance asks for, and
+  // the reason it is read from the content layer here rather than written twice.
+  const { ui } = getContent(locale);
+  const trail: BreadcrumbItem[] = [{ name: ui.breadcrumbs.home, path: "/" }, ...items];
   return (
     <JsonLdScript
       data={{

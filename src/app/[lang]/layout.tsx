@@ -4,12 +4,14 @@ import { ConsentManager } from "@/components/consent";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { WhatsAppBubble } from "@/components/ui/WhatsAppBubble";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { UiProvider } from "@/components/i18n/UiProvider";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { site } from "@/content/site";
 import { HTML_LANG, OG_LOCALE } from "@/i18n/config";
 import { getContent } from "@/i18n/content";
+import { fill } from "@/i18n/format";
 import { getLocale } from "@/i18n/server";
 import { allowIndexing, siteUrl } from "@/lib/env";
 import "../globals.css";
@@ -60,13 +62,17 @@ export const KANNADA_FONT_URL = "/fonts/noto-sans-kannada-v32-kannada-wght.woff2
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
+  const content = getContent(locale);
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: `${site.name} | Rooftop solar for homes, housing societies and businesses`,
+      // The brand is a hole in the line rather than a prefix glued to it: Kannada keeps the name
+      // Latin but does not necessarily keep it first. The template stays `%s | {name}` in both
+      // locales, because the suffix is the brand and the separator, not a sentence.
+      default: fill(content.ui.meta.defaultTitle, { siteName: site.name }),
       template: `%s | ${site.name}`,
     },
-    description: site.description,
+    description: content.site.description,
     applicationName: site.name,
     // Indexing is switched on only when the real domain is configured (lib/env.ts).
     robots: allowIndexing ? { index: true, follow: true } : { index: false, follow: false },
@@ -89,27 +95,33 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
   return (
     <html lang={HTML_LANG[locale]} className={`${inter.variable} ${plexMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        {locale === "kn" && (
-          <link rel="preload" href={KANNADA_FONT_URL} as="font" type="font/woff2" crossOrigin="anonymous" />
-        )}
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-100 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-teal-900"
-        >
-          {content.ui.layout.skipLink}
-        </a>
-        <ScrollProgress />
-        <SiteHeader content={content} />
-        {/* Pages sit below the fixed header; the home hero pulls itself up with -mt-(--header-h). */}
-        <main id="main" className="flex-1 pt-(--header-h)">
-          {children}
-        </main>
-        <SiteFooter content={content} />
-        {/* Consent UI mounts last: it renders nothing until a choice is needed. */}
-        <WhatsAppBubble label={content.ui.whatsappBubble.srLabel} />
-        <ConsentManager />
-        <SmoothScroll />
-        <JsonLd />
+        {/* The chrome strings the two islands that cannot take props read instead: the route
+            error boundary, which Next hands only `error` and `retry`, and the consent UI, whose
+            settings panel is rendered by /cookies. It renders no element of its own, so the
+            markup below is unchanged. */}
+        <UiProvider value={{ error: content.ui.error, consent: content.ui.consent }}>
+          {locale === "kn" && (
+            <link rel="preload" href={KANNADA_FONT_URL} as="font" type="font/woff2" crossOrigin="anonymous" />
+          )}
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-100 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-teal-900"
+          >
+            {content.ui.layout.skipLink}
+          </a>
+          <ScrollProgress />
+          <SiteHeader content={content} />
+          {/* Pages sit below the fixed header; the home hero pulls itself up with -mt-(--header-h). */}
+          <main id="main" className="flex-1 pt-(--header-h)">
+            {children}
+          </main>
+          <SiteFooter content={content} />
+          {/* Consent UI mounts last: it renders nothing until a choice is needed. */}
+          <WhatsAppBubble label={content.ui.whatsappBubble.srLabel} />
+          <ConsentManager />
+          <SmoothScroll />
+          <JsonLd />
+        </UiProvider>
       </body>
     </html>
   );
