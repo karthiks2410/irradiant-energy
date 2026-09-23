@@ -3,9 +3,27 @@
  * HTML plus plain text, brand colours (globals.css), every user value HTML-escaped, and links
  * only to fixed `siteUrl` paths, never to anything derived from the request (05 §6.2).
  * Email clients cannot load the brand web fonts, so the templates use a system stack.
+ *
+ * The two emails have different readers and therefore different languages.
+ *
+ * - The **customer acknowledgement** is written in the language the form was filled in. Someone
+ *   who has just read a Kannada page and typed into a Kannada form should not get an English
+ *   email back. It reads its copy from `getContent(locale).quote.email`, and the `<html lang>`
+ *   follows, so a mail client renders it with the right font stack.
+ * - The **internal alert** stays English, always. Its reader is the sales team, it is a work
+ *   item rather than copy, and half of what it carries — flags, engine version — is not prose
+ *   at all. It gains one row saying which language the enquiry came in, so whoever calls back
+ *   knows what to expect (docs/kannada/research/architecture.md §6.12).
+ *
+ * Numbers and dates stay en-IN in both: lakh/crore grouping is how a reader in Karnataka reads
+ * a rupee figure, and `kn-IN` would group in thousands (§6.7).
  */
 
 import { isConfirmed, site, whatsappLink } from "@/content/site";
+import { DEFAULT_LOCALE, LOCALE_NAME, type Locale } from "@/i18n/config";
+import { getContent } from "@/i18n/content";
+import { fill } from "@/i18n/format";
+import { HTML_LANG } from "@/i18n/config";
 import { siteUrl } from "@/lib/env";
 import type { Estimate } from "@/lib/solar/calc";
 import { SEGMENT_LABELS } from "@/lib/solar/constants";
@@ -26,6 +44,8 @@ export interface LeadEmailContext {
   estimate: Estimate | null;
   /** Submission time, shown as the consent timestamp. */
   submittedAt: Date;
+  /** The language the form was filled in; it decides the acknowledgement's language only. */
+  locale: Locale;
 }
 
 const COLOR = {
@@ -38,7 +58,13 @@ const COLOR = {
   mist: "#e7ebe5",
 } as const;
 
-const FONT = "Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+/**
+ * A system stack: mail clients cannot load the brand web fonts. `Noto Sans Kannada` leads the
+ * Kannada faces a desktop or phone client is likely to have; anything that has none of them
+ * falls through to the client's own default, which still renders the script.
+ */
+const FONT =
+  "Inter, 'Segoe UI', Roboto, Helvetica, Arial, 'Noto Sans Kannada', 'Tunga', 'Nirmala UI', sans-serif";
 
 export function escapeHtml(value: string): string {
   return value
@@ -59,13 +85,15 @@ function contactLines(): { phone: string | null; email: string | null; whatsapp:
   };
 }
 
-const formatDate = (d: Date) =>
-  new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" }).format(d) +
-  " IST";
+const stamp = (d: Date) =>
+  new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" }).format(d);
 
-function layout(title: string, bodyHtml: string, footerHtml: string): string {
+/** The zone suffix is the only part of a timestamp that is words, so it is the only part that moves. */
+const formatDate = (d: Date, template = "{datetime} IST") => fill(template, { datetime: stamp(d) });
+
+function layout(title: string, bodyHtml: string, footerHtml: string, lang: string = HTML_LANG.en): string {
   return `<!doctype html>
-<html lang="en">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -109,6 +137,13 @@ function rows(pairs: ReadonlyArray<readonly [string, string]>): string {
 
 const textRows = (pairs: ReadonlyArray<readonly [string, string]>) => pairs.map(([k, v]) => `${k}: ${v}`).join("\n");
 
+/**
+ * How the alert names the language the enquiry came in. English, with the Kannada endonym beside
+ * it: the row is read by the sales team, and the endonym is what they will see on the website.
+ * Not copy, so it is not in a content module and is not translated.
+ */
+const ENQUIRY_LANGUAGE: Record<Locale, string> = { en: "English", kn: `Kannada (${LOCALE_NAME.kn})` };
+
 function estimateRows(estimate: Estimate): ReadonlyArray<readonly [string, string]> {
   return [
     ["Recommended size", `${estimate.systemKwp} kWp (${estimate.monthlyKwh} kWh/month at ₹${estimate.tariff.averageInrPerKwh}/unit)`],
@@ -123,6 +158,24 @@ function estimateRows(estimate: Estimate): ReadonlyArray<readonly [string, strin
   ];
 }
 
+/**
+ * Fill a template into HTML: the literal text is escaped, the named values are raw fragments.
+ *
+ * It exists because two acknowledgement lines put a LINK inside a sentence — the site address in
+ * the footer, the email address in the contact line — and the sentence is one reviewer row, so
+ * the anchor has to be dropped into a hole rather than concatenated around a fragment.
+ */
+function htmlTemplate(template: string, values: Readonly<Record<string, string>>): string {
+  let out = "";
+  let last = 0;
+  for (const match of template.matchAll(/\{(\w+)\}/g)) {
+    out += escapeHtml(template.slice(last, match.index));
+    out += values[match[1]] ?? escapeHtml(match[0]);
+    last = match.index + match[0].length;
+  }
+  return out + escapeHtml(template.slice(last));
+}
+
 /** Internal alert to LEAD_EMAIL. Carries the consent flags so sales act within them (17 §6.3). */
 export function renderLeadAlert(ctx: LeadEmailContext): EmailContent {
   const { lead, reference, estimate, submittedAt } = ctx;
@@ -134,6 +187,9 @@ export function renderLeadAlert(ctx: LeadEmailContext): EmailContent {
     ["Phone", lead.phone],
     ["Email", lead.email],
     ["WhatsApp opt-in", lead.whatsappOptIn ? "Yes" : "No — do not message on WhatsApp"],
+    // Which language this enquiry was sent in, so whoever calls back knows what to expect and
+    // can see that the acknowledgement they received was in that language too (§6.12).
+    ["Language", ENQUIRY_LANGUAGE[ctx.locale]],
     ["Consent to contact", `Given ${formatDate(submittedAt)} on the estimate form`],
   ];
   const enquiry: ReadonlyArray<readonly [string, string]> = [
@@ -181,68 +237,98 @@ ${customerWhatsapp ? button("WhatsApp the customer", customerWhatsapp) : button(
 }
 
 /**
- * One-time acknowledgement to the customer. No figures, no promises about timing, no free
- * text from the form; a consent reference in the footer (brand PDF p.70, 17 §6.3).
+ * One-time acknowledgement to the customer, in the language they filled the form in.
+ *
+ * No figures, no promises about timing, no free text from the form; a consent reference in the
+ * footer (brand PDF p.70, 17 §6.3). Every sentence is a template from `content.quote.email`, so
+ * the Kannada version is the reviewers' wording rather than an English sentence with the nouns
+ * swapped — and the property type is named from `ui.calculator.segments`, the same words the
+ * calculator used.
  */
 export function renderCustomerAcknowledgement(ctx: LeadEmailContext): EmailContent {
-  const { lead, reference, submittedAt } = ctx;
-  const segment = SEGMENT_LABELS[lead.segment].toLowerCase();
+  const { lead, reference, submittedAt, locale = DEFAULT_LOCALE } = ctx;
+  const content = getContent(locale);
+  const copy = content.quote.email;
+  const segmentLabel = content.ui.calculator.segments[lead.segment];
+  // A no-op in Kannada, which has no case; in English it turns "Housing society" into the noun
+  // the sentence needs ("…solar for your housing society").
+  const segment = segmentLabel.toLowerCase();
   const contact = contactLines();
   const firstName = lead.name.split(/\s+/)[0];
-  const whatsappHref = customerWhatsappHref(reference);
+  const whatsappHref = customerWhatsappHref(reference, locale);
+  const when = formatDate(submittedAt, copy.datetime);
 
   const received: ReadonlyArray<readonly [string, string]> = [
-    ["Reference", reference],
-    ["Property", SEGMENT_LABELS[lead.segment]],
-    ["PIN code", lead.pincode ?? "not given"],
-    ["Monthly bill", lead.monthlyBill === undefined ? "not given" : formatInr(lead.monthlyBill)],
-    ["WhatsApp updates", lead.whatsappOptIn ? "Yes" : "No"],
+    [copy.rowReference, reference],
+    [copy.rowProperty, segmentLabel],
+    [copy.rowPincode, lead.pincode ?? copy.notGiven],
+    [copy.rowMonthlyBill, lead.monthlyBill === undefined ? copy.notGiven : formatInr(lead.monthlyBill)],
+    [copy.rowWhatsapp, lead.whatsappOptIn ? copy.yes : copy.no],
   ];
 
   const address = site.contact.address;
   const addressLine = isConfirmed(address.status) ? address.value.lines.join(", ") : null;
   const legalName = site.legal.entityName;
 
-  const subject = `We have your solar enquiry (${reference})`;
+  const subject = fill(copy.subjectLine, { reference });
+
+  /**
+   * "Call {phone} or email {email}." names both routes in one sentence, so it needs both. If
+   * either fact is ever unconfirmed the line is left out rather than half-written: a fragment
+   * assembled in code could only be assembled in English, and the WhatsApp button above it is
+   * still a way through.
+   */
+  const bothContacts = contact.phone !== null && contact.email !== null;
+  const contactHtml = bothContacts
+    ? `<p style="margin:0;color:${COLOR.grey};font-size:14px;">${htmlTemplate(copy.contactLine, {
+        phone: escapeHtml(contact.phone!),
+        email: `<a href="mailto:${escapeHtml(contact.email!)}" style="color:${COLOR.green};">${escapeHtml(contact.email!)}</a>`,
+      })}</p>`
+    : "";
+  const contactText = bothContacts ? fill(copy.contactLine, { phone: contact.phone!, email: contact.email! }) : "";
 
   const html = layout(
     subject,
-    `<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLOR.teal};">Thanks, ${escapeHtml(firstName)}. We have your enquiry.</h1>
-<p style="margin:0 0 12px;">You asked about rooftop solar for your ${escapeHtml(segment)}. We will review the details below and get in touch to arrange the next step, usually a site visit so the final system size and figures can be confirmed.</p>
+    `<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLOR.teal};">${escapeHtml(fill(copy.heading, { firstName }))}</h1>
+<p style="margin:0 0 12px;">${escapeHtml(fill(copy.intro, { segment }))}</p>
 ${rows(received)}
-<p style="margin:0 0 4px;">Prefer to talk now? Message us on WhatsApp and quote your reference.</p>
-${button("Message us on WhatsApp", whatsappHref)}
-<p style="margin:0;color:${COLOR.grey};font-size:14px;">${[
-      contact.phone ? `Call ${escapeHtml(contact.phone)}` : null,
-      contact.email ? `email <a href="mailto:${escapeHtml(contact.email)}" style="color:${COLOR.green};">${escapeHtml(contact.email)}</a>` : null,
-    ]
-      .filter(Boolean)
-      .join(" or ")}.</p>
-<p style="margin:16px 0 0;color:${COLOR.grey};font-size:14px;">Any figures shown by the calculator on our website are estimates, not a quote or a guarantee. Subsidies are decided and paid by the Government after DISCOM inspection.</p>`,
-    `<p style="margin:0 0 8px;">You are receiving this one-time acknowledgement because you submitted the estimate form on <a href="${escapeHtml(siteUrl)}" style="color:${COLOR.green};">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a> on ${escapeHtml(formatDate(submittedAt))} and agreed to be contacted about this enquiry. It is not a marketing email.</p>
+<p style="margin:0 0 4px;">${escapeHtml(copy.talkNow)}</p>
+${button(copy.whatsappButton, whatsappHref)}
+${contactHtml}
+<p style="margin:16px 0 0;color:${COLOR.grey};font-size:14px;">${escapeHtml(copy.disclaimer)}</p>`,
+    `<p style="margin:0 0 8px;">${htmlTemplate(copy.footer, {
+      site: `<a href="${escapeHtml(siteUrl)}" style="color:${COLOR.green};">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a>`,
+      datetime: escapeHtml(when),
+    })}</p>
 <p style="margin:0;">${escapeHtml(legalName ?? site.name)}${addressLine ? ` · ${escapeHtml(addressLine)}` : ""}</p>`,
+    HTML_LANG[locale],
   );
 
   const text = [
-    `Thanks, ${firstName}. We have your enquiry.`,
+    fill(copy.heading, { firstName }),
     "",
-    `You asked about rooftop solar for your ${segment}. We will review the details below and get in touch to arrange the next step, usually a site visit so the final system size and figures can be confirmed.`,
+    fill(copy.intro, { segment }),
     "",
     textRows(received),
     "",
-    `Prefer to talk now? Message us on WhatsApp and quote your reference: ${whatsappHref}`,
-    [contact.phone ? `Call ${contact.phone}` : null, contact.email ? `email ${contact.email}` : null].filter(Boolean).join(" or "),
+    fill(copy.talkNowText, { whatsappUrl: whatsappHref }),
+    contactText,
     "",
-    "Any figures shown by the calculator on our website are estimates, not a quote or a guarantee. Subsidies are decided and paid by the Government after DISCOM inspection.",
+    copy.disclaimer,
     "",
-    `You are receiving this one-time acknowledgement because you submitted the estimate form on ${siteUrl} on ${formatDate(submittedAt)} and agreed to be contacted about this enquiry. It is not a marketing email.`,
+    fill(copy.footer, { site: siteUrl, datetime: when }),
     `${legalName ?? site.name}${addressLine ? ` · ${addressLine}` : ""}`,
   ].join("\n");
 
   return { subject, html, text };
 }
 
-/** Customer-to-company WhatsApp link; the prefill carries only the reference, never personal data. */
-export function customerWhatsappHref(reference: string): string {
-  return whatsappLink(`Hi, I sent a solar enquiry on the Irradiant Energy website (ref ${reference}).`);
+/**
+ * Customer-to-company WhatsApp link; the prefill carries only the reference, never personal data.
+ *
+ * The prefill is a message the CUSTOMER sends, so it is written in their language — they are the
+ * one who will see it sitting in the compose box.
+ */
+export function customerWhatsappHref(reference: string, locale: Locale = DEFAULT_LOCALE): string {
+  return whatsappLink(fill(getContent(locale).quote.whatsappPrefill, { reference }));
 }

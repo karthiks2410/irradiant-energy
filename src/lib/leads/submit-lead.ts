@@ -14,6 +14,7 @@ import { headers } from "next/headers";
 import { after } from "next/server";
 import { Resend } from "resend";
 import { site } from "@/content/site";
+import { DEFAULT_LOCALE, isLocale, type Locale } from "@/i18n/config";
 import { customerWhatsappHref, renderCustomerAcknowledgement, renderLeadAlert } from "@/lib/leads/emails";
 import { hashEmailDomain, logLeadEvent } from "@/lib/leads/log";
 import { checkLeadRateLimit } from "@/lib/leads/rate-limit";
@@ -24,11 +25,21 @@ import { buildEstimate, type Estimate } from "@/lib/solar/calc";
 // The action-state contract (LeadActionState, initialLeadState) is exported from
 // src/lib/leads/state.ts: a "use server" module may only export async functions.
 
-const CONTACT_FALLBACK = "please WhatsApp or call us instead.";
-const ERROR_SEND = `We couldn't send your request right now — ${CONTACT_FALLBACK}`;
-const ERROR_RATE_LIMITED = `We've received several requests from your connection — ${CONTACT_FALLBACK}`;
-const ERROR_TOO_FAST = "That was quick. Please check your details and submit again.";
-const ERROR_INVALID = "Please check the highlighted fields.";
+// Refusals are codes, not sentences: one action id serves /en and /kn, and the wording lives in
+// src/content/quote.ts where a reviewer can read it (architecture.md §6.12).
+
+/**
+ * Which language the form was filled in.
+ *
+ * A Server Action cannot read `next/root-params` — it has no route — so the page posts the
+ * locale as a hidden field. It decides one thing: the language of the customer's
+ * acknowledgement. Anything unrecognised falls back to English rather than throwing, because a
+ * tampered field must not cost someone their enquiry.
+ */
+function localeOf(formData: FormData): Locale {
+  const value = formData.get("locale");
+  return typeof value === "string" && isLocale(value) ? value : DEFAULT_LOCALE;
+}
 
 // Sender and lead inbox fall back to the addresses in decisions.md D-009; they are not secrets.
 // In Production they are never missing: next.config.ts imports lib/env.server.ts, which fails
@@ -49,33 +60,34 @@ export async function submitLead(_prev: LeadActionState, formData: FormData): Pr
       errorName: err instanceof Error ? err.name : "unknown",
       errorStatus: null,
     });
-    return { ok: false, error: ERROR_SEND, values: echoValues(formData) };
+    return { ok: false, errorCode: "send", values: echoValues(formData) };
   }
 }
 
 async function handleLead(formData: FormData): Promise<LeadActionState> {
   const values = echoValues(formData);
+  const locale = localeOf(formData);
   const parsed = parseLeadForm(formData);
   const reference = newReference();
 
   if (parsed.kind === "spam") {
     // A filled honeypot is a bot: answer as if it worked and send nothing.
     logLeadEvent("warn", "lead_spam_dropped", { reference });
-    return { ok: true, reference, whatsappHref: customerWhatsappHref(reference) };
+    return { ok: true, reference, whatsappHref: customerWhatsappHref(reference, locale) };
   }
   if (parsed.kind === "too-fast") {
     logLeadEvent("warn", "lead_too_fast", { reference });
-    return { ok: false, error: ERROR_TOO_FAST, values };
+    return { ok: false, errorCode: "tooFast", values };
   }
   if (parsed.kind === "invalid") {
-    return { ok: false, error: ERROR_INVALID, fieldErrors: parsed.fieldErrors, values };
+    return { ok: false, errorCode: "invalid", fieldErrors: parsed.fieldErrors, values };
   }
   const lead = parsed.lead;
 
   const decision = await checkLeadRateLimit(await clientIp());
   if (!decision.allowed) {
     logLeadEvent("warn", "lead_rate_limited", { reference, retryAfterSeconds: decision.retryAfterSeconds });
-    return { ok: false, error: ERROR_RATE_LIMITED, values };
+    return { ok: false, errorCode: "rateLimited", values };
   }
 
   // Production can now ship without a key (owner decision, 2026-09-20: Resend cannot send until
@@ -89,11 +101,12 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
     logLeadEvent("error", "lead_email_unconfigured", { reference });
     return {
       ok: false,
-      error:
+      errorCode: "send",
+      devMessage:
         process.env.NODE_ENV === "production"
-          ? ERROR_SEND
+          ? undefined
           : "Email is not configured: set RESEND_API_KEY in .env.local (see .env.example).",
-      whatsappHref: customerWhatsappHref(reference),
+      whatsappHref: customerWhatsappHref(reference, locale),
       reference,
       values,
     };
@@ -110,7 +123,7 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
           // larger system in the sales alert than the visitor saw on screen.
           roofAreaSqft: lead.roofAreaSqft,
         });
-  const context = { lead, reference, estimate, submittedAt: new Date() };
+  const context = { lead, reference, estimate, submittedAt: new Date(), locale };
   const resend = new Resend(apiKey);
   const logFields = {
     reference,
@@ -134,7 +147,7 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
     // Nothing durable holds this enquiry, so the only way it survives is if the visitor carries
     // it to us. The WhatsApp link is pre-filled with their reference, which is the same one the
     // email would have quoted, so a rescued enquiry can still be matched up.
-    return { ok: false, error: ERROR_SEND, whatsappHref: customerWhatsappHref(reference), reference, values };
+    return { ok: false, errorCode: "send", whatsappHref: customerWhatsappHref(reference, locale), reference, values };
   }
   logLeadEvent("info", "lead_alert_sent", logFields);
 
@@ -153,7 +166,7 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
     else logLeadEvent("warn", "lead_ack_failed", { ...logFields, ...ackResult.error });
   });
 
-  return { ok: true, reference, whatsappHref: customerWhatsappHref(reference) };
+  return { ok: true, reference, whatsappHref: customerWhatsappHref(reference, locale) };
 }
 
 interface SendRequest {
