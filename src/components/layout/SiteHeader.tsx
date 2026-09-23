@@ -20,10 +20,19 @@ export function SiteHeader() {
           <LogoLockup className="h-[42px] w-auto lg:h-12" />
         </Link>
 
-        {/* data-header-nav / data-header-menu is what globals.css uses to hand 1024–1279 over to
-            the sheet in Kannada only, where the inline nav plus the right cluster overflows the
-            bar (layout-risks.md B1). English keeps its inline nav at every width it had it. */}
-        <nav aria-label="Main" data-header-nav className="hidden lg:block">
+        {/*
+         * xl, not lg (layout-risks.md B1). At 1024–1279 the inline nav and the right-hand cluster
+         * do not fit: measured on the pre-change build, the header's inner container is 1084px
+         * wide inside 1024px, so the CTA is clipped by the viewport edge — before any Kannada or
+         * any language switch. Kannada makes it worse (its nav items wrapped to two lines inside a
+         * fixed-height bar), and the M4 fix that stops the CTA wrapping makes it worse again,
+         * because a pill that cannot wrap cannot get narrower.
+         *
+         * So 1024–1279 uses the sheet, which fits both languages comfortably. This is the one
+         * place English rendering changes beyond the URL prefix, and it changes from clipped to
+         * not clipped.
+         */}
+        <nav aria-label="Main" className="hidden xl:block">
           <ul className="flex items-center gap-1">
             {nav.map((item) => (
               <li key={item.label}>
@@ -36,10 +45,19 @@ export function SiteHeader() {
         <div className="flex items-center gap-1 md:gap-2 lg:gap-2.5">
           <HeaderContact />
 
-          {/* From lg the switch sits in the bar; below that it is the first row of the mobile
-              sheet, so a phone visitor is never without it (the owner's prototype hid it below
-              1120px and offered nothing in its place). */}
-          <LanguageSwitch className="hidden lg:inline-flex" />
+          {/*
+           * From xl the switch sits in the bar, beside the phone and the CTA; below that it is the
+           * first thing in the mobile sheet, so nobody is ever without it — the owner's prototype
+           * hid it below 1120px and offered nothing in its place.
+           *
+           * The display utility is on this wrapper, not on the pill: Tailwind emits `.inline-flex`
+           * after `.hidden`, so a `hidden` passed through className loses the cascade and the pill
+           * stays on screen at every width. That is not hypothetical — it pushed the menu button
+           * 43px off a 360px screen until this wrapper was added. Same reason the CTA below has one.
+           */}
+          <span className="hidden xl:inline-flex">
+            <LanguageSwitch />
+          </span>
 
           {/* The wrapper carries the display utility, not the pill: ButtonLink's own
               `inline-flex` is emitted after `.hidden` in the Tailwind stylesheet, so a

@@ -1,18 +1,34 @@
 import { expect, type Page, type ConsoleMessage } from "@playwright/test";
+import { localizePath } from "../src/i18n/paths";
+import { publishedPaths } from "../src/i18n/registry";
 
-export const ROUTES = [
-  "/",
-  "/about",
-  "/solutions",
-  "/solutions/solar/home",
-  "/solutions/solar/housing-society",
-  "/solutions/solar/commercial",
-  "/get-quote",
-  "/contact",
-  "/privacy",
-  "/terms",
-  "/cookies",
-];
+/*
+ * The route lists come from src/i18n/registry.ts rather than being retyped here, so a page that is
+ * published in one locale and not the other is covered exactly where it resolves — and a route
+ * added to the app cannot be missed by the suite. The registry imports nothing but the locale
+ * constants, which is what lets Playwright import it directly.
+ */
+export const ROUTES = publishedPaths("en");
+export const KN_ROUTES = publishedPaths("kn");
+
+/** The English URL for an unprefixed app path: en("/about") -> "/en/about". */
+export const en = (path: string) => localizePath(path, "en");
+
+/**
+ * The language switch that is actually on screen.
+ *
+ * Below xl it lives in the mobile sheet, so a width-agnostic test has to open the sheet first —
+ * which is also the assertion that matters: a phone visitor must be able to change language.
+ */
+export async function languageSwitch(page: Page) {
+  const inBar = page.locator("[data-language-switch]:visible");
+  if ((await inBar.count()) > 0) return inBar.first();
+
+  await page.getByRole("button", { name: /open menu/i }).first().click();
+  const inSheet = page.getByRole("dialog").locator("[data-language-switch]:visible");
+  await expect(inSheet, "the language switch is not reachable at this width").toHaveCount(1);
+  return inSheet.first();
+}
 
 /** Collect page errors and console errors so a test can assert the page is actually clean. */
 export function watchForErrors(page: Page) {

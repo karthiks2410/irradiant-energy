@@ -2,11 +2,11 @@ import { test, expect, type Page } from "@playwright/test";
 import { dismissConsent } from "./helpers";
 
 // The desktop Solutions menu opens on hover with hover intent, and stays a keyboard disclosure.
-// It only exists at `lg` and up; the phone uses the menu sheet instead.
+// It only exists at `xl` and up; everything narrower uses the menu sheet instead.
 test.describe("the Solutions menu", () => {
   test.beforeEach(async ({ page }, info) => {
     test.skip(info.project.name === "mobile", "desktop navigation only");
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/en", { waitUntil: "networkidle" });
     await dismissConsent(page);
   });
 

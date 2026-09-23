@@ -27,8 +27,8 @@ export function MobileMenu() {
         type="button"
         onClick={() => dialogRef.current?.showModal()}
         aria-haspopup="dialog"
-        data-header-menu
-        className="inline-grid size-11 shrink-0 place-items-center rounded-full border border-white/30 lg:hidden"
+        // xl, matching SiteHeader's nav breakpoint: the sheet owns 1024–1279 now.
+        className="inline-grid size-11 shrink-0 place-items-center rounded-full border border-white/30 xl:hidden"
       >
         <span className="sr-only">Open menu</span>
         <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.75">

@@ -3,7 +3,7 @@ import { dismissConsent, headerNav, scrollDown, watchForErrors } from "./helpers
 
 test.describe("navigation", () => {
   test("every header link lands at the top of its page", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/en", { waitUntil: "networkidle" });
     await dismissConsent(page);
 
     for (const name of ["About", "Calculator", "Contact"]) {
@@ -20,7 +20,7 @@ test.describe("navigation", () => {
   });
 
   test("the primary call to action reaches the estimator", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/en", { waitUntil: "networkidle" });
     await dismissConsent(page);
     await page.getByRole("link", { name: /get a free estimate/i }).first().click();
     await expect(page).toHaveURL(/\/get-quote/);
@@ -31,7 +31,7 @@ test.describe("navigation", () => {
     // Mobile Safari does not move focus on Tab unless the person has switched on Full
     // Keyboard Access, so tabbing there measures the browser, not the site.
     test.skip(await page.evaluate(() => "ontouchstart" in window), "no Tab navigation on iOS Safari");
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/en", { waitUntil: "networkidle" });
     // Answer consent first: the banner takes focus once when it appears, so the first Tab
     // from a fresh load belongs to it, not to the skip link.
     await dismissConsent(page);
@@ -53,7 +53,7 @@ test.describe("navigation", () => {
 test.describe("estimator", () => {
   test("changing the bill changes the estimate", async ({ page }) => {
     const errors = watchForErrors(page);
-    await page.goto("/get-quote", { waitUntil: "networkidle" });
+    await page.goto("/en/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
 
     const slider = page.getByRole("slider").first();
@@ -83,7 +83,7 @@ test.describe("estimator", () => {
   // be rejected rather than reaching anyone.
   test("an empty submission cannot reach anyone", async ({ page }) => {
     test.slow();
-    await page.goto("/get-quote", { waitUntil: "networkidle" });
+    await page.goto("/en/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
 
     const submit = page.getByRole("button", { name: /send my request/i });
@@ -119,7 +119,7 @@ test.describe("estimator", () => {
 test.describe("the estimate counts to its new value", () => {
   /** Drive the bill up and sample the figure the visitor actually sees, frame by frame. */
   async function sampleWhileChanging(page: import("@playwright/test").Page) {
-    await page.goto("/get-quote", { waitUntil: "networkidle" });
+    await page.goto("/en/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
     // No PIN: the figures are there from the bill alone.
     await expect(page.getByText(/annual savings/i).first()).toBeVisible();
@@ -183,7 +183,7 @@ test.describe("the estimate counts to its new value", () => {
 test.describe("the hero starts the estimate", () => {
   test("the hero form seeds the calculator and lands on real figures", async ({ page }) => {
     test.slow();
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/en", { waitUntil: "networkidle" });
     await dismissConsent(page);
 
     // `.last()` because the hero reserves its tallest scene with a hidden, inert copy of the
@@ -212,8 +212,8 @@ test.describe("the estimate does not wait for a PIN code", () => {
   // every tariff and yield constant is statewide, so it only narrows the caveat. Both
   // calculators must behave the same way about it.
   for (const [where, path] of [
-    ["the calculator page", "/get-quote"],
-    ["the home page band", "/#calculator"],
+    ["the calculator page", "/en/get-quote"],
+    ["the home page band", "/en#calculator"],
   ] as const) {
     test(`${where} shows figures from the bill alone, and names the tariff it assumed`, async ({ page }) => {
       await page.goto(path, { waitUntil: "networkidle" });
@@ -231,7 +231,7 @@ test.describe("the estimate does not wait for a PIN code", () => {
 
   test("a Bengaluru PIN removes the assumption, a Mysuru one changes it", async ({ page }) => {
     test.slow();
-    await page.goto("/get-quote", { waitUntil: "networkidle" });
+    await page.goto("/en/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
     const main = page.locator("main");
 
@@ -245,7 +245,7 @@ test.describe("the estimate does not wait for a PIN code", () => {
 
 test.describe("consent", () => {
   test("refusing loads nothing and the answer can be reopened", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/en", { waitUntil: "networkidle" });
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
 
@@ -276,7 +276,7 @@ test.describe("the consent banner holds the page", () => {
   // of silently not applying, so this drives real input rather than reading a class.
   test("the page will not scroll until the visitor answers", async ({ page }) => {
     test.slow();
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/en", { waitUntil: "networkidle" });
     await expect(page.getByRole("dialog")).toBeVisible();
 
     const size = page.viewportSize()!;
@@ -300,7 +300,7 @@ test.describe("the consent banner holds the page", () => {
 
   test("answering releases it", async ({ page }) => {
     test.slow();
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/en", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: /reject/i }).click();
     await expect(page.getByRole("dialog")).toBeHidden();
 
@@ -314,7 +314,7 @@ test.describe("reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
 
   test("the hero does not rotate on its own", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/en", { waitUntil: "networkidle" });
     await dismissConsent(page);
     const first = await page.locator("h1").innerText();
     await page.waitForTimeout(7500);
