@@ -68,6 +68,7 @@ export function HomeCalculator({ content }: { content: Content }) {
                 results={calculator.results}
                 assumptionsLabel={calculator.assumptionsLabel}
                 disclaimer={calculator.disclaimer}
+                assumptions={{ assumptions: content.quote.assumptions, citations: content.quote.citations }}
                 ui={content.ui.calculator}
                 optionalMarker={content.ui.fields.optionalMarker}
               />

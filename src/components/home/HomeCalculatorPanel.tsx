@@ -29,6 +29,7 @@ import { enIn, parseSegment } from "@/components/quote/copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "@/components/quote/FieldRow";
 import { ChevronDownIcon, SelectField, StatTile, TextField } from "@/components/ui";
 import { fill } from "@/i18n/format";
+import { describeAssumptions, type AssumptionCopy } from "@/lib/solar/assumptions";
 import { buildEstimate, type EstimateFlag } from "@/lib/solar/calc";
 import { SEGMENTS, type Segment } from "@/lib/solar/constants";
 import { TickerNumber } from "@/components/motion/TickerNumber";
@@ -83,6 +84,12 @@ export type HomeCalculatorPanelProps = {
   results: { title: string; size: string; generation: string; savings: string; payback: string };
   assumptionsLabel: string;
   disclaimer: string;
+  /**
+   * The templates behind the assumptions panel. The engine returns keys and figures, never
+   * prose (src/lib/solar/calc.ts), so the words for them have to arrive with the rest of the
+   * copy rather than out of the estimate.
+   */
+  assumptions: AssumptionCopy;
   ui: CalculatorUi;
   /** The "(optional)" marker beside an optional field's label. */
   optionalMarker: string;
@@ -94,6 +101,7 @@ export function HomeCalculatorPanel({
   results,
   assumptionsLabel,
   disclaimer,
+  assumptions,
   ui,
   optionalMarker,
   className = "",
@@ -281,11 +289,11 @@ export function HomeCalculatorPanel({
             <ChevronDownIcon className="size-4 shrink-0 transition-transform duration-200 ease-controlled group-open:rotate-180" />
           </summary>
           <dl className="mt-3 grid gap-3">
-            {estimate.assumptions.map((assumption) => (
-              <div key={assumption.label}>
+            {describeAssumptions(estimate.assumptions, assumptions).map((assumption) => (
+              <div key={assumption.key}>
                 <dt className="font-label text-label text-grey-600 uppercase">{assumption.label}</dt>
                 <dd className="mt-1 text-small text-ink-2">{assumption.value}</dd>
-                <dd className="mt-1 text-small text-grey-600">{assumption.source}</dd>
+                <dd className="mt-1 text-small text-grey-600">{assumption.citation}</dd>
               </div>
             ))}
           </dl>

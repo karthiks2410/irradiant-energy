@@ -4,11 +4,13 @@ import { parseSegment } from "@/components/quote/copy";
 import { EstimateControls } from "@/components/quote/EstimateControls";
 import { EstimateProvider } from "@/components/quote/EstimateProvider";
 import { EstimateResults } from "@/components/quote/EstimateResults";
+import { fillTags } from "@/components/quote/template";
 import { LeadForm } from "@/components/quote/LeadForm";
 import { mailConfigured } from "@/lib/env.server";
 import { MobileSummaryBar } from "@/components/quote/MobileSummaryBar";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { Accent, Card, Eyebrow, Section, SectionHeading } from "@/components/ui";
+import { getContent } from "@/i18n/content";
 import { site, whatsappLink } from "@/content/site";
 import { langParams } from "@/i18n/registry";
 import { getLocale } from "@/i18n/server";
@@ -17,12 +19,13 @@ import { pageMetadata } from "@/lib/seo";
 export const generateStaticParams = () => langParams("get-quote");
 
 export async function generateMetadata() {
+  const locale = await getLocale();
+  const { meta } = getContent(locale).quote;
   return pageMetadata({
-    title: "Solar estimate calculator",
-    description:
-      "Size a rooftop solar system for your home, housing society or business, see the estimated cost, savings and payback, then ask us for a proposal.",
+    title: meta.title,
+    description: meta.description,
     path: "/get-quote",
-    locale: await getLocale(),
+    locale,
   });
 }
 
@@ -38,6 +41,14 @@ async function servedAt(): Promise<number> {
   return Date.now();
 }
 
+/**
+ * The calculator page.
+ *
+ * Everything below the Section wrappers is a client island, and an island may not import copy
+ * (scripts/check-client-content.ts) — so this component does the one read of `getContent` and
+ * hands each island the slice it prints. That is also what keeps a Kannada string out of an
+ * English page's payload: only one locale's `quote` object is ever serialised.
+ */
 export default async function GetQuotePage({
   searchParams,
 }: {
@@ -52,24 +63,29 @@ export default async function GetQuotePage({
   // immune to a wrong clock on the visitor's device (the action compares against server time).
   const startedAt = await servedAt();
 
+  const locale = await getLocale();
+  const content = getContent(locale);
+  const quote = content.quote;
+  const calculator = content.ui.calculator;
+
   const phone = site.contact.phonePrimary.value;
   const phoneAlt = site.contact.phoneSecondary.value;
   const email = site.contact.email.value;
 
   return (
-    <EstimateProvider initialSegment={initialSegment}>
-      <BreadcrumbJsonLd items={[{ name: "Calculator", path: "/get-quote" }]} />
+    <EstimateProvider initialSegment={initialSegment} pincodeError={quote.controls.pincodeError}>
+      <BreadcrumbJsonLd items={[{ name: quote.breadcrumb.current, path: "/get-quote" }]} />
 
       <Section surface="canvas" containerClassName="grid-page items-start gap-y-12">
-        <nav aria-label="Breadcrumb" className="col-span-4 md:col-span-8 lg:col-span-12">
+        <nav aria-label={quote.breadcrumb.navLabel} className="col-span-4 md:col-span-8 lg:col-span-12">
           <ol className="flex flex-wrap items-center gap-2 text-small text-grey-600">
             <li>
               <Link href="/" className={linkClass}>
-                Home
+                {quote.breadcrumb.home}
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li aria-current="page">Calculator</li>
+            <li aria-current="page">{quote.breadcrumb.current}</li>
           </ol>
         </nav>
 
@@ -85,25 +101,39 @@ export default async function GetQuotePage({
           className="col-span-4 rounded-lg bg-teal-900 p-6 sm:p-8 md:col-span-8 lg:col-span-5"
         >
           {/* Owner-approved prototype copy (D-009): calc.eyebrow and calc.title, verbatim. */}
-          <Eyebrow tone="signal">Solar calculator</Eyebrow>
-          <h1 className="mt-4 font-display text-h2 font-extrabold text-white">
-            Estimate the right solar system for your site.
-          </h1>
+          <Eyebrow tone="signal">{quote.hero.eyebrow}</Eyebrow>
+          <h1 className="mt-4 font-display text-h2 font-extrabold text-white">{quote.hero.title}</h1>
           {/*
             PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Shortened: the instruction it used to
             carry ("tell us what you are putting solar on and roughly what you spend") is the
             same thing the Step 1 column says beside it, and saying it twice cost the panel two
             lines that pushed its last tiles below the fold on a laptop.
           */}
-          <p className="mt-4 text-lead text-white/80">The figures update as you go.</p>
-          <EstimateResults />
+          <p className="mt-4 text-lead text-white/80">{quote.hero.lead}</p>
+          <EstimateResults
+            copy={{
+              results: quote.results,
+              assumptions: quote.assumptions,
+              citations: quote.citations,
+              flags: calculator.flags,
+              units: { kwp: calculator.kwpUnit, kwh: calculator.kwhUnit, years: calculator.yearsUnit },
+            }}
+          />
         </div>
 
         <div className="col-span-4 md:col-span-8 lg:col-span-7">
-          <Eyebrow>Step 1</Eyebrow>
-          <h2 className="mt-4 font-display text-h3 font-bold text-carbon">Your property and usage</h2>
+          <Eyebrow>{quote.step1.eyebrow}</Eyebrow>
+          <h2 className="mt-4 font-display text-h3 font-bold text-carbon">{quote.step1.heading}</h2>
           <div className="mt-8">
-            <EstimateControls />
+            <EstimateControls
+              copy={{
+                controls: quote.controls,
+                segmentLabels: calculator.segments,
+                segments: quote.segments,
+                optionalMarker: content.ui.fields.optionalMarker,
+                format: quote.format,
+              }}
+            />
           </div>
         </div>
       </Section>
@@ -117,31 +147,32 @@ export default async function GetQuotePage({
         <div className="col-span-4 md:col-span-8 lg:col-span-7">
           <SectionHeading
             id="lead-form-heading"
-            eyebrow="Step 2"
+            eyebrow={quote.step2.eyebrow}
             align="stacked"
-            title={
-              <>
-                Get your <Accent>proposal</Accent>.
-              </>
-            }
-            lead="Your estimate is sent with your details."
+            // `<accent>` marks the green run inside the sentence, so the reviewer can move it:
+            // in Kannada the emphasised noun is not the last word.
+            title={<>{fillTags(quote.step2.title, { tags: { accent: (children) => <Accent>{children}</Accent> } })}</>}
+            lead={quote.step2.lead}
           />
           <div className="mt-10">
             <LeadForm
               startedAt={startedAt}
               canSend={mailConfigured}
               contact={{ phone: site.contact.phonePrimary.value, whatsappHref: whatsappLink() }}
+              copy={quote.form}
+              optionalMarker={content.ui.fields.optionalMarker}
+              locale={locale}
             />
           </div>
         </div>
 
         <aside className="col-span-4 md:col-span-8 lg:col-span-4 lg:col-start-9">
           <Card padding="lg">
-            <h2 className="font-display text-h4 font-semibold text-carbon">Prefer to talk?</h2>
+            <h2 className="font-display text-h4 font-semibold text-carbon">{quote.aside.heading}</h2>
             <ul className="mt-4 grid gap-3 text-body text-ink-2">
               <li>
                 <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className={linkClass}>
-                  WhatsApp us
+                  {quote.aside.whatsapp}
                 </a>
               </li>
               <li>
@@ -164,7 +195,7 @@ export default async function GetQuotePage({
         </aside>
       </Section>
 
-      <MobileSummaryBar targetId="lead-form" />
+      <MobileSummaryBar targetId="lead-form" copy={{ summary: quote.summary, format: quote.format }} />
     </EstimateProvider>
   );
 }
