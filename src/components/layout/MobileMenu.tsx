@@ -56,6 +56,10 @@ export function MobileMenu({ copy }: { copy: MobileMenuCopy }) {
         type="button"
         onClick={() => dialogRef.current?.showModal()}
         aria-haspopup="dialog"
+        // A hook for the e2e suite, which runs against both locales: the accessible name is
+        // "Open menu" on /en and "ಮೆನು ತೆರೆಯಿರಿ" on /kn, so a test cannot find it by name the way
+        // it used to. Same convention as [data-language-switch].
+        data-menu-toggle
         // xl, matching SiteHeader's nav breakpoint: the sheet owns 1024–1279 now.
         className="inline-grid size-11 shrink-0 place-items-center rounded-full border border-white/30 xl:hidden"
       >

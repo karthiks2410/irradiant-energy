@@ -24,7 +24,9 @@ export async function languageSwitch(page: Page) {
   const inBar = page.locator("[data-language-switch]:visible");
   if ((await inBar.count()) > 0) return inBar.first();
 
-  await page.getByRole("button", { name: /open menu/i }).first().click();
+  // Found by attribute, not by accessible name: the name is localised, and this helper runs on
+  // both locales' routes.
+  await page.locator("[data-menu-toggle]:visible").first().click();
   const inSheet = page.getByRole("dialog").locator("[data-language-switch]:visible");
   await expect(inSheet, "the language switch is not reachable at this width").toHaveCount(1);
   return inSheet.first();
@@ -81,7 +83,9 @@ export async function headerNav(page: Page) {
 
   const sheet = page.getByRole("navigation", { name: "Mobile" });
   if (!(await sheet.isVisible().catch(() => false))) {
-    await page.getByRole("button", { name: /open menu/i }).first().click();
+    // Found by attribute, not by accessible name: the name is localised, and this helper runs on
+  // both locales' routes.
+  await page.locator("[data-menu-toggle]:visible").first().click();
     await expect(sheet).toBeVisible();
   }
   return sheet;
