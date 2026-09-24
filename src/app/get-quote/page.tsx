@@ -75,7 +75,7 @@ export default async function GetQuotePage({
         */}
         <div
           data-surface="dark"
-          className="col-span-4 rounded-lg bg-teal-900 p-6 sm:p-8 md:col-span-8 lg:col-span-5"
+          className="@container col-span-4 rounded-lg bg-teal-900 p-6 sm:p-8 md:col-span-8 lg:col-span-5"
         >
           {/* Owner-approved prototype copy (D-009): calc.eyebrow and calc.title, verbatim. */}
           <Eyebrow tone="signal">Solar calculator</Eyebrow>

@@ -1,22 +1,11 @@
 "use client";
 
-/**
- * Live figures for step 1. Rendered inside the Deep Teal panel, so every primitive below picks
- * up its dark-surface colours from the panel's data-surface="dark".
- *
- * Every tile is marked `estimated` (brand PDF p.31): these are modelled numbers, never measured
- * ones, and the assumptions they rest on are one disclosure away.
- *
- * The figures do not wait for a PIN code. It changes none of them — see EstimateProvider — so
- * the bill alone produces a complete estimate, and the tiles carry a note saying which tariffs
- * were assumed until a PIN narrows it.
- */
-
 import { TickerNumber } from "@/components/motion/TickerNumber";
 import type { ReactNode } from "react";
 import { ChevronDownIcon, StatTile } from "@/components/ui";
 import { formatInr } from "@/lib/solar/format";
-import { enIn, estimateDisclaimer, flagNotes } from "./copy";
+import { ROOF_SQFT_PER_KWP } from "@/lib/solar/constants";
+import { estimateDisclaimer, flagNotes } from "./copy";
 import { useEstimate } from "./EstimateProvider";
 
 interface Tile {
@@ -26,20 +15,15 @@ interface Tile {
   note?: string;
 }
 
-/**
- * Figures travel to their new value rather than cutting to it, so that moving a control reads
- * as the same number changing. `key` is deliberately absent from the tiles: React must keep the
- * same TickerNumber instance across an estimate change, or the spring restarts from the new
- * value and nothing moves.
- */
 const ticker = (value: number, format: (n: number) => string) => (
   <TickerNumber value={value} format={format} />
 );
 
-const waitingTiles: Tile[] = ["Annual savings", "Payback", "System size", "Annual generation"].map((label) => ({
-  label,
-  value: "—",
-}));
+const waitingTiles: Tile[] = [
+  { label: "Monthly savings", value: formatInr(0) },
+  { label: "Payback", value: "0", unit: "years" },
+  { label: "Indicative cost", value: formatInr(0) },
+];
 
 export function EstimateResults() {
   const { estimate } = useEstimate();
@@ -48,49 +32,49 @@ export function EstimateResults() {
   if (estimate) {
     tiles = [
       {
-        label: "Annual savings",
-        value: ticker(estimate.annualSavingsInr, (n) => formatInr(Math.round(n))),
-        note: "Year one",
+        label: "Monthly savings",
+        value: ticker(estimate.monthlySavingsInr, (n) => formatInr(Math.round(n))),
       },
       {
         label: "Payback",
-        // Payback can be genuinely unavailable, and an em dash is not a number to count to.
         value: estimate.paybackYears === null ? "—" : ticker(estimate.paybackYears, (n) => n.toFixed(1)),
         unit: estimate.paybackYears === null ? undefined : "years",
       },
-      { label: "System size", value: ticker(estimate.systemKwp, (n) => n.toFixed(1)), unit: "kWp" },
-      {
-        label: "Annual generation",
-        value: ticker(estimate.annualGenerationKwh, (n) => enIn.format(Math.round(n))),
-        unit: "kWh",
-      },
+      estimate.subsidyInr > 0
+        ? {
+            label: "PM Surya Ghar subsidy",
+            value: ticker(estimate.subsidyInr, (n) => formatInr(Math.round(n))),
+            note: estimate.flags.includes("subsidy-house-count-unknown") ? "Upper limit" : undefined,
+          }
+        : {
+            label: "Indicative cost",
+            value: ticker(estimate.netCostInr, (n) => formatInr(Math.round(n))),
+          },
     ];
-    if (estimate.subsidyInr > 0) {
-      tiles.push({
-        label: "PM Surya Ghar subsidy",
-        value: ticker(estimate.subsidyInr, (n) => formatInr(Math.round(n))),
-        note: estimate.flags.includes("subsidy-house-count-unknown") ? "Upper limit" : undefined,
-      });
-    }
-    // Payback already leads the block above; cost closes it.
-    tiles.push({
-      label: estimate.subsidyInr > 0 ? "Net cost after subsidy" : "Indicative cost",
-      value: ticker(estimate.netCostInr, (n) => formatInr(Math.round(n))),
-    });
   }
 
   return (
     <div className="mt-8">
-      {/* The word "estimate" does the labelling here, and the dashed rule under each figure is
-          the brand's own mark for a modelled number (brand PDF p.31). "(estimated)" on each of
-          six tiles as well — under a heading that already says estimate and above a line that
-          says it again — read as doubt about our own engine rather than as candour. The
-          substance is untouched: the assumptions stay one click away and the disclaimer stays
-          below. */}
       <h2 className="font-mono text-label text-on-dark-muted uppercase">Your estimate</h2>
 
       <div aria-live="polite" className="mt-3">
-        <ul className="grid grid-cols-2 gap-3">
+        {/* Promoted system size callout */}
+        {estimate && (
+          <div className="mb-3 rounded-md border border-white/15 bg-teal-950 p-4">
+            <span className="block font-mono text-label text-green-400 uppercase">Recommended system</span>
+            <span className="mt-2 flex items-baseline gap-1.5">
+              <span className="font-mono text-data-xl font-medium tabular-nums text-white">
+                <TickerNumber value={estimate.systemKwp} format={(n) => n.toFixed(1)} />
+              </span>
+              <span className="text-data text-green-400">kWp</span>
+            </span>
+            <span className="mt-1 block text-small text-white/60">
+              ~{Math.round(estimate.systemKwp * ROOF_SQFT_PER_KWP.value)} sq ft of roof
+            </span>
+          </div>
+        )}
+
+        <ul className="grid grid-cols-1 gap-3 @sm:grid-cols-3">
           {tiles.map((tile) => (
             <StatTile
               as="li"
@@ -123,7 +107,6 @@ export function EstimateResults() {
             <ChevronDownIcon className="size-4 shrink-0 transition-transform duration-200 ease-controlled group-open:rotate-180" />
           </summary>
           <dl className="mt-4 grid gap-4">
-            {/* No figure on this page is projected, so the projection assumption is left out here. */}
             {estimate.assumptions
               .filter((assumption) => assumption.label !== "Projection")
               .map((assumption) => (

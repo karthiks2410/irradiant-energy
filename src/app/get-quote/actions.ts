@@ -106,9 +106,8 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
           segment: lead.segment,
           pincode: lead.pincode,
           monthlyBillInr: lead.monthlyBill,
-          // Carried from the calculator: it caps the system size, so leaving it out would put a
-          // larger system in the sales alert than the visitor saw on screen.
           roofAreaSqft: lead.roofAreaSqft,
+          sanctionedLoadKw: lead.sanctionedLoadKw,
         });
   const context = { lead, reference, estimate, submittedAt: new Date() };
   const resend = new Resend(apiKey);
