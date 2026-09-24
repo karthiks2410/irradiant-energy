@@ -246,6 +246,30 @@ export const PROJECTION_HORIZON_YEARS = {
   status: "assumption",
 } as const satisfies EngineConstant<number>;
 
+/** BESCOM fixed charge per kW of sanctioned load, applied across all domestic categories. */
+export const FIXED_CHARGE_PER_KW = {
+  id: "fixed-charge-per-kw",
+  label: "Fixed charge per kW of sanctioned load",
+  value: 150,
+  unit: "INR per kW per month",
+  source: "BESCOM domestic tariff schedule; indicative average across LT categories",
+  citation: "Indicative; your actual fixed charge depends on your BESCOM category",
+  effectiveFrom: "2025-04-01",
+  status: "owner-accepted",
+} as const satisfies EngineConstant<number>;
+
+/** Flat per-unit energy rate used by the simplified calculator for quick estimation. */
+export const FLAT_ENERGY_RATE = {
+  id: "flat-energy-rate",
+  label: "Average energy rate per unit (Bengaluru)",
+  value: 5.8,
+  unit: "INR per kWh",
+  source: "Approximate average across BESCOM domestic slabs for typical Bengaluru consumption",
+  citation: "Indicative average; your actual rate depends on consumption and BESCOM category",
+  effectiveFrom: "2025-04-01",
+  status: "owner-accepted",
+} as const satisfies EngineConstant<number>;
+
 /** Grid emission factor. 1 tCO2/MWh equals 1 kg CO2/kWh. Replaces the unsourced 0.82 (04 §7.5). */
 export const GRID_EMISSION_FACTOR = {
   id: "grid-emission-factor",
@@ -310,4 +334,6 @@ export const ENGINE_CONSTANTS: readonly EngineConstant<unknown>[] = [
   PROJECTION_HORIZON_YEARS,
   GRID_EMISSION_FACTOR,
   SYSTEM_SIZE_LIMITS,
+  FIXED_CHARGE_PER_KW,
+  FLAT_ENERGY_RATE,
 ];

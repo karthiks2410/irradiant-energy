@@ -17,6 +17,8 @@ import {
   citationFor,
   DEFAULT_NON_DOMESTIC_TARIFF,
   ENGINE_VERSION,
+  FIXED_CHARGE_PER_KW,
+  FLAT_ENERGY_RATE,
   GRID_EMISSION_FACTOR,
   INSTALL_COST_PER_KWP,
   KWH_BOUNDS,
@@ -47,6 +49,8 @@ export interface EstimateInput {
   averageTariffInrPerKwh?: number;
   /** Available roof area in sq ft; caps the system size when given. */
   roofAreaSqft?: number;
+  /** Sanctioned load in kW from the electricity bill; caps the system size. */
+  sanctionedLoadKw?: number;
   /** Housing societies only: number of houses, which caps the subsidised capacity. */
   houses?: number;
 }
@@ -68,7 +72,9 @@ export type EstimateFlag =
   /** Commercial connections get no PM Surya Ghar subsidy. */
   | "subsidy-not-applicable"
   /** Society subsidy shown without a house count, so only the 500 kW cap applied. */
-  | "subsidy-house-count-unknown";
+  | "subsidy-house-count-unknown"
+  /** System size capped by the sanctioned load. */
+  | "size-capped-load";
 
 export interface Assumption {
   label: string;
@@ -369,8 +375,24 @@ export function buildEstimate(input: EstimateInput): Estimate {
   if (region.state !== "karnataka") flags.push("tariff-assumed-karnataka");
 
   const { minKwp, stepKwp, maxKwp } = SYSTEM_SIZE_LIMITS.value;
-  const targetAnnualKwh = tariff.monthlyKwh * 12 * OFFSET_CAP.value;
-  let systemKwp = ceilToStep(targetAnnualKwh / SPECIFIC_YIELD.value, stepKwp);
+
+  let systemKwp: number;
+  const hasSanctionedLoad = isFiniteNumber(input.sanctionedLoadKw) && input.sanctionedLoadKw > 0;
+
+  if (hasSanctionedLoad) {
+    const fixedCharge = FIXED_CHARGE_PER_KW.value * input.sanctionedLoadKw!;
+    const energyPortion = Math.max(0, tariff.monthlyBillInr - fixedCharge);
+    const monthlyUnits = energyPortion / FLAT_ENERGY_RATE.value;
+    const annualUnits = monthlyUnits * 12;
+    systemKwp = Math.round(annualUnits / SPECIFIC_YIELD.value);
+    systemKwp = Math.min(systemKwp, input.sanctionedLoadKw!);
+    if (systemKwp < Math.round(annualUnits / SPECIFIC_YIELD.value)) {
+      flags.push("size-capped-load");
+    }
+  } else {
+    const targetAnnualKwh = tariff.monthlyKwh * 12 * OFFSET_CAP.value;
+    systemKwp = ceilToStep(targetAnnualKwh / SPECIFIC_YIELD.value, stepKwp);
+  }
 
   const roofCapKwp =
     isFiniteNumber(input.roofAreaSqft) && input.roofAreaSqft > 0
@@ -386,7 +408,7 @@ export function buildEstimate(input: EstimateInput): Estimate {
     flags.push("size-capped-segment");
   }
   if (systemKwp < minKwp) {
-    systemKwp = minKwp;
+    systemKwp = hasSanctionedLoad ? 1 : minKwp;
     flags.push("size-minimum-applied");
   }
 

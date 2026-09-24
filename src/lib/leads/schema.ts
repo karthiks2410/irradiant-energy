@@ -15,6 +15,7 @@ export const LEAD_FIELDS = [
   "pincode",
   "monthlyBill",
   "roofAreaSqft",
+  "sanctionedLoadKw",
   "message",
   "consent",
   "whatsappOptIn",
@@ -86,6 +87,10 @@ export const leadSchema = z.object({
   roofAreaSqft: z.preprocess(
     emptyToUndefined,
     z.coerce.number().positive().max(ROOF_AREA_MAX_SQFT).optional().catch(undefined),
+  ),
+  sanctionedLoadKw: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().positive().max(1000).optional().catch(undefined),
   ),
   message: z.preprocess(
     emptyToUndefined,

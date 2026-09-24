@@ -53,6 +53,7 @@ export const flagNotes: Record<EstimateFlag, string> = {
   "size-minimum-applied": "This calculator does not size systems below 1 kWp.",
   "size-capped-segment": "Capped at this calculator's largest size for this property type.",
   "size-capped-roof": "Capped by the roof area you entered.",
+  "size-capped-load": "Capped by your sanctioned load.",
   "subsidy-not-applicable": "The PM Surya Ghar subsidy does not apply to commercial connections.",
   "subsidy-house-count-unknown": "Shown as an upper limit: the society subsidy also depends on the number of homes.",
 };

@@ -377,8 +377,8 @@ const calculatorCta: Cta = {
 const calculator: {
   copy: SectionCopy;
   bullets: readonly string[];
-  fields: Readonly<Record<"segment" | "location" | "bill" | "tariff" | "roof" | "houses", { label: string; hint?: string }>>;
-  results: { title: string; size: string; generation: string; savings: string; payback: string };
+  fields: Readonly<Record<"segment" | "location" | "bill" | "tariff" | "load" | "houses", { label: string; hint?: string }>>;
+  results: { title: string; size: string; savings: string; payback: string; subsidy: string; cost: string };
   assumptionsLabel: string;
   disclaimer: string;
   cta: Cta;
@@ -402,20 +402,19 @@ const calculator: {
   ],
   fields: {
     segment: { label: "Customer type" },
-    // The hint no longer claims the PIN decides the tariffs, because it does not: every tariff
-    // and yield constant is statewide, so it only narrows which supplier the note names.
-    location: { label: "City / PIN code", hint: "Confirms which supplier serves you." },
+    location: { label: "PIN code", hint: "Confirms which supplier serves you." },
     bill: { label: "Monthly electricity bill (₹)", hint: "A typical month, before any solar." },
     tariff: { label: "Average tariff (₹ / unit)", hint: "Leave it blank to use the tariff listed under the assumptions." },
-    roof: { label: "Available roof area (sq. ft.)", hint: "Leave it blank if there is no practical limit." },
+    load: { label: "Sanctioned load (kW)", hint: "From your electricity bill." },
     houses: { label: "Homes in the society", hint: "Sets the ceiling the subsidy estimate can use." },
   },
   results: {
     title: "Your estimate",
-    size: "Recommended size",
-    generation: "Annual generation",
-    savings: "Projected savings",
+    size: "Recommended system",
+    savings: "Monthly savings",
     payback: "Indicative payback",
+    subsidy: "PM Surya Ghar subsidy",
+    cost: "Indicative cost",
   },
   assumptionsLabel: "What this estimate assumes",
   disclaimer:

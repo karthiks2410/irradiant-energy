@@ -37,7 +37,7 @@ const errorAnchors: Record<string, { id: string; label: string }> = {
 };
 
 export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: boolean }) {
-  const { segment, monthlyBill, estimate, roofArea } = useEstimate();
+  const { segment, monthlyBill, estimate, sanctionedLoad } = useEstimate();
   const [state, formAction] = useActionState(submitLead, initialLeadState);
   const noticeRef = useRef<HTMLDivElement>(null);
 
@@ -115,9 +115,7 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
       {/* Only a PIN code the engine actually accepted travels: a half-typed one would come back
           from the server as an error against a field that is not on screen. */}
       <input type="hidden" name="pincode" value={estimate?.region.pincode ?? ""} />
-      {/* The roof area the visitor entered (not estimate.roofAreaSqft, which is the area the
-          recommended system needs). It caps the size, so the server recomputes with it too. */}
-      <input type="hidden" name="roofAreaSqft" value={Number(roofArea) > 0 ? roofArea : ""} />
+      <input type="hidden" name="sanctionedLoadKw" value={Number(sanctionedLoad) > 0 ? sanctionedLoad : ""} />
       <input type="hidden" name="startedAt" defaultValue={String(startedAt)} />
 
       {/* Honeypot: off-screen rather than display:none, which naive bots skip. */}
