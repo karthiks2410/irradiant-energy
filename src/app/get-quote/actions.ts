@@ -14,7 +14,7 @@ import { headers } from "next/headers";
 import { after } from "next/server";
 import { Resend } from "resend";
 import { site } from "@/content/site";
-import { customerWhatsappHref, renderCustomerAcknowledgement, renderLeadAlert } from "@/lib/leads/emails";
+import { customerWhatsappHref, renderCustomerQuotation, renderLeadAlert } from "@/lib/leads/emails";
 import { hashEmailDomain, logLeadEvent } from "@/lib/leads/log";
 import { checkLeadRateLimit } from "@/lib/leads/rate-limit";
 import { parseLeadForm } from "@/lib/leads/schema";
@@ -139,7 +139,7 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
 
   // The visitor does not need to wait for their acknowledgement; a failure only gets logged.
   after(async () => {
-    const ack = renderCustomerAcknowledgement(context);
+    const ack = renderCustomerQuotation(context);
     const ackResult = await send(resend, {
       from: `${site.name} <${EMAIL_FROM}>`,
       to: lead.email,
