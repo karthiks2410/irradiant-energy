@@ -1,5 +1,7 @@
 import { AccentedTitle } from "@/components/pages/AccentedTitle";
+import { QuickQuoteButton } from "@/components/quote/QuickQuote";
 import { ButtonLink, Section, SectionHeading } from "@/components/ui";
+import { quoteCta } from "@/content/site";
 import type { Cta, SectionCopy } from "@/content/types";
 import { CallLink, WhatsAppButton } from "./Contact";
 
@@ -17,6 +19,7 @@ export function ClosingCtaBand({
   whatsappText,
   showCall = true,
   accentTail = 2,
+  siteVisit = false,
 }: {
   copy: SectionCopy;
   primary: Pick<Cta, "label" | "href">;
@@ -29,6 +32,11 @@ export function ClosingCtaBand({
    * closing bands were missing while About and Contact each rolled their own. 0 turns it off.
    */
   accentTail?: number;
+  /**
+   * Adds "Book a free site visit" (opens the quick-quote popup) as an OUTLINE button, so the page
+   * still has exactly one filled button. On the audience pages, where a visit is the next step.
+   */
+  siteVisit?: boolean;
 }) {
   return (
     <Section surface="dark" aria-labelledby="closing-cta-heading">
@@ -43,6 +51,11 @@ export function ClosingCtaBand({
         <ButtonLink href={primary.href} variant="light">
           {primary.label}
         </ButtonLink>
+        {siteVisit && (
+          <QuickQuoteButton intent="site-visit" variant="outline-light">
+            {quoteCta.siteVisitLabel}
+          </QuickQuoteButton>
+        )}
         <WhatsAppButton text={whatsappText} variant="outline-light" />
       </div>
       {showCall && (

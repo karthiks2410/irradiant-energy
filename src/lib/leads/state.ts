@@ -3,7 +3,8 @@
  * Lives outside the "use server" module because that file may only export async functions.
  */
 
-import type { LeadField } from "./schema";
+import type { QuickEstimateSummary } from "./quick";
+import type { LeadField, QuickLeadField } from "./schema";
 
 export type LeadFieldErrors = Partial<Record<LeadField, string>>;
 
@@ -48,3 +49,29 @@ export type LeadActionState =
     };
 
 export const initialLeadState: LeadActionState = { ok: null };
+
+/* Quick quote popup ------------------------------------------------------- */
+
+export type QuickQuoteState =
+  | { ok: null }
+  | {
+      ok: true;
+      reference: string;
+      whatsappHref: string;
+      /** The headline ranges, already formatted on the server. */
+      summary: QuickEstimateSummary;
+    }
+  | {
+      ok: false;
+      error: string;
+      fieldErrors?: Partial<Record<QuickLeadField, string>>;
+      /** Set when the enquiry was valid but could not be delivered: finish it on WhatsApp. */
+      whatsappHref?: string;
+      reference?: string;
+    };
+
+export const initialQuickQuoteState: QuickQuoteState = { ok: null };
+
+export type QuickEmailState = { ok: null } | { ok: true } | { ok: false; error: string; fieldError?: string };
+
+export const initialQuickEmailState: QuickEmailState = { ok: null };

@@ -151,3 +151,10 @@ export const nav: (NavLink | NavGroup)[] = [
 export const isNavGroup = (item: NavLink | NavGroup): item is NavGroup => "items" in item;
 
 export const primaryCta: NavLink = { label: "Get a free estimate", href: "/get-quote" };
+
+/**
+ * The header button that opens the quick-quote popup (owner, 2026-09-25). "Quote", not "estimate":
+ * this journey ends in a written quotation after a site visit, while "estimate" stays the word for
+ * anything the calculator computes. Sentence case, never "FREE".
+ */
+export const quoteCta = { label: "Get a free quote", siteVisitLabel: "Book a free site visit" } as const;
