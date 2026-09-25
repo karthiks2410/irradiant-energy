@@ -240,7 +240,7 @@ export function renderCustomerQuotation(ctx: LeadEmailContext): EmailContent {
   const html = layout(
     subject,
     `<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLOR.teal};">Thanks, ${escapeHtml(firstName)}. ${estimate ? "Here’s your solar estimate." : "We have your enquiry."}</h1>
-<p style="margin:0 0 12px;">You asked about rooftop solar for your ${escapeHtml(segment)}. ${estimate ? "Below are the indicative figures based on what you told us." : ""} We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.</p>
+<p style="margin:0 0 12px;">You asked about rooftop solar for your ${escapeHtml(segment)}. ${estimate ? "Below are the indicative figures based on what you told us. " : ""}We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.</p>
 ${estimate ? estimateCard(estimate) : ""}
 <h2 style="margin:${estimate ? "8" : "24"}px 0 8px;font-size:16px;color:${COLOR.teal};">What you submitted</h2>
 ${rows(received)}
@@ -260,7 +260,7 @@ ${button("Message us on WhatsApp", whatsappHref)}
   const text = [
     `Thanks, ${firstName}. ${estimate ? "Here’s your solar estimate." : "We have your enquiry."}`,
     "",
-    `You asked about rooftop solar for your ${segment}. ${estimate ? "Below are the indicative figures based on what you told us." : ""} We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.`,
+    `You asked about rooftop solar for your ${segment}. ${estimate ? "Below are the indicative figures based on what you told us. " : ""}We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.`,
     "",
     ...(estimate ? [textEstimateCard(estimate), ""] : []),
     "WHAT YOU SUBMITTED",
