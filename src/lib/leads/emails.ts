@@ -12,6 +12,8 @@ import { SEGMENT_LABELS } from "@/lib/solar/constants";
 import { formatInr } from "@/lib/solar/format";
 import type { Lead } from "./schema";
 
+const logoUrl = `${siteUrl}/images/email/ie-logo-white.png`;
+
 export interface EmailContent {
   subject: string;
   html: string;
@@ -77,7 +79,7 @@ function layout(title: string, bodyHtml: string, footerHtml: string): string {
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${COLOR.white};border:1px solid ${COLOR.mist};">
 <tr><td style="background:${COLOR.teal};padding:20px 28px;">
-<span style="font-size:18px;font-weight:700;letter-spacing:0.02em;color:${COLOR.white};">${escapeHtml(site.name)}</span>
+<img src="${logoUrl}" alt="${escapeHtml(site.name)}" width="240" height="57" style="display:block;border:0;outline:none;max-width:240px;height:auto;" />
 </td></tr>
 <tr><td style="padding:28px 28px 8px;font-size:16px;line-height:1.6;">
 ${bodyHtml}
@@ -109,6 +111,22 @@ function rows(pairs: ReadonlyArray<readonly [string, string]>): string {
 
 const textRows = (pairs: ReadonlyArray<readonly [string, string]>) => pairs.map(([k, v]) => `${k}: ${v}`).join("\n");
 
+function estimateCard(estimate: Estimate): string {
+  const pairs = customerEstimateRows(estimate);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:8px;background:${COLOR.canvas};border:1px solid ${COLOR.mist};">
+<tr><td style="padding:20px 24px;">
+<h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:${COLOR.teal};">Your solar estimate</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px;">${pairs
+    .map(
+      ([k, v], i) =>
+        `<tr><td style="padding:8px 0;${i < pairs.length - 1 ? `border-bottom:1px solid ${COLOR.mist};` : ""}color:${COLOR.grey};vertical-align:top;width:45%;">${escapeHtml(k)}</td><td style="padding:8px 0;${i < pairs.length - 1 ? `border-bottom:1px solid ${COLOR.mist};` : ""}vertical-align:top;font-weight:600;color:${COLOR.carbon};">${escapeHtml(v)}</td></tr>`,
+    )
+    .join("")}</table>
+</td></tr></table>`;
+}
+
+const textEstimateCard = (estimate: Estimate) => ["YOUR SOLAR ESTIMATE", textRows(customerEstimateRows(estimate))].join("\n");
+
 function estimateRows(estimate: Estimate): ReadonlyArray<readonly [string, string]> {
   return [
     ["Recommended size", `${estimate.systemKwp} kWp (${estimate.monthlyKwh} kWh/month at ₹${estimate.tariff.averageInrPerKwh}/unit)`],
@@ -120,6 +138,17 @@ function estimateRows(estimate: Estimate): ReadonlyArray<readonly [string, strin
     ["Simple payback", estimate.paybackYears === null ? "—" : `${estimate.paybackYears} years`],
     ["Flags", estimate.flags.length ? estimate.flags.join(", ") : "none"],
     ["Engine", estimate.engineVersion],
+  ];
+}
+
+function customerEstimateRows(estimate: Estimate): ReadonlyArray<readonly [string, string]> {
+  return [
+    ["System size", `${estimate.systemKwp} kWp`],
+    ["Cost before subsidy", formatInr(estimate.grossCostInr)],
+    ["PM Surya Ghar subsidy", formatInr(estimate.subsidyInr)],
+    ["Net cost (after subsidy)", formatInr(estimate.netCostInr)],
+    ["Monthly savings", `${formatInr(estimate.monthlySavingsInr)} (${Math.round(estimate.savingsShareOfBill * 100)}% of your bill)`],
+    ["Simple payback", estimate.paybackYears === null ? "—" : `~${estimate.paybackYears} years`],
   ];
 }
 
@@ -181,11 +210,12 @@ ${customerWhatsapp ? button("WhatsApp the customer", customerWhatsapp) : button(
 }
 
 /**
- * One-time acknowledgement to the customer. No figures, no promises about timing, no free
- * text from the form; a consent reference in the footer (brand PDF p.70, 17 §6.3).
+ * Customer quotation email. Includes the estimate figures when available, so the customer
+ * receives the numbers they saw on the calculator. No free text from the form; a consent
+ * reference in the footer (brand PDF p.70, 17 §6.3).
  */
-export function renderCustomerAcknowledgement(ctx: LeadEmailContext): EmailContent {
-  const { lead, reference, submittedAt } = ctx;
+export function renderCustomerQuotation(ctx: LeadEmailContext): EmailContent {
+  const { lead, reference, estimate, submittedAt } = ctx;
   const segment = SEGMENT_LABELS[lead.segment].toLowerCase();
   const contact = contactLines();
   const firstName = lead.name.split(/\s+/)[0];
@@ -203,14 +233,18 @@ export function renderCustomerAcknowledgement(ctx: LeadEmailContext): EmailConte
   const addressLine = isConfirmed(address.status) ? address.value.lines.join(", ") : null;
   const legalName = site.legal.entityName;
 
-  const subject = `We have your solar enquiry (${reference})`;
+  const subject = estimate
+    ? `Your solar estimate: ${estimate.systemKwp} kWp at ${formatInr(estimate.netCostInr)} (${reference})`
+    : `We have your solar enquiry (${reference})`;
 
   const html = layout(
     subject,
-    `<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLOR.teal};">Thanks, ${escapeHtml(firstName)}. We have your enquiry.</h1>
-<p style="margin:0 0 12px;">You asked about rooftop solar for your ${escapeHtml(segment)}. We will review the details below and get in touch to arrange the next step, usually a site visit so the final system size and figures can be confirmed.</p>
+    `<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLOR.teal};">Thanks, ${escapeHtml(firstName)}. ${estimate ? "Here’s your solar estimate." : "We have your enquiry."}</h1>
+<p style="margin:0 0 12px;">You asked about rooftop solar for your ${escapeHtml(segment)}. ${estimate ? "Below are the indicative figures based on what you told us." : ""} We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.</p>
+${estimate ? estimateCard(estimate) : ""}
+<h2 style="margin:${estimate ? "8" : "24"}px 0 8px;font-size:16px;color:${COLOR.teal};">What you submitted</h2>
 ${rows(received)}
-<p style="margin:0 0 4px;">Prefer to talk now? Message us on WhatsApp and quote your reference.</p>
+<p style="margin:16px 0 4px;">Prefer to talk now? Message us on WhatsApp and quote your reference.</p>
 ${button("Message us on WhatsApp", whatsappHref)}
 <p style="margin:0;color:${COLOR.grey};font-size:14px;">${[
       contact.phone ? `Call ${escapeHtml(contact.phone)}` : null,
@@ -219,15 +253,17 @@ ${button("Message us on WhatsApp", whatsappHref)}
       .filter(Boolean)
       .join(" or ")}.</p>
 <p style="margin:16px 0 0;color:${COLOR.grey};font-size:14px;">Any figures shown by the calculator on our website are estimates, not a quote or a guarantee. Subsidies are decided and paid by the Government after DISCOM inspection.</p>`,
-    `<p style="margin:0 0 8px;">You are receiving this one-time acknowledgement because you submitted the estimate form on <a href="${escapeHtml(siteUrl)}" style="color:${COLOR.green};">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a> on ${escapeHtml(formatDate(submittedAt))} and agreed to be contacted about this enquiry. It is not a marketing email.</p>
+    `<p style="margin:0 0 8px;">You are receiving this because you submitted the estimate form on <a href="${escapeHtml(siteUrl)}" style="color:${COLOR.green};">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a> on ${escapeHtml(formatDate(submittedAt))} and agreed to be contacted about this enquiry. It is not a marketing email.</p>
 <p style="margin:0;">${escapeHtml(legalName ?? site.name)}${addressLine ? ` · ${escapeHtml(addressLine)}` : ""}</p>`,
   );
 
   const text = [
-    `Thanks, ${firstName}. We have your enquiry.`,
+    `Thanks, ${firstName}. ${estimate ? "Here’s your solar estimate." : "We have your enquiry."}`,
     "",
-    `You asked about rooftop solar for your ${segment}. We will review the details below and get in touch to arrange the next step, usually a site visit so the final system size and figures can be confirmed.`,
+    `You asked about rooftop solar for your ${segment}. ${estimate ? "Below are the indicative figures based on what you told us." : ""} We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.`,
     "",
+    ...(estimate ? [textEstimateCard(estimate), ""] : []),
+    "WHAT YOU SUBMITTED",
     textRows(received),
     "",
     `Prefer to talk now? Message us on WhatsApp and quote your reference: ${whatsappHref}`,
@@ -235,7 +271,7 @@ ${button("Message us on WhatsApp", whatsappHref)}
     "",
     "Any figures shown by the calculator on our website are estimates, not a quote or a guarantee. Subsidies are decided and paid by the Government after DISCOM inspection.",
     "",
-    `You are receiving this one-time acknowledgement because you submitted the estimate form on ${siteUrl} on ${formatDate(submittedAt)} and agreed to be contacted about this enquiry. It is not a marketing email.`,
+    `You are receiving this because you submitted the estimate form on ${siteUrl} on ${formatDate(submittedAt)} and agreed to be contacted about this enquiry. It is not a marketing email.`,
     `${legalName ?? site.name}${addressLine ? ` · ${addressLine}` : ""}`,
   ].join("\n");
 
