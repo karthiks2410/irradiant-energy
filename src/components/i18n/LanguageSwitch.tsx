@@ -2,16 +2,22 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type MouseEvent } from "react";
+import type { Locale } from "@/i18n/config";
 import { HREFLANG, HTML_LANG, LOCALE_LABEL, LOCALES } from "@/i18n/config";
 import { counterpartHref, filterSwitchQuery, localeFromPathname } from "@/i18n/paths";
 
 /**
- * The EN / ಕನ್ನಡ switch (owner's prototype: a ghost pill — transparent, 1px white border, white
- * bold text).
+ * The EN | ಕನ್ನಡ toggle: a segmented control, the active language filled solid white.
+ *
+ * It replaced a ghost pill ("EN / ಕನ್ನಡ") where the only sign of the current language was that the
+ * other one was dimmed — the owner found that "less intuitive" (2026-09-25). A filled segment says
+ * "you are here" at a glance, and the empty one reads as the other position of a switch. Tapping it
+ * fills the new side and clears the old one before the page changes, so it behaves like a toggle
+ * rather than a link that happens to sit in a pill.
  *
  * Both languages are shown, so a reader recognises their own without first reading the other. The
  * current one is a `<span aria-current="true">`, not a link: it is where you already are, it needs
- * no tab stop, and assistive tech gets the same information the colour gives everyone else.
+ * no tab stop, and assistive tech gets the same information the fill gives everyone else.
  *
  * Deliberately a plain `<a>`, never `next/link`:
  * - `next/link` prefetches on hover, and a prefetch of a Kannada route pulls the Kannada stylesheet
@@ -38,6 +44,9 @@ export function LanguageSwitch({ className = "" }: { className?: string }) {
   const pathname = usePathname();
   const current = localeFromPathname(pathname);
   const [tail, setTail] = useState("");
+  /** The side the visitor just tapped: it fills while the old side clears, then the page changes. */
+  const [pending, setPending] = useState<Locale | null>(null);
+  const shown = pending ?? current;
 
   useEffect(() => {
     const read = () =>
@@ -56,56 +65,51 @@ export function LanguageSwitch({ className = "" }: { className?: string }) {
       return;
     }
     event.preventDefault();
-    window.location.assign(
-      counterpartHref({
-        pathname: window.location.pathname,
-        search: window.location.search,
-        hash: window.location.hash,
-        to,
-      }),
-    );
+    const href = counterpartHref({
+      pathname: window.location.pathname,
+      search: window.location.search,
+      hash: window.location.hash,
+      to,
+    });
+    // Let the fill move first, so the tap is seen to flip the switch. Without motion, go at once.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setPending(to);
+    window.setTimeout(() => window.location.assign(href), reduced ? 0 : 170);
   }
+
+  const segment = (locale: Locale) =>
+    `inline-flex min-h-10 items-center justify-center rounded-full px-3 transition-colors duration-200 ease-controlled ${
+      locale === "kn" ? "font-kn-system" : ""
+    } ${locale === shown ? "bg-white text-teal-900 shadow-[0_1px_2px_rgb(0_0_0/0.25)]" : "text-white/85 hover:bg-white/10 hover:text-white"}`;
 
   return (
     <div
       role="group"
       aria-label="Language"
       data-language-switch=""
-      className={`inline-flex shrink-0 items-center rounded-full border border-white/34 text-[0.8125rem] font-bold text-white ${className}`}
+      // The track: 2px of padding around 40px segments keeps the whole control 44px tall.
+      // `grid-cols-[1fr_1fr]`, not `grid-cols-2`: Tailwind's version is minmax(0, 1fr), which let the
+      // columns shrink to nothing inside the header's flex row, so the quote button drew over "ಕನ್ನಡ".
+      className={`inline-grid shrink-0 grid-cols-[1fr_1fr] items-center gap-0.5 rounded-full bg-white/10 p-0.5 text-[0.8125rem] font-bold ring-1 ring-white/25 ring-inset ${className}`}
     >
-      {LOCALES.map((locale, index) => (
-        <span key={locale} className="inline-flex items-center">
-          {index > 0 && (
-            <span aria-hidden="true" className="text-white/40">
-              /
-            </span>
-          )}
-          {locale === current ? (
-            <span
-              aria-current="true"
-              lang={HTML_LANG[locale]}
-              // The current language is the opaque one; the other is dimmed until hovered.
-              className={`inline-flex min-h-11 items-center px-2.5 text-white ${locale === "kn" ? "font-kn-system" : ""}`}
-            >
-              {LOCALE_LABEL[locale]}
-            </span>
-          ) : (
-            <a
-              href={counterpartHref({ pathname, to: locale }) + tail}
-              hrefLang={HREFLANG[locale]}
-              lang={HTML_LANG[locale]}
-              onClick={(event) => handleClick(event, locale)}
-              // min-h-11 on the anchor itself, not on the wrapper: the 44px target has to be the
-              // thing you tap.
-              className={`inline-flex min-h-11 items-center px-2.5 text-white/65 transition-colors duration-200 hover:text-white ${
-                locale === "kn" ? "font-kn-system" : ""
-              }`}
-            >
-              {LOCALE_LABEL[locale]}
-            </a>
-          )}
-        </span>
-      ))}
+      {LOCALES.map((locale) =>
+        locale === current ? (
+          <span key={locale} aria-current="true" lang={HTML_LANG[locale]} className={segment(locale)}>
+            {LOCALE_LABEL[locale]}
+          </span>
+        ) : (
+          <a
+            key={locale}
+            href={counterpartHref({ pathname, to: locale }) + tail}
+            hrefLang={HREFLANG[locale]}
+            lang={HTML_LANG[locale]}
+            onClick={(event) => handleClick(event, locale)}
+            className={segment(locale)}
+          >
+            {LOCALE_LABEL[locale]}
+          </a>
+        ),
+      )}
     </div>
   );
 }

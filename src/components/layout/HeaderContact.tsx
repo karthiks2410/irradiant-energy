@@ -28,10 +28,10 @@ export function HeaderContact({
     <>
       <a
         href={`tel:${phone.tel}`}
-        className="grid size-11 shrink-0 place-items-center rounded-full text-white transition-colors duration-200 ease-controlled hover:bg-white/15 md:w-auto md:gap-2 md:px-4 md:[grid-auto-flow:column]"
+        className="grid size-11 shrink-0 place-items-center rounded-full text-white transition-colors duration-200 ease-controlled hover:bg-white/15 min-[90rem]:w-auto min-[90rem]:gap-2 min-[90rem]:px-4 min-[90rem]:[grid-auto-flow:column]"
       >
         <PhoneIcon className="size-[18px]" />
-        <span className="sr-only md:not-sr-only md:font-mono md:text-small md:tabular-nums">
+        <span className="sr-only min-[90rem]:not-sr-only min-[90rem]:font-mono min-[90rem]:text-small min-[90rem]:tabular-nums">
           {phone.display}
         </span>
         <span className="sr-only">{srLabel}</span>

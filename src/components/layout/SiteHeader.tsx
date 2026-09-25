@@ -63,7 +63,7 @@ export function SiteHeader({ content }: { content: Content }) {
            * stays on screen at every width. That is not hypothetical — it pushed the menu button
            * 43px off a 360px screen until this wrapper was added. Same reason the CTA below has one.
            */}
-          <span className="hidden xl:inline-flex">
+          <span className="hidden shrink-0 xl:inline-flex">
             <LanguageSwitch />
           </span>
 
