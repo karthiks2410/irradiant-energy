@@ -6,6 +6,8 @@
 import { z } from "zod";
 import { SEGMENTS } from "@/lib/solar/constants";
 import { EMAIL_MAX, MESSAGE_MAX, NAME_MAX, ROOF_AREA_MAX_SQFT } from "./limits";
+import { ALL_BUCKET_IDS, findBucket } from "./quick";
+import { EMAIL_RE, INDIAN_MOBILE_RE, LEAD_MESSAGES, NAME_RE, PINCODE_RE, REFERENCE_RE } from "./rules";
 
 export const LEAD_FIELDS = [
   "name",
@@ -29,14 +31,6 @@ const MAX_FUTURE_SKEW_MS = 60_000;
 
 export { EMAIL_MAX, MESSAGE_MAX, NAME_MAX } from "./limits";
 
-/** Letters and combining marks (covers Kannada), spaces, dots, apostrophes and hyphens. */
-const NAME_RE = /^[\p{L}\p{M} .'-]+$/u;
-/** 10-digit Indian mobile, optionally with +91 / 91 / 0 and spaces or dashes. */
-const INDIAN_MOBILE_RE = /^(?:\+?91|0)?[6-9]\d{9}$/;
-/** Stricter than a bare `@` check: a real TLD, no repeated dots, no spaces. */
-const EMAIL_RE =
-  /^[A-Za-z0-9._%+-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
-const PINCODE_RE = /^[1-9][0-9]{5}$/;
 
 const emptyToUndefined = (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v);
 
@@ -147,3 +141,91 @@ export function parseLeadForm(formData: FormData, now: number = Date.now()): Lea
 }
 
 const isLeadField = (key: string): key is LeadField => (LEAD_FIELDS as readonly string[]).includes(key);
+
+/* ---------------------------------------------------------------------------
+   Quick quote (the header popup)
+
+   Four fields and consent, no email: phone first, click and go (owner decision, 2026-09-25).
+   The bill arrives as a bucket id, and the bucket must belong to the chosen property type —
+   a business bucket posted with "home" is rejected rather than silently mis-estimated. The
+   phone doubles as the WhatsApp number the visitor gave, and the consent wording on the popup
+   covers a phone or WhatsApp follow-up about this enquiry, so the WhatsApp opt-in is implied by
+   that one affirmative tick rather than asked for twice.
+   --------------------------------------------------------------------------- */
+
+export const QUICK_LEAD_FIELDS = ["name", "phone", "segment", "pincode", "billBucket", "consent"] as const;
+export type QuickLeadField = (typeof QUICK_LEAD_FIELDS)[number];
+
+export const quickLeadSchema = z
+  .object({
+    name: leadSchema.shape.name,
+    phone: leadSchema.shape.phone,
+    segment: leadSchema.shape.segment,
+    pincode: z.string({ error: LEAD_MESSAGES.pincode }).trim().regex(PINCODE_RE, LEAD_MESSAGES.pincode),
+    billBucket: z.enum(ALL_BUCKET_IDS as [string, ...string[]], { error: LEAD_MESSAGES.billRange }),
+    consent: leadSchema.shape.consent,
+    website: leadSchema.shape.website,
+    startedAt: leadSchema.shape.startedAt,
+  })
+  .superRefine((value, ctx) => {
+    if (!findBucket(value.segment, value.billBucket)) {
+      ctx.addIssue({ code: "custom", path: ["billBucket"], message: LEAD_MESSAGES.billRange });
+    }
+  });
+
+export type QuickLead = z.output<typeof quickLeadSchema>;
+
+export type QuickLeadParseResult =
+  | { kind: "ok"; lead: QuickLead }
+  | { kind: "spam" }
+  | { kind: "too-fast" }
+  | { kind: "invalid"; fieldErrors: Partial<Record<QuickLeadField, string>> };
+
+export function parseQuickLead(formData: FormData, now: number = Date.now()): QuickLeadParseResult {
+  const raw: Record<string, FormDataEntryValue | undefined> = {};
+  for (const key of [...QUICK_LEAD_FIELDS, "website", "startedAt"]) {
+    const value = formData.get(key);
+    raw[key] = typeof value === "string" ? value : undefined;
+  }
+
+  const parsed = quickLeadSchema.safeParse(raw);
+  if (!parsed.success) {
+    const fieldErrors: Partial<Record<QuickLeadField, string>> = {};
+    for (const issue of parsed.error.issues) {
+      const field = issue.path[0];
+      if (field === "website") return { kind: "spam" };
+      if (field === "startedAt") return { kind: "too-fast" };
+      if (typeof field === "string" && (QUICK_LEAD_FIELDS as readonly string[]).includes(field)) {
+        fieldErrors[field as QuickLeadField] ??= issue.message;
+      }
+    }
+    return { kind: "invalid", fieldErrors };
+  }
+
+  const elapsed = now - parsed.data.startedAt;
+  if (elapsed < MIN_FILL_TIME_MS || elapsed <= -MAX_FUTURE_SKEW_MS) return { kind: "too-fast" };
+  return { kind: "ok", lead: parsed.data };
+}
+
+/**
+ * The optional second step: "Email me the full breakdown". It re-sends the quick lead's fields
+ * (there is no lead store to look them up from) plus the reference the first step returned and
+ * the address. Asking for it after the figures are on screen is the consent act for this one
+ * email; it enrols nobody in anything else.
+ */
+export const quickEmailSchema = z
+  .object({
+    reference: z.string().regex(REFERENCE_RE, "reference"),
+    name: leadSchema.shape.name,
+    segment: leadSchema.shape.segment,
+    pincode: z.string().trim().regex(PINCODE_RE, LEAD_MESSAGES.pincode),
+    billBucket: z.enum(ALL_BUCKET_IDS as [string, ...string[]], { error: LEAD_MESSAGES.billRange }),
+    email: leadSchema.shape.email,
+  })
+  .superRefine((value, ctx) => {
+    if (!findBucket(value.segment, value.billBucket)) {
+      ctx.addIssue({ code: "custom", path: ["billBucket"], message: LEAD_MESSAGES.billRange });
+    }
+  });
+
+export type QuickEmailRequest = z.output<typeof quickEmailSchema>;

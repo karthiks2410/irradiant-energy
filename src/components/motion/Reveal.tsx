@@ -4,12 +4,12 @@ import { LazyMotion, domAnimation, m, stagger, useInView, useReducedMotion } fro
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { EASE_OUT_EXPO, REVEAL_DURATION, REVEAL_RISE } from "./tokens";
 
-type RevealTag = "div" | "section" | "article" | "ul" | "ol" | "li" | "p" | "figure" | "span";
+type RevealTag = "div" | "section" | "article" | "aside" | "ul" | "ol" | "li" | "p" | "figure" | "span";
 
 // Owner review 2, point 13: the old 8px / 0.38s fade was too small to register as movement — the
-// sections looked like they were simply switching on. A 28px rise on an ease-out-expo curve travels
-// far enough to read as "coming up" while the curve's fast exit keeps the page from feeling slow:
-// most of the distance is covered in the first third of the 0.62s.
+// sections looked like they were simply switching on. A 24px rise on an ease-out-expo curve travels
+// far enough to read as "coming up"; 0.5s (down from 0.62s, owner 2026-09-25, after
+// sweat-and-fit.vercel.app) keeps it quick, and matches the CSS scroll reveal in ScrollReveal.tsx.
 const ease = EASE_OUT_EXPO;
 const rise = REVEAL_RISE;
 const duration = REVEAL_DURATION;
@@ -91,6 +91,7 @@ export function Reveal({ as = "div", delay = 0, stagger: itemStagger, id, classN
         }}
         id={id}
         className={className}
+        data-motion-reveal=""
         initial={false}
         animate={armed && !inView ? "hidden" : "visible"}
         variants={variants}

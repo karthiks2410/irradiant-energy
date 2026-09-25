@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { isNavGroup, nav, primaryCta } from "@/content/site";
+import { isNavGroup, nav, quoteCta } from "@/content/site";
 import { LogoLockup } from "@/components/brand/Logo";
-import { ButtonLink } from "@/components/ui/Button";
+import { QuickQuoteButton } from "@/components/quote/QuickQuote";
 import { HeaderContact } from "./HeaderContact";
 import { HeaderShell } from "./HeaderShell";
 import { MobileMenu } from "./MobileMenu";
@@ -37,7 +37,7 @@ export function SiteHeader() {
               `hidden` passed through className loses the cascade and the CTA stays on
               screen at phone widths — pushing the menu button out of the viewport. */}
           <span className="hidden sm:inline-flex">
-            <ButtonLink href={primaryCta.href}>{primaryCta.label}</ButtonLink>
+            <QuickQuoteButton>{quoteCta.label}</QuickQuoteButton>
           </span>
           <MobileMenu />
         </div>

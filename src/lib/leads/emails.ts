@@ -20,14 +20,35 @@ export interface EmailContent {
   text: string;
 }
 
+/** A lead from either form. The quick-quote popup collects no email, so it is optional here. */
+export type EmailLead = Omit<Lead, "email"> & { email?: string };
+
 export interface LeadEmailContext {
-  lead: Lead;
+  lead: EmailLead;
   /** Short reference quoted in both emails and in logs. */
   reference: string;
   /** When the form carried a bill, the server-side recompute for the sales team. */
   estimate: Estimate | null;
   /** Submission time, shown as the consent timestamp. */
   submittedAt: Date;
+  /** Which form the lead came from, for the consent line. Defaults to the estimate form. */
+  source?: "estimate form" | "quick quote popup";
+  /**
+   * Quick-quote leads give a bill range, not a bill. When set, it replaces the monthly-bill value
+   * and the estimate is labelled as worked out at `representativeBillInr`, never as their bill.
+   */
+  billRange?: { label: string; representativeBillInr: number };
+}
+
+function billValue(ctx: LeadEmailContext): string {
+  if (ctx.billRange) return ctx.billRange.label;
+  return ctx.lead.monthlyBill === undefined ? "not given" : formatInr(ctx.lead.monthlyBill);
+}
+
+/** One line saying which bill a range lead's figures were worked out at. */
+function rangeNote(ctx: LeadEmailContext): string | null {
+  if (!ctx.billRange) return null;
+  return `Worked out at ${formatInr(ctx.billRange.representativeBillInr)} a month, ${ctx.billRange.label.startsWith("Over") ? `the lower edge of the "${ctx.billRange.label}" range, so treat these figures as a minimum` : `the middle of the ${ctx.billRange.label} range`}. A site visit confirms the real figures.`;
 }
 
 const COLOR = {
@@ -111,11 +132,11 @@ function rows(pairs: ReadonlyArray<readonly [string, string]>): string {
 
 const textRows = (pairs: ReadonlyArray<readonly [string, string]>) => pairs.map(([k, v]) => `${k}: ${v}`).join("\n");
 
-function estimateCard(estimate: Estimate): string {
+function estimateCard(estimate: Estimate, note: string | null = null): string {
   const pairs = customerEstimateRows(estimate);
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:8px;background:${COLOR.canvas};border:1px solid ${COLOR.mist};">
 <tr><td style="padding:20px 24px;">
-<h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:${COLOR.teal};">Your solar estimate</h2>
+<h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:${COLOR.teal};">Your solar estimate</h2>${note ? `<p style="margin:0 0 12px;color:${COLOR.grey};font-size:14px;">${escapeHtml(note)}</p>` : ""}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px;">${pairs
     .map(
       ([k, v], i) =>
@@ -125,7 +146,8 @@ function estimateCard(estimate: Estimate): string {
 </td></tr></table>`;
 }
 
-const textEstimateCard = (estimate: Estimate) => ["YOUR SOLAR ESTIMATE", textRows(customerEstimateRows(estimate))].join("\n");
+const textEstimateCard = (estimate: Estimate, note: string | null = null) =>
+  ["YOUR SOLAR ESTIMATE", ...(note ? [note] : []), textRows(customerEstimateRows(estimate))].join("\n");
 
 function estimateRows(estimate: Estimate): ReadonlyArray<readonly [string, string]> {
   return [
@@ -155,20 +177,22 @@ function customerEstimateRows(estimate: Estimate): ReadonlyArray<readonly [strin
 /** Internal alert to LEAD_EMAIL. Carries the consent flags so sales act within them (17 §6.3). */
 export function renderLeadAlert(ctx: LeadEmailContext): EmailContent {
   const { lead, reference, estimate, submittedAt } = ctx;
+  const source = ctx.source ?? "estimate form";
+  const note = rangeNote(ctx);
   const segment = SEGMENT_LABELS[lead.segment];
   const customerWhatsapp = lead.whatsappOptIn ? `https://wa.me/${lead.phone.replace(/\D/g, "")}` : null;
 
   const contact: ReadonlyArray<readonly [string, string]> = [
     ["Name", lead.name],
     ["Phone", lead.phone],
-    ["Email", lead.email],
+    ["Email", lead.email ?? "not given — follow up by phone or WhatsApp"],
     ["WhatsApp opt-in", lead.whatsappOptIn ? "Yes" : "No — do not message on WhatsApp"],
-    ["Consent to contact", `Given ${formatDate(submittedAt)} on the estimate form`],
+    ["Consent to contact", `Given ${formatDate(submittedAt)} on the ${source}`],
   ];
   const enquiry: ReadonlyArray<readonly [string, string]> = [
     ["Property", segment],
     ["PIN code", lead.pincode ?? "not given"],
-    ["Monthly bill", lead.monthlyBill === undefined ? "not given" : formatInr(lead.monthlyBill)],
+    ["Monthly bill", billValue(ctx)],
     ["Message", lead.message ?? "—"],
   ];
 
@@ -184,11 +208,11 @@ ${rows(contact)}
 ${rows(enquiry)}
 ${
   estimate
-    ? `<h2 style="margin:8px 0 0;font-size:16px;color:${COLOR.teal};">Estimate (recomputed on the server)</h2>${rows(estimateRows(estimate))}`
+    ? `<h2 style="margin:8px 0 0;font-size:16px;color:${COLOR.teal};">Estimate (recomputed on the server)</h2>${note ? `<p style="margin:4px 0 0;color:${COLOR.grey};font-size:14px;">${escapeHtml(note)}</p>` : ""}${rows(estimateRows(estimate))}`
     : ""
 }
 ${customerWhatsapp ? button("WhatsApp the customer", customerWhatsapp) : button("Call the customer", `tel:${lead.phone}`)}`,
-    `Sent automatically by the estimate form on ${escapeHtml(siteUrl)}. Replying to this email goes to the customer.`,
+    `Sent automatically by the ${source} on ${escapeHtml(siteUrl)}. ${lead.email ? "Replying to this email goes to the customer." : "The customer gave no email: reply by phone or WhatsApp."}`,
   );
 
   const text = [
@@ -199,11 +223,11 @@ ${customerWhatsapp ? button("WhatsApp the customer", customerWhatsapp) : button(
     "",
     "ENQUIRY",
     textRows(enquiry),
-    ...(estimate ? ["", "ESTIMATE (recomputed on the server)", textRows(estimateRows(estimate))] : []),
+    ...(estimate ? ["", "ESTIMATE (recomputed on the server)", ...(note ? [note] : []), textRows(estimateRows(estimate))] : []),
     "",
     customerWhatsapp ? `WhatsApp the customer: ${customerWhatsapp}` : `Call the customer: ${lead.phone}`,
     "",
-    `Sent automatically by the estimate form on ${siteUrl}. Replying to this email goes to the customer.`,
+    `Sent automatically by the ${source} on ${siteUrl}. ${lead.email ? "Replying to this email goes to the customer." : "The customer gave no email: reply by phone or WhatsApp."}`,
   ].join("\n");
 
   return { subject, html, text };
@@ -216,6 +240,10 @@ ${customerWhatsapp ? button("WhatsApp the customer", customerWhatsapp) : button(
  */
 export function renderCustomerQuotation(ctx: LeadEmailContext): EmailContent {
   const { lead, reference, estimate, submittedAt } = ctx;
+  const note = rangeNote(ctx);
+  // Why this person is getting the email, in the footer: the quick popup's email is one they
+  // asked for after seeing their figures; the estimate form's is the acknowledgement of a submit.
+  const why = ctx.source === "quick quote popup" ? "asked us to email your estimate" : "submitted the estimate form";
   const segment = SEGMENT_LABELS[lead.segment].toLowerCase();
   const contact = contactLines();
   const firstName = lead.name.split(/\s+/)[0];
@@ -225,7 +253,7 @@ export function renderCustomerQuotation(ctx: LeadEmailContext): EmailContent {
     ["Reference", reference],
     ["Property", SEGMENT_LABELS[lead.segment]],
     ["PIN code", lead.pincode ?? "not given"],
-    ["Monthly bill", lead.monthlyBill === undefined ? "not given" : formatInr(lead.monthlyBill)],
+    ["Monthly bill", billValue(ctx)],
     ["WhatsApp updates", lead.whatsappOptIn ? "Yes" : "No"],
   ];
 
@@ -241,7 +269,7 @@ export function renderCustomerQuotation(ctx: LeadEmailContext): EmailContent {
     subject,
     `<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLOR.teal};">Thanks, ${escapeHtml(firstName)}. ${estimate ? "Here’s your solar estimate." : "We have your enquiry."}</h1>
 <p style="margin:0 0 12px;">You asked about rooftop solar for your ${escapeHtml(segment)}. ${estimate ? "Below are the indicative figures based on what you told us. " : ""}We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.</p>
-${estimate ? estimateCard(estimate) : ""}
+${estimate ? estimateCard(estimate, note) : ""}
 <h2 style="margin:${estimate ? "8" : "24"}px 0 8px;font-size:16px;color:${COLOR.teal};">What you submitted</h2>
 ${rows(received)}
 <p style="margin:16px 0 4px;">Prefer to talk now? Message us on WhatsApp and quote your reference.</p>
@@ -253,7 +281,7 @@ ${button("Message us on WhatsApp", whatsappHref)}
       .filter(Boolean)
       .join(" or ")}.</p>
 <p style="margin:16px 0 0;color:${COLOR.grey};font-size:14px;">Any figures shown by the calculator on our website are estimates, not a quote or a guarantee. Subsidies are decided and paid by the Government after DISCOM inspection.</p>`,
-    `<p style="margin:0 0 8px;">You are receiving this because you submitted the estimate form on <a href="${escapeHtml(siteUrl)}" style="color:${COLOR.green};">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a> on ${escapeHtml(formatDate(submittedAt))} and agreed to be contacted about this enquiry. It is not a marketing email.</p>
+    `<p style="margin:0 0 8px;">You are receiving this because you ${why} on <a href="${escapeHtml(siteUrl)}" style="color:${COLOR.green};">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a> on ${escapeHtml(formatDate(submittedAt))} and agreed to be contacted about this enquiry. It is not a marketing email.</p>
 <p style="margin:0;">${escapeHtml(legalName ?? site.name)}${addressLine ? ` · ${escapeHtml(addressLine)}` : ""}</p>`,
   );
 
@@ -262,7 +290,7 @@ ${button("Message us on WhatsApp", whatsappHref)}
     "",
     `You asked about rooftop solar for your ${segment}. ${estimate ? "Below are the indicative figures based on what you told us. " : ""}We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.`,
     "",
-    ...(estimate ? [textEstimateCard(estimate), ""] : []),
+    ...(estimate ? [textEstimateCard(estimate, note), ""] : []),
     "WHAT YOU SUBMITTED",
     textRows(received),
     "",
@@ -271,7 +299,7 @@ ${button("Message us on WhatsApp", whatsappHref)}
     "",
     "Any figures shown by the calculator on our website are estimates, not a quote or a guarantee. Subsidies are decided and paid by the Government after DISCOM inspection.",
     "",
-    `You are receiving this because you submitted the estimate form on ${siteUrl} on ${formatDate(submittedAt)} and agreed to be contacted about this enquiry. It is not a marketing email.`,
+    `You are receiving this because you ${why} on ${siteUrl} on ${formatDate(submittedAt)} and agreed to be contacted about this enquiry. It is not a marketing email.`,
     `${legalName ?? site.name}${addressLine ? ` · ${addressLine}` : ""}`,
   ].join("\n");
 
@@ -281,4 +309,27 @@ ${button("Message us on WhatsApp", whatsappHref)}
 /** Customer-to-company WhatsApp link; the prefill carries only the reference, never personal data. */
 export function customerWhatsappHref(reference: string): string {
   return whatsappLink(`Hi, I sent a solar enquiry on the Irradiant Energy website (ref ${reference}).`);
+}
+
+/**
+ * Internal note when a quick-quote visitor later asks for their breakdown by email. The first
+ * alert had no address; this one carries it, matched by reference, and replying reaches them.
+ */
+export function renderQuickEmailNote(reference: string, name: string, email: string): EmailContent {
+  const subject = `Email added to ${reference}`;
+  const line = `${name} asked for their estimate by email. Their address is below; replying to this email goes to them.`;
+  const pairs: ReadonlyArray<readonly [string, string]> = [
+    ["Reference", reference],
+    ["Name", name],
+    ["Email", email],
+  ];
+  const html = layout(
+    subject,
+    `<h1 style="margin:0 0 8px;font-size:22px;line-height:1.3;color:${COLOR.teal};">Email added to ${escapeHtml(reference)}</h1>
+<p style="margin:0 0 12px;">${escapeHtml(line)}</p>
+${rows(pairs)}`,
+    `Sent automatically by the quick quote popup on ${escapeHtml(siteUrl)}.`,
+  );
+  const text = [subject, "", line, "", textRows(pairs), "", `Sent automatically by the quick quote popup on ${siteUrl}.`].join("\n");
+  return { subject, html, text };
 }

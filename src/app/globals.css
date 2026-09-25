@@ -292,3 +292,141 @@ html[data-scroll-locked] {
   touch-action: none;
   overscroll-behavior: none;
 }
+
+/* ---------------------------------------------------------------------------
+   Entrance: content rises into place when a page loads or is navigated to
+   (owner, 2026-09-25: "the website should emerge in all pages", not switch on).
+
+   Applied to the CONTENT of a hero — heading, text, buttons, the calculator — never to a
+   full-bleed band: moving a band would open a strip of bare background under the fixed header
+   for the length of the animation.
+
+   `backwards`, not `both`: the start frame holds during the stagger delay, and once the animation
+   ends no transform is left behind. A lingering `translate` would make the element the containing
+   block for any position:fixed descendant (see RouteTransition.tsx for why that matters here).
+   --------------------------------------------------------------------------- */
+
+@keyframes emerge {
+  from {
+    opacity: 0;
+    translate: 0 1.25rem;
+  }
+}
+
+/* Every child rises, one after another. */
+.emerge > * {
+  animation: emerge 0.8s var(--ease-controlled) backwards;
+}
+.emerge > :nth-child(2) { animation-delay: 70ms; }
+.emerge > :nth-child(3) { animation-delay: 140ms; }
+.emerge > :nth-child(4) { animation-delay: 210ms; }
+.emerge > :nth-child(5) { animation-delay: 280ms; }
+.emerge > :nth-child(n + 6) { animation-delay: 350ms; }
+
+/* One element, optionally delayed: style="--emerge-delay: 200ms". */
+.emerge-self {
+  animation: emerge 0.8s var(--ease-controlled) var(--emerge-delay, 0ms) backwards;
+}
+
+/* ---------------------------------------------------------------------------
+   Popups rise into place instead of appearing (owner, 2026-09-25, after solarsquare.in).
+
+   Native <dialog> with CSS only: @starting-style gives the entry frame, and `allow-discrete` on
+   `display` and `overlay` keeps the dialog in the top layer until its exit transition finishes,
+   so closing animates too. Browsers without @starting-style simply show it without motion.
+   `.sheet` rises from below (a bottom sheet on phones); `.sheet-down` drops from above, for the
+   full-screen mobile menu.
+   --------------------------------------------------------------------------- */
+
+dialog.sheet,
+dialog.sheet-down {
+  opacity: 0;
+  translate: 0 1.5rem;
+  transition:
+    opacity 0.28s ease-out,
+    translate 0.42s var(--ease-controlled),
+    overlay 0.42s allow-discrete,
+    display 0.42s allow-discrete;
+}
+dialog.sheet-down {
+  translate: 0 -1.5rem;
+}
+dialog.sheet[open],
+dialog.sheet-down[open] {
+  opacity: 1;
+  translate: 0 0;
+}
+@starting-style {
+  dialog.sheet[open] {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+  dialog.sheet-down[open] {
+    opacity: 0;
+    translate: 0 -1.5rem;
+  }
+}
+
+/* On a phone the quote popup is a bottom sheet, so it travels the whole way up. */
+@media (max-width: 639px) {
+  dialog.sheet {
+    translate: 0 100%;
+    transition-duration: 0.28s, 0.5s, 0.5s, 0.5s;
+  }
+  @starting-style {
+    dialog.sheet[open] {
+      translate: 0 100%;
+    }
+  }
+}
+
+dialog.sheet::backdrop,
+dialog.sheet-down::backdrop {
+  background-color: transparent;
+  transition:
+    background-color 0.3s ease-out,
+    overlay 0.42s allow-discrete,
+    display 0.42s allow-discrete;
+}
+dialog.sheet[open]::backdrop,
+dialog.sheet-down[open]::backdrop {
+  background-color: color-mix(in srgb, var(--color-teal-975) 60%, transparent);
+}
+@starting-style {
+  dialog.sheet[open]::backdrop,
+  dialog.sheet-down[open]::backdrop {
+    background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emerge > *,
+  .emerge-self {
+    animation: none;
+  }
+  dialog.sheet,
+  dialog.sheet-down,
+  dialog.sheet::backdrop,
+  dialog.sheet-down::backdrop {
+    translate: none;
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll reveal (components/motion/ScrollReveal.tsx). The hidden state exists only once the
+   script has run (`html.rv-on`), so without JavaScript nothing is ever hidden. Pace after
+   sweat-and-fit: a short rise, done in about half a second.
+   --------------------------------------------------------------------------- */
+html.rv-on .rv {
+  opacity: 0;
+  translate: 0 1.5rem;
+  transition:
+    opacity 0.5s ease-out,
+    translate 0.6s var(--ease-controlled);
+  transition-delay: calc(var(--rv-i, 0) * 70ms);
+}
+html.rv-on .rv.rv-in {
+  opacity: 1;
+  translate: 0 0;
+}

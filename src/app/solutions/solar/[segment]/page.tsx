@@ -112,6 +112,7 @@ export default async function SegmentPage({ params }: SegmentPageProps) {
         copy={closingCta.copy}
         primary={closingCta.primary(slug)}
         whatsappText={whatsappPrompts[slug].text}
+        siteVisit
       />
     </>
   );

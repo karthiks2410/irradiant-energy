@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Eyebrow } from "@/components/ui";
 import { Breadcrumbs, type Crumb } from "./Breadcrumbs";
 import { RadiantField } from "./RadiantField";
@@ -72,7 +72,7 @@ export function PageHero({ trail, current, eyebrow, title, lead, meta, actions, 
 
         <div className="mt-6 flex flex-1 flex-col justify-center lg:mt-8">
           <div className="grid-page items-center gap-y-10">
-            <div className={media ? "col-span-4 md:col-span-8 lg:col-span-7" : "col-span-4 md:col-span-8 lg:col-span-9"}>
+            <div className={`emerge ${media ? "col-span-4 md:col-span-8 lg:col-span-7" : "col-span-4 md:col-span-8 lg:col-span-9"}`}>
               {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
               <h1 id="page-title" className={`font-display text-h1 font-extrabold ${eyebrow ? "mt-5" : ""}`}>
                 {title}
@@ -83,7 +83,11 @@ export function PageHero({ trail, current, eyebrow, title, lead, meta, actions, 
               {actions && <div className="mt-8 flex flex-wrap items-center gap-4">{actions}</div>}
               {support && <div className="mt-6">{support}</div>}
             </div>
-            {media && <div className="col-span-4 md:col-span-8 lg:col-span-5">{media}</div>}
+            {media && (
+              <div className="emerge-self col-span-4 md:col-span-8 lg:col-span-5" style={{ "--emerge-delay": "180ms" } as CSSProperties}>
+                {media}
+              </div>
+            )}
           </div>
         </div>
       </div>

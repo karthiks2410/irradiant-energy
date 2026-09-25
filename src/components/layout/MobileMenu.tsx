@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { isNavGroup, nav, primaryCta, site, whatsappLink } from "@/content/site";
+import { isNavGroup, nav, quoteCta, site, whatsappLink } from "@/content/site";
+import { openQuickQuote } from "@/components/quote/QuickQuote";
 import { LogoLockup } from "@/components/brand/Logo";
 
 /**
@@ -39,7 +40,7 @@ export function MobileMenu() {
         aria-label="Menu"
         data-surface="dark"
         data-lenis-prevent
-        className="m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-teal-900 text-white backdrop:bg-teal-975/60"
+        className="m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-teal-900 text-white sheet-down"
       >
         <div className="container-page flex h-(--header-h) items-center justify-between">
           <LogoLockup className="h-10 w-auto" />
@@ -82,12 +83,18 @@ export function MobileMenu() {
           </ul>
 
           <div className="mt-8 grid gap-3">
-            <Link
-              href={primaryCta.href}
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => {
+                // One modal at a time: close the sheet, then open the quote popup.
+                dialogRef.current?.close();
+                openQuickQuote();
+              }}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 font-semibold text-teal-900"
             >
-              {primaryCta.label}
-            </Link>
+              {quoteCta.label}
+            </button>
             <div className="grid grid-cols-2 gap-3">
               <a
                 href={`tel:${phone.tel}`}
