@@ -40,7 +40,7 @@ export function MobileMenu() {
         aria-label="Menu"
         data-surface="dark"
         data-lenis-prevent
-        className="m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-teal-900 text-white backdrop:bg-teal-975/60"
+        className="m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-teal-900 text-white sheet-down"
       >
         <div className="container-page flex h-(--header-h) items-center justify-between">
           <LogoLockup className="h-10 w-auto" />

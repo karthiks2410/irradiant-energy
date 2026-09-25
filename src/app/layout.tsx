@@ -4,6 +4,7 @@ import { ConsentManager } from "@/components/consent";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { WhatsAppBubble } from "@/components/ui/WhatsAppBubble";
 import { QuickQuoteDialog } from "@/components/quote/QuickQuote";
+import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Consent UI mounts last: it renders nothing until a choice is needed. */}
         <WhatsAppBubble />
         <QuickQuoteDialog />
+        <ScrollReveal />
         <ConsentManager />
         <SmoothScroll />
         <JsonLd />

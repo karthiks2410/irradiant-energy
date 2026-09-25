@@ -19,6 +19,11 @@ type SectionProps = Omit<ComponentProps<"section">, "className" | "ref"> & {
   padded?: boolean;
   className?: string;
   containerClassName?: string;
+  /**
+   * Blocks inside the container ease up the first time they scroll into view (default). Turn it off
+   * for a section whose content runs its own motion. See components/motion/ScrollReveal.tsx.
+   */
+  reveal?: boolean;
   children: ReactNode;
 };
 
@@ -29,6 +34,7 @@ export function Section({
   padded = true,
   className = "",
   containerClassName = "",
+  reveal = true,
   children,
   ...props
 }: SectionProps) {
@@ -38,7 +44,13 @@ export function Section({
       data-surface={surface === "dark" ? "dark" : undefined}
       className={`${surfaces[surface]} ${padded ? "section-y" : ""} ${className}`}
     >
-      {container ? <div className={`container-page ${containerClassName}`}>{children}</div> : children}
+      {container ? (
+        <div className={`container-page ${containerClassName}`} data-reveal-children={reveal ? "" : undefined}>
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </Tag>
   );
 }

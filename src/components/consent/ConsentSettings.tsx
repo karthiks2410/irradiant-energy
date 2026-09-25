@@ -53,7 +53,7 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
       onClose={onClose}
       aria-labelledby="consent-settings-title"
       data-lenis-prevent
-      className="m-auto max-h-[min(44rem,calc(100dvh-2rem))] w-[min(36rem,calc(100vw-2rem))] overflow-y-auto rounded-lg bg-white p-0 text-carbon shadow-overlay backdrop:bg-teal-975/60"
+      className="m-auto max-h-[min(44rem,calc(100dvh-2rem))] w-[min(36rem,calc(100vw-2rem))] overflow-y-auto rounded-lg bg-white p-0 text-carbon shadow-overlay sheet"
     >
       <div className="flex items-start justify-between gap-4 border-b border-mist p-5 sm:p-6">
         <h2 id="consent-settings-title" className="font-display text-h3 font-bold text-carbon">

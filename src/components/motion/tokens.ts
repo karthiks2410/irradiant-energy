@@ -11,8 +11,8 @@
 export const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
 /** Section reveal: tall enough to read as movement, short enough not to hold the page up. */
-export const REVEAL_RISE = 28;
-export const REVEAL_DURATION = 0.62;
+export const REVEAL_RISE = 24;
+export const REVEAL_DURATION = 0.5;
 
 /** Route change: opacity only (see RouteTransition for why), so it has to be quick. */
 export const ROUTE_DURATION = 0.34;

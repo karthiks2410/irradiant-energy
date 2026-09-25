@@ -6,6 +6,7 @@ import { EstimateProvider } from "@/components/quote/EstimateProvider";
 import { EstimateResults } from "@/components/quote/EstimateResults";
 import { LeadForm } from "@/components/quote/LeadForm";
 import { mailConfigured } from "@/lib/env.server";
+import { Reveal } from "@/components/motion/Reveal";
 import { MobileSummaryBar } from "@/components/quote/MobileSummaryBar";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { Accent, Card, Eyebrow, Section, SectionHeading } from "@/components/ui";
@@ -53,7 +54,7 @@ export default async function GetQuotePage({
     <EstimateProvider initialSegment={initialSegment}>
       <BreadcrumbJsonLd items={[{ name: "Calculator", path: "/get-quote" }]} />
 
-      <Section surface="canvas" containerClassName="grid-page items-start gap-y-12">
+      <Section surface="canvas" containerClassName="emerge grid-page items-start gap-y-12">
         <nav aria-label="Breadcrumb" className="col-span-4 md:col-span-8 lg:col-span-12">
           <ol className="flex flex-wrap items-center gap-2 text-small text-grey-600">
             <li>
@@ -107,7 +108,7 @@ export default async function GetQuotePage({
         aria-labelledby="lead-form-heading"
         containerClassName="grid-page items-start gap-y-12"
       >
-        <div className="col-span-4 md:col-span-8 lg:col-span-7">
+        <Reveal className="col-span-4 md:col-span-8 lg:col-span-7">
           <SectionHeading
             id="lead-form-heading"
             eyebrow="Step 2"
@@ -122,9 +123,9 @@ export default async function GetQuotePage({
           <div className="mt-10">
             <LeadForm startedAt={startedAt} canSend={mailConfigured} />
           </div>
-        </div>
+        </Reveal>
 
-        <aside className="col-span-4 md:col-span-8 lg:col-span-4 lg:col-start-9">
+        <Reveal as="aside" delay={0.08} className="col-span-4 md:col-span-8 lg:col-span-4 lg:col-start-9">
           <Card padding="lg">
             <h2 className="font-display text-h4 font-semibold text-carbon">Prefer to talk?</h2>
             <ul className="mt-4 grid gap-3 text-body text-ink-2">
@@ -150,7 +151,7 @@ export default async function GetQuotePage({
               </li>
             </ul>
           </Card>
-        </aside>
+        </Reveal>
       </Section>
 
       <MobileSummaryBar targetId="lead-form" />

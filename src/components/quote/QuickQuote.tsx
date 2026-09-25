@@ -33,7 +33,7 @@ import { usePathname } from "next/navigation";
 import { useActionState, useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { emailQuickQuote, submitQuickQuote } from "@/app/get-quote/actions";
-import { Button, CheckboxField, TextField } from "@/components/ui";
+import { Button, CheckboxField, controlClass, FieldError, TextField } from "@/components/ui";
 import { ChoiceChips } from "@/components/ui/fields/ChoiceChips";
 import { BILL_BUCKETS, bucketLabel } from "@/lib/leads/quick";
 import { checkEmail, checkName, checkPhone, checkPincode, LEAD_MESSAGES } from "@/lib/leads/rules";
@@ -53,38 +53,36 @@ export function openQuickQuote(intent: QuickQuoteIntent = "quote") {
 const COPY = {
   quote: {
     title: "Get a free quote",
-    lead: "Your estimate appears as soon as you send this. We then arrange a free site visit and a written quotation.",
+    lead: "See your estimate now. We follow up with a free site visit.",
     submit: "See my estimate",
   },
   "site-visit": {
     title: "Book a free site visit",
-    lead: "We check your roof, shading and connection, then send you a written quotation. You see an estimate straight away.",
+    lead: "We check your roof and send a written quotation. Your estimate shows straight away.",
     submit: "Book my visit",
   },
   close: "Close",
   name: "Name",
   phone: "WhatsApp number",
-  phoneHint: "We call or message you on this number.",
   pincode: "PIN code",
   segment: "Property",
   bill: "Monthly electricity bill",
-  consent: "I agree that Irradiant Energy may call me or message me on WhatsApp on this number about this enquiry, and I have read the",
+  consent: "Irradiant Energy may call or WhatsApp me about this enquiry. I have read the",
   privacy: "privacy notice",
   sending: "Sending…",
   resultTitle: "Your estimate",
   resultFor: (bill: string, segment: string) => `For a ${segment.toLowerCase()} with a bill of ${bill} a month`,
   systemSize: "System size",
   monthlySavings: "Monthly savings",
-  subsidy: "PM Surya Ghar subsidy",
-  disclaimer:
-    "Worked out from your bill range, so these are estimates, not a quote. A site visit confirms your roof, shading and final price.",
-  reference: (ref: string) => `Your reference is ${ref}. We will contact you on the number you gave.`,
+  subsidy: "Subsidy",
+  note: (ref: string) =>
+    `Estimates from your bill range, not a quote — a site visit confirms the final price. Reference ${ref}; we will call you on the number you gave.`,
   fullBreakdown: "See the full breakdown",
   whatsapp: "Talk to us on WhatsApp",
   emailLabel: "Email me the full breakdown",
-  emailHint: "Optional. We send this one email and add you to nothing.",
+  emailHint: "Optional. One email, no newsletters.",
   emailSubmit: "Send",
-  emailSent: (to: string) => `Sent to ${to}. It has the cost, the subsidy and the payback as well.`,
+  emailSent: (to: string) => `Sent to ${to}, with the cost and payback too.`,
   failedWhatsapp: "Send it on WhatsApp instead",
 } as const;
 
@@ -94,7 +92,9 @@ function segmentFromPath(pathname: string): Segment {
   return (match?.[1] as Segment | undefined) ?? "home";
 }
 
-const SEGMENT_OPTIONS = SEGMENTS.map((value) => ({ value, label: SEGMENT_LABELS[value] }));
+/** Short enough for three chips beside the PIN field. */
+const SEGMENT_SHORT: Record<Segment, string> = { home: "Home", "housing-society": "Society", commercial: "Business" };
+const SEGMENT_OPTIONS = SEGMENTS.map((value) => ({ value, label: SEGMENT_SHORT[value] }));
 
 export function QuickQuoteButton({
   intent = "quote",
@@ -158,19 +158,19 @@ export function QuickQuoteDialog() {
       onClose={() => document.documentElement.removeAttribute("data-scroll-locked")}
       aria-labelledby="quick-quote-title"
       data-lenis-prevent
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(34rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-lg bg-white p-0 text-carbon shadow-overlay backdrop:bg-teal-975/60 max-sm:mb-0 max-sm:max-h-[calc(100dvh-1rem)] max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none"
+      className="sheet m-auto max-h-[calc(100dvh-2rem)] w-[min(38rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-lg bg-white p-0 text-carbon shadow-overlay max-sm:mb-0 max-sm:max-h-[calc(100dvh-0.5rem)] max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none"
     >
-      <div className="flex items-start justify-between gap-4 border-b border-mist p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-4 border-b border-mist px-5 py-4">
         <div>
-          <h2 id="quick-quote-title" className="font-display text-h3 font-bold text-carbon">
+          <h2 id="quick-quote-title" className="font-display text-h4 font-bold text-carbon">
             {copy.title}
           </h2>
-          <p className="mt-1 text-small text-ink-2">{copy.lead}</p>
+          <p className="mt-0.5 text-small text-ink-2">{copy.lead}</p>
         </div>
         <button
           type="button"
           onClick={close}
-          className="inline-grid size-11 shrink-0 place-items-center rounded-full border border-mist text-teal-900 transition-colors hover:bg-canvas"
+          className="-mr-1 inline-grid size-10 shrink-0 place-items-center rounded-full border border-mist text-teal-900 transition-colors hover:bg-canvas"
         >
           <span className="sr-only">{COPY.close}</span>
           <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.75">
@@ -282,7 +282,7 @@ function QuickQuoteBody({
   }
 
   return (
-    <form action={formAction} onSubmit={onSubmit} noValidate className="grid gap-5 p-5 sm:p-6">
+    <form action={formAction} onSubmit={onSubmit} noValidate className="grid gap-4 px-5 pt-4 pb-5">
       {state.ok === false && (
         <p ref={errorSummaryRef} tabIndex={-1} role="alert" className="rounded-md bg-error-tint p-4 text-small text-carbon">
           {state.error}{" "}
@@ -300,6 +300,7 @@ function QuickQuoteBody({
         <input id="qq-website" name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2">
       <TextField
         id="qq-name"
         name="name"
@@ -318,7 +319,6 @@ function QuickQuoteBody({
         name="phone"
         type="tel"
         label={COPY.phone}
-        hint={COPY.phoneHint}
         prefix="+91"
         inputMode="tel"
         autoComplete="tel-national"
@@ -326,6 +326,9 @@ function QuickQuoteBody({
         onChange={(event) => recheck("phone", event.target.value)}
         error={errors.phone}
       />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-[9rem_1fr] sm:items-start">
       <TextField
         id="qq-pincode"
         name="pincode"
@@ -346,6 +349,7 @@ function QuickQuoteBody({
       <ChoiceChips
         name="segment"
         legend={COPY.segment}
+        size="sm"
         options={SEGMENT_OPTIONS}
         value={segment}
         onChange={(event) => {
@@ -353,9 +357,11 @@ function QuickQuoteBody({
           setBucket("");
         }}
       />
+      </div>
       <ChoiceChips
         name="billBucket"
         legend={COPY.bill}
+        size="sm"
         options={bucketOptions}
         value={bucket}
         onChange={(event) => {
@@ -393,7 +399,7 @@ const QUICK_ORDER: QuickLeadField[] = ["name", "phone", "pincode", "billBucket",
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" arrow disabled={pending} className="w-full justify-center sm:w-auto">
+    <Button type="submit" arrow disabled={pending} className="w-full justify-between pl-6">
       {pending ? COPY.sending : label}
     </Button>
   );
@@ -434,30 +440,29 @@ function QuickQuoteResult({
   ];
 
   return (
-    <div className="grid gap-5 p-5 sm:p-6">
+    <div className="grid gap-4 px-5 pt-4 pb-5">
       <div>
-        <h3 ref={headingRef} tabIndex={-1} className="font-display text-h4 font-semibold text-carbon outline-none">
+        <h3 ref={headingRef} tabIndex={-1} className="font-display text-ui font-bold text-carbon outline-none">
           {COPY.resultTitle}
         </h3>
         <p className="mt-1 text-small text-ink-2">{COPY.resultFor(summary.billRangeLabel, SEGMENT_LABELS[segment])}</p>
       </div>
 
-      <dl className="grid gap-3 sm:grid-cols-3">
+      <dl className="grid grid-cols-3 gap-2">
         {tiles.map(([label, value]) => (
-          <div key={label} className="rounded-md border border-mist bg-canvas p-4">
-            <dt className="text-small text-grey-600">{label}</dt>
-            <dd className="mt-1 font-display text-h4 font-semibold text-teal-900">{value}</dd>
+          <div key={label} className="rounded-md border border-mist bg-canvas px-3 py-2.5">
+            <dt className="text-small leading-tight text-grey-600">{label}</dt>
+            <dd className="mt-1 font-display text-ui leading-snug font-bold text-teal-900 tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>
 
-      <p className="text-small text-ink-2">{COPY.disclaimer}</p>
-      <p className="text-small text-ink-2">{COPY.reference(state.reference)}</p>
+      <p className="text-small text-ink-2">{COPY.note(state.reference)}</p>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         <Link
           href={`/get-quote?segment=${segment}`}
-          className="inline-flex min-h-11 items-center rounded-full border-2 border-teal-900 px-5 font-semibold text-teal-900 transition-colors hover:bg-teal-900 hover:text-white"
+          className="inline-flex min-h-10 items-center rounded-full border-2 border-teal-900 px-4 text-small font-semibold text-teal-900 transition-colors hover:bg-teal-900 hover:text-white"
         >
           {COPY.fullBreakdown}
         </Link>
@@ -465,13 +470,13 @@ function QuickQuoteResult({
           href={state.whatsappHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-11 items-center rounded-full border-2 border-teal-900 px-5 font-semibold text-teal-900 transition-colors hover:bg-teal-900 hover:text-white"
+          className="inline-flex min-h-10 items-center rounded-full border-2 border-teal-900 px-4 text-small font-semibold text-teal-900 transition-colors hover:bg-teal-900 hover:text-white"
         >
           {COPY.whatsapp}
         </a>
       </div>
 
-      <div className="border-t border-mist pt-5">
+      <div className="border-t border-mist pt-4">
         {emailState.ok === true ? (
           <p role="status" className="rounded-md bg-success-tint p-4 text-small text-carbon">
             {COPY.emailSent(email)}
@@ -485,7 +490,7 @@ function QuickQuoteResult({
               setEmailError(error);
               if (error) event.preventDefault();
             }}
-            className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start"
+            className="grid gap-1.5"
             aria-describedby={emailState.ok === false ? statusId : undefined}
           >
             <input type="hidden" name="reference" value={state.reference} />
@@ -493,23 +498,37 @@ function QuickQuoteResult({
             <input type="hidden" name="segment" value={segment} />
             <input type="hidden" name="pincode" value={pincode} />
             <input type="hidden" name="billBucket" value={billBucket} />
-            <TextField
-              id="qq-email"
-              name="email"
-              type="email"
-              label={COPY.emailLabel}
-              hint={COPY.emailHint}
-              autoComplete="email"
-              inputMode="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              error={emailError}
-            />
-            <div className="sm:pt-8">
+            <label htmlFor="qq-email" className="text-small font-semibold text-carbon">
+              {COPY.emailLabel}
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="qq-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                value={email}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  if (emailError && !checkEmail(event.target.value)) setEmailError(undefined);
+                }}
+                aria-invalid={emailError ? true : undefined}
+                aria-describedby={emailError ? "qq-email-error" : "qq-email-hint"}
+                placeholder="you@example.com"
+                className={`${controlClass} min-h-11 flex-1`}
+              />
               <EmailButton />
             </div>
+            {emailError ? (
+              <FieldError id="qq-email-error">{emailError}</FieldError>
+            ) : (
+              <p id="qq-email-hint" className="text-small text-grey-600">
+                {COPY.emailHint}
+              </p>
+            )}
             {emailState.ok === false && !emailState.fieldError && (
-              <p id={statusId} role="alert" className="text-small text-error sm:col-span-2">
+              <p id={statusId} role="alert" className="text-small text-error">
                 {emailState.error}
               </p>
             )}
@@ -523,7 +542,7 @@ function QuickQuoteResult({
 function EmailButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" variant="outline" disabled={pending}>
+    <Button type="submit" variant="outline" disabled={pending} className="min-h-11 shrink-0 px-5">
       {pending ? COPY.sending : COPY.emailSubmit}
     </Button>
   );
