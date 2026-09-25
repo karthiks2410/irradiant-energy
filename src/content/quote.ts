@@ -132,12 +132,7 @@ export const quotePage = {
 
   /** The phone-only bar that keeps the headline figure in view during step 1. */
   summary: {
-    /**
-     * The empty state. It is unreachable on this page — the bill is a slider, so the engine
-     * always has a figure to give — and it is kept because the type still allows a null
-     * estimate. `waitingNote` is the one string in this module with no reviewer row, for that
-     * reason; both the generator and kn-parity.test.ts name it.
-     */
+    /** The empty state, shown until a bill is typed (the bill has been a typed field since #14). */
     waitingHeading: "Your estimate",
     waitingNote: "Set your monthly bill to see it",
     kwp: "{kwp} kWp",

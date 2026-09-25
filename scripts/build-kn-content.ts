@@ -244,8 +244,6 @@ const UNTRANSLATED: Readonly<Record<string, string>> = {
   "homePage.calculator.fields.tariff.hint": "input withdrawn at owner review round 2; kept for the engine's API",
   "projectImages.duskSkyline.alt": "hero slide 1: decoration behind fixed copy, rendered with alt=\"\"",
   "ui.calculator.flags.kwh-clamped": "the kWh input is not offered, so the engine cannot raise this flag here",
-  "quotePage.summary.waitingNote":
-    "the mobile bar's empty state; the bill is a slider, so the engine always has a figure and this never renders",
   "quotePage.assumptions.tariffEntered.value":
     "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
   "quotePage.citations.enteredTariff":
@@ -265,6 +263,21 @@ const UNTRANSLATED: Readonly<Record<string, string>> = {
   "segments.commercial.faq.groups[1].label": "FAQ group headings are not rendered",
   "aboutPage.brand.purposeShort.text": "brand PDF purpose line; the rebuilt About page renders positioning and promise only",
   "aboutPage.brand.introduction.text": "brand PDF 10-word introduction; nothing on the site renders it",
+  "ui.quickQuote.emailPlaceholder": "an example address; email addresses are written in Latin letters in any language",
+};
+
+/**
+ * COLLISIONS: one English string that needs two Kannada renderings, by path.
+ *
+ * Matching by English text gives every "Home" the same Kannada, but English uses the word for
+ * two things: the home page (nav, breadcrumbs: ಮುಖಪುಟ) and a house as a property type (the
+ * calculator and popup chips: ಮನೆ). Found in review, 2026-09-25: the property chip read "Homepage".
+ * `en` is checked against the English module, so a reworded source string fails loudly here
+ * instead of keeping a stale override.
+ */
+const COLLISIONS: Readonly<Record<string, { en: string; kn: string; why: string }>> = {
+  "ui.calculator.segments.home": { en: "Home", kn: "ಮನೆ", why: "property type, not the home page" },
+  "ui.quickQuote.segmentShort.home": { en: "Home", kn: "ಮನೆ", why: "property type, not the home page" },
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -302,6 +315,7 @@ const key = (name: string) => (IDENTIFIER.test(name) ? name : quote(name));
 class Generator {
   readonly missing: string[] = [];
   readonly unusedAllowlist = new Set(Object.keys(UNTRANSLATED));
+  readonly unusedCollisions = new Set(Object.keys(COLLISIONS));
   readonly rows: Map<string, Row>;
 
   constructor(rows: Map<string, Row>) {
@@ -310,6 +324,12 @@ class Generator {
 
   /** The Kannada for an English string, or the English itself when the path is allow-listed. */
   private translate(text: string, at: string): string {
+    const collision = COLLISIONS[at];
+    if (collision) {
+      this.unusedCollisions.delete(at);
+      if (collision.en !== text) throw new Error(`${at}: COLLISIONS expects "${collision.en}", the English is now "${text}"`);
+      return collision.kn;
+    }
     const row = this.rows.get(text);
     if (row) return row.kn;
     if (at in UNTRANSLATED) {
@@ -439,6 +459,15 @@ if (generator.unusedAllowlist.size > 0) {
   console.error(
     `UNTRANSLATED lists ${generator.unusedAllowlist.size} path(s) that no longer exist or are now translated:\n` +
       [...generator.unusedAllowlist].map((p) => `  ${p}`).join("\n") +
+      `\nRemove them from this script.\n`,
+  );
+  process.exit(1);
+}
+
+if (generator.unusedCollisions.size > 0) {
+  console.error(
+    `COLLISIONS lists ${generator.unusedCollisions.size} path(s) that no longer exist:\n` +
+      [...generator.unusedCollisions].map((p) => `  ${p}`).join("\n") +
       `\nRemove them from this script.\n`,
   );
   process.exit(1);

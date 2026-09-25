@@ -47,13 +47,12 @@ const SAME_IN_BOTH: Readonly<Record<string, string>> = {
     "both holes are Latin \u2014 the brand name and the brand line \u2014 so the reviewers' row (u248) repeats the English",
   "ui.footer.gstin": "the statutory identifier: label and number both stay Latin, to match the certificate (glossary #77)",
   "quote.summary.kwp": "a figure and a unit symbol, nothing to translate; the reviewers' row (u136) repeats it",
-  "quote.summary.waitingNote":
-    "the mobile bar's empty state; the bill is a slider, so the engine always has a figure and this never renders",
   "quote.assumptions.tariffEntered.value":
     "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
   "quote.citations.enteredTariff":
     "the average-tariff input was withdrawn at owner review round 2, so the engine cannot take this branch",
   "contactPage.ways.whatsapp.eyebrow": "the network's own name",
+  "ui.quickQuote.emailPlaceholder": "an example address; email addresses are written in Latin letters in any language",
   "about.brand.tagline.text": "the brand line, kept Latin (brand PDF p.5); the reviewers' row repeats it verbatim",
   "about.brand.purposeShort.text": "brand PDF purpose line; the rebuilt About page renders positioning and promise only",
   "about.brand.introduction.text": "brand PDF 10-word introduction; nothing on the site renders it",

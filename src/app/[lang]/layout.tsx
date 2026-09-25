@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Inter } from "next/font/google";
+import { preload } from "react-dom";
 import { ConsentManager } from "@/components/consent";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { WhatsAppBubble } from "@/components/ui/WhatsAppBubble";
@@ -93,6 +94,9 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
   // The chrome reads the same merged content the page does, and hands it to the header, the
   // footer and the two client islands below as props.
   const content = getContent(locale);
+  // React hoists this into <head>. A <link> element in the body did the same, but as a
+  // Kannada-only sibling it tripped a duplicate-key warning in the layout router.
+  if (locale === "kn") preload(KANNADA_FONT_URL, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
 
   return (
     <html lang={HTML_LANG[locale]} className={`${inter.variable} ${plexMono.variable} h-full antialiased`}>
@@ -102,9 +106,6 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
             settings panel is rendered by /cookies. It renders no element of its own, so the
             markup below is unchanged. */}
         <UiProvider value={{ error: content.ui.error, consent: content.ui.consent }}>
-          {locale === "kn" && (
-            <link rel="preload" href={KANNADA_FONT_URL} as="font" type="font/woff2" crossOrigin="anonymous" />
-          )}
           <a
             href="#main"
             className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-100 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-teal-900"
