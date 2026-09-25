@@ -251,10 +251,15 @@
    * variable on `html:lang(kn)` retunes every component without touching a single class list,
    * and it cannot lose a layer fight because it is not competing — it is the input.
    *
-   * Sizes are unchanged except where §6.2 says otherwise (small 14→15, eyebrow 13→14,
-   * label 12→13, hero and display reworked): the brand rule is to adapt the layout, never to
-   * shrink the type. Leading is raised because Kannada ink is ~1.27em per line against Latin's
-   * ~0.95em and the English values collide (§5.1: the hero overlapped by 0.37em at lh 0.96).
+   * Kannada has its own size scale, not the English one. Kannada letters look larger than Latin
+   * at the same font-size, so the English sizes made every Kannada line read about a fifth bigger
+   * than its English twin and the hero filled the screen (owner, 2026-09-25: "it is too big on the
+   * screen … Kannada is bigger in general, it's inherent with the shape of the letters … do not
+   * map 1:1 … keep the overall Kannada text a px or 2 smaller"). So body, lead, UI and small text
+   * run 1px under English, eyebrows and labels about 1px under, h4 1px under, h1–h3 about 0.85×
+   * and hero/display about 0.65×. Figures (`data`) keep the English size: they are Latin digits.
+   * Leading is raised because Kannada ink is ~1.27em per line against Latin's ~0.95em and the
+   * English values collide (§5.1: the hero overlapped by 0.37em at lh 0.96).
    */
   html:lang(kn) {
     /* System Kannada, in order of metric fidelity to the webfont: the system Noto first
@@ -278,31 +283,38 @@
        site's 800 maps to 700 (§4). */
     --font-weight-extrabold: 700;
 
-    --text-hero: clamp(2rem, 11vw, 3rem);
+    --text-hero: clamp(1.75rem, 8.5vw, 2.5rem);
     --text-hero--line-height: 1.35;
     --text-hero--letter-spacing: normal;
-    --text-hero-md: clamp(3.25rem, 5.6vw, 5.5rem);
+    --text-hero-md: clamp(2.5rem, 3.9vw, 4rem);
     --text-hero-md--line-height: 1.35;
     --text-hero-md--letter-spacing: normal;
-    --text-display: clamp(2.25rem, 1.2rem + 4.5vw, 5.5rem);
+    --text-display: clamp(1.875rem, 1rem + 3.4vw, 4.25rem);
     --text-display--line-height: 1.35;
     --text-display--letter-spacing: normal;
+    --text-h1: clamp(1.875rem, 1.35rem + 2.1vw, 3.625rem);
     --text-h1--line-height: 1.35;
     --text-h1--letter-spacing: normal;
     --text-h1--font-weight: 700;
+    --text-h2: clamp(1.5rem, 1.1rem + 1.3vw, 2.375rem);
     --text-h2--line-height: 1.4;
     --text-h2--letter-spacing: normal;
+    --text-h3: clamp(1.125rem, 0.98rem + 0.5vw, 1.4375rem);
     --text-h3--line-height: 1.45;
+    --text-h4: 1.0625rem;
     --text-h4--line-height: 1.5;
+    --text-lead: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
     --text-lead--line-height: 1.75;
+    --text-body: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
     --text-body--line-height: 1.8;
-    --text-small: 0.9375rem;
+    --text-small: 0.8125rem;
     --text-small--line-height: 1.7;
+    --text-ui: 0.9375rem;
     --text-ui--line-height: 1.5;
-    --text-eyebrow: 0.875rem;
+    --text-eyebrow: 0.75rem;
     --text-eyebrow--line-height: 1.5;
     --text-eyebrow--letter-spacing: normal;
-    --text-label: 0.8125rem;
+    --text-label: 0.71875rem;
     --text-label--line-height: 1.5;
     --text-label--letter-spacing: normal;
     --text-data--line-height: 1.4;

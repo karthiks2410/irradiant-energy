@@ -25,7 +25,7 @@ const PROTO_EASE = "ease-[cubic-bezier(0.25,0.1,0.25,1)]";
  * Kannada lines overlap by 0.37em at that leading (typography.md §5.1, §6.4 item 1).
  */
 const HEADLINE = "font-display text-hero font-bold text-white md:text-hero-md";
-const LEAD = "mt-5 max-w-[590px] text-[0.9375rem] leading-[1.7] text-white/90 md:text-[1.1875rem]";
+const LEAD = "mt-5 max-w-[590px] text-[0.9375rem] leading-[1.7] text-white/90 md:text-[1.1875rem] kn:text-[0.875rem] kn:md:text-[1.125rem]";
 const CHIPS = "mt-[22px] flex flex-wrap gap-x-[18px] gap-y-2.5";
 const CHIP = "flex items-center gap-2 text-small text-white/90";
 
@@ -195,7 +195,7 @@ export function HeroBackdrop({ slides, labels, overlay, actions }: HeroBackdropP
             the foot, because the carousel dots are absolutely positioned at `bottom-2` and the
             taller Kannada chip row ran underneath them (chips bottom 750 vs dots top 748 at 1280).
             English keeps its exact padding. */}
-        <div className="grid max-w-[690px] pt-[calc(var(--header-h)+4.5rem)] md:pt-[calc(var(--header-h)+5.25rem)] kn:md:pt-[calc(var(--header-h)+3.5rem)] kn:pb-14 [@media(max-height:720px)]:pt-[calc(var(--header-h)+2rem)] [@media(max-height:720px)]:pb-16">
+        <div className="grid max-w-[690px] kn:max-w-[880px] pt-[calc(var(--header-h)+4.5rem)] md:pt-[calc(var(--header-h)+5.25rem)] kn:md:pt-[calc(var(--header-h)+3.5rem)] kn:pb-14 [@media(max-height:720px)]:pt-[calc(var(--header-h)+2rem)] [@media(max-height:720px)]:pb-16">
           {/* The sizer: every scene, laid out and measured, shown to nobody. It carries no
               heading and no landmark, so it adds nothing for assistive technology to find, and
               it is `inert` because `actions` now contains a real form — `visibility: hidden`
