@@ -96,7 +96,7 @@ export function LeadForm({
   /** Posted with the form so the action knows which language to send the customer's email in. */
   locale: Locale;
 }) {
-  const { segment, monthlyBill, estimate, roofArea } = useEstimate();
+  const { segment, monthlyBill, estimate, sanctionedLoad } = useEstimate();
   const [state, formAction] = useActionState(submitLead, initialLeadState);
   const noticeRef = useRef<HTMLDivElement>(null);
 
@@ -195,9 +195,7 @@ export function LeadForm({
       {/* Only a PIN code the engine actually accepted travels: a half-typed one would come back
           from the server as an error against a field that is not on screen. */}
       <input type="hidden" name="pincode" value={estimate?.region.pincode ?? ""} />
-      {/* The roof area the visitor entered (not estimate.roofAreaSqft, which is the area the
-          recommended system needs). It caps the size, so the server recomputes with it too. */}
-      <input type="hidden" name="roofAreaSqft" value={Number(roofArea) > 0 ? roofArea : ""} />
+      <input type="hidden" name="sanctionedLoadKw" value={Number(sanctionedLoad) > 0 ? sanctionedLoad : ""} />
       <input type="hidden" name="startedAt" defaultValue={String(startedAt)} />
       {/* Which page this was sent from, so the acknowledgement is written in the language the
           visitor was reading. A Server Action has no access to next/root-params. */}

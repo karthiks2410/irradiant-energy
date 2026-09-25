@@ -34,15 +34,12 @@ interface EstimateContextValue {
   setSegment: (segment: Segment) => void;
   monthlyBill: number;
   setMonthlyBill: (value: number) => void;
-  /** Raw digits as typed; only a complete, valid PIN code reaches the engine. Optional. */
   pincode: string;
   setPincode: (value: string) => void;
-  /** Called when the field is left, so an untouched empty field is not reported as an error. */
   touchPincode: () => void;
   pincodeError?: string;
-  roofArea: string;
-  setRoofArea: (value: string) => void;
-  /** Always present: the bill alone is enough. Null only if the bill itself is unusable. */
+  sanctionedLoad: string;
+  setSanctionedLoad: (value: string) => void;
   estimate: Estimate | null;
 }
 
@@ -72,7 +69,7 @@ export function EstimateProvider({
   const [monthlyBill, setMonthlyBill] = useState(() => billBounds(initialSegment).default);
   const [pincode, setPincode] = useState("");
   const [pincodeTouched, setPincodeTouched] = useState(false);
-  const [roofArea, setRoofArea] = useState("");
+  const [sanctionedLoad, setSanctionedLoad] = useState("");
 
   /** Bill ranges differ per segment, so the bill restarts at the new segment's typical value. */
   const setSegment = (next: Segment) => {
@@ -81,19 +78,19 @@ export function EstimateProvider({
   };
 
   const pincodeComplete = PINCODE_RE.test(pincode);
-  const roofAreaSqft = Number(roofArea);
+  const sanctionedLoadKw = Number(sanctionedLoad);
 
   const estimate = useMemo(
     () =>
-      buildEstimate({
-        segment,
-        monthlyBillInr: monthlyBill,
-        // A half-typed PIN is not a location: it would resolve to the wrong band and claim a
-        // precision that is not there, so only a complete one is handed over.
-        pincode: pincodeComplete ? pincode : undefined,
-        roofAreaSqft: roofAreaSqft > 0 ? roofAreaSqft : undefined,
-      }),
-    [segment, monthlyBill, pincode, pincodeComplete, roofAreaSqft],
+      sanctionedLoadKw > 0
+        ? buildEstimate({
+            segment,
+            monthlyBillInr: monthlyBill,
+            pincode: pincodeComplete ? pincode : undefined,
+            sanctionedLoadKw,
+          })
+        : null,
+    [segment, monthlyBill, pincode, pincodeComplete, sanctionedLoadKw],
   );
 
   const value: EstimateContextValue = {
@@ -107,8 +104,8 @@ export function EstimateProvider({
     // Six typed digits that still do not parse (a leading zero) are a mistake straight away;
     // anything shorter waits until the visitor has left the field.
     pincodeError: !pincodeComplete && (pincodeTouched || pincode.length === 6) ? pincodeError : undefined,
-    roofArea,
-    setRoofArea,
+    sanctionedLoad,
+    setSanctionedLoad,
     estimate,
   };
 

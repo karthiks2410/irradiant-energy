@@ -4,7 +4,7 @@ import { isNavGroup, site, whatsappLink } from "@/content/site";
 import type { Content } from "@/i18n/content";
 import { fill } from "@/i18n/format";
 import { LogoLockup } from "@/components/brand/Logo";
-import { ButtonLink } from "@/components/ui/Button";
+import { QuickQuoteButton } from "@/components/quote/QuickQuote";
 import { HeaderContact } from "./HeaderContact";
 import { HeaderShell } from "./HeaderShell";
 import { MobileMenu } from "./MobileMenu";
@@ -72,12 +72,13 @@ export function SiteHeader({ content }: { content: Content }) {
               `hidden` passed through className loses the cascade and the CTA stays on
               screen at phone widths — pushing the menu button out of the viewport. */}
           <span className="hidden sm:inline-flex">
-            <ButtonLink href={primaryCta.href}>{primaryCta.label}</ButtonLink>
+            <QuickQuoteButton>{ui.quickQuote.cta}</QuickQuoteButton>
           </span>
           <MobileMenu
             copy={{
               nav,
               primaryCta,
+              quoteLabel: ui.quickQuote.cta,
               labels: ui.mobileMenu,
               phone: content.site.contact.phonePrimary.value,
               // Built here, where the merged copy is: the sheet hydrates and must not reach for a

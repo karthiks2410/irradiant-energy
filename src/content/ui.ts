@@ -224,9 +224,10 @@ export const ui = {
      * calculator needs, and makes no claim about solar, tariffs or the business.
      */
     pincodeError: "Enter a 6-digit PIN code, for example 560001.",
-    /** Note under the savings tile; `{years}` is the engine's projection horizon. */
-    savingsNote: "Over {years} years",
+    /** Under the payback tile when a subsidy is counted in it. */
     subsidyNote: "After the estimated subsidy",
+    /** Under the recommended system size (redesign #14). */
+    roofNeeded: "~{sqft} sq ft of roof",
     yearsUnit: "years",
     kwpUnit: "kWp",
     kwhUnit: "kWh",
@@ -237,6 +238,61 @@ export const ui = {
      */
     segments: { ...SEGMENT_LABELS },
     flags: { ...flagNotes },
+  },
+
+  /**
+   * The quick-quote popup (header button on every page) and the buttons that open it.
+   * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL.
+   *
+   * "Quote" for this journey, which ends in a written quotation after a site visit; "estimate" for
+   * anything the calculator computes. Sentence case, never "FREE".
+   */
+  quickQuote: {
+    cta: "Get a free quote",
+    siteVisitCta: "Book a free site visit",
+    quote: {
+      title: "Get a free quote",
+      lead: "See your estimate now. We follow up with a free site visit.",
+      submit: "See my estimate",
+    },
+    siteVisit: {
+      title: "Book a free site visit",
+      lead: "We check your roof and send a written quotation. Your estimate shows straight away.",
+      submit: "Book my visit",
+    },
+    close: "Close",
+    name: "Name",
+    phone: "WhatsApp number",
+    pincode: "PIN code",
+    segment: "Property",
+    /** Short enough for three chips beside the PIN field. */
+    segmentShort: { home: "Home", "housing-society": "Society", commercial: "Business" },
+    bill: "Monthly electricity bill",
+    consent: "Irradiant Energy may call or WhatsApp me about this enquiry. I have read the {privacy}.",
+    privacy: "privacy notice",
+    sending: "Sending…",
+    resultTitle: "Your estimate",
+    resultFor: "For a {segment} with a bill of {bill} a month",
+    systemSize: "System size",
+    monthlySavings: "Monthly savings",
+    subsidy: "Subsidy",
+    note: "Estimates from your bill range, not a quote — a site visit confirms the final price. Reference {reference}; we will call you on the number you gave.",
+    fullBreakdown: "See the full breakdown",
+    whatsapp: "Talk to us on WhatsApp",
+    emailLabel: "Email me the full breakdown",
+    emailHint: "Optional. One email, no newsletters.",
+    emailPlaceholder: "you@example.com",
+    emailSubmit: "Send",
+    emailSent: "Sent to {email}, with the cost and payback too.",
+    failedWhatsapp: "Send it on WhatsApp instead",
+    /** The words around a range; `{value}` is the figure (src/lib/leads/quick.ts RangeWords). */
+    ranges: {
+      under: "Under {value}",
+      over: "Over {value}",
+      from: "From {value}",
+      upTo: "Up to {value}",
+      noSubsidy: "Not available for businesses",
+    },
   },
 } as const;
 

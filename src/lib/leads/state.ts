@@ -3,8 +3,9 @@
  * Lives outside the "use server" module because that file may only export async functions.
  */
 
-import type { LeadFormErrorCode } from "./errors";
-import type { LeadField } from "./schema";
+import type { LeadFieldErrorCode, LeadFormErrorCode } from "./errors";
+import type { QuickEstimateSummary } from "./quick";
+import type { LeadField, QuickLeadField } from "./schema";
 
 /**
  * Codes, not sentences (src/lib/leads/errors.ts). The action serves both locale trees from one
@@ -59,3 +60,33 @@ export type LeadActionState =
     };
 
 export const initialLeadState: LeadActionState = { ok: null };
+
+/* Quick quote popup ------------------------------------------------------- */
+
+export type QuickQuoteState =
+  | { ok: null }
+  | {
+      ok: true;
+      reference: string;
+      whatsappHref: string;
+      /** The headline ranges, already formatted on the server. */
+      summary: QuickEstimateSummary;
+    }
+  | {
+      ok: false;
+      /** A code, not a sentence: the popup words it in the page's language. */
+      errorCode: LeadFormErrorCode;
+      fieldErrors?: Partial<Record<QuickLeadField, LeadFieldErrorCode>>;
+      /** Set when the enquiry was valid but could not be delivered: finish it on WhatsApp. */
+      whatsappHref?: string;
+      reference?: string;
+    };
+
+export const initialQuickQuoteState: QuickQuoteState = { ok: null };
+
+export type QuickEmailState =
+  | { ok: null }
+  | { ok: true }
+  | { ok: false; errorCode: LeadFormErrorCode; fieldError?: LeadFieldErrorCode };
+
+export const initialQuickEmailState: QuickEmailState = { ok: null };

@@ -4,9 +4,11 @@
  * Step 1 inputs. Deliberately not a <form>: nothing is submitted here, the figures update as
  * the visitor types and the values travel to step 2 as hidden fields.
  *
- * The PIN code is optional: it narrows the tariff disclosure rather than changing any figure
- * estimate uses — and the pair of text fields sits in a <FieldRow> so the two inputs stay level
- * however their helper text wraps, and however long the PIN code's error message is.
+ * Order after the redesign (#14): property type, then PIN code and sanctioned load side by side,
+ * then the bill. The sanctioned load, read off the electricity bill, caps the system size in
+ * place of the old roof-area field. The PIN code is optional: it narrows the tariff disclosure
+ * rather than changing any figure. The pair of text fields sits in a <FieldRow> so the two inputs
+ * stay level however their helper text wraps, and however long the PIN code's error message is.
  *
  * Every word arrives as a prop. This is a client island, so importing a content module would
  * put both languages' copy in the browser bundle (scripts/check-client-content.ts).
@@ -45,8 +47,8 @@ export function EstimateControls({ copy }: { copy: EstimateControlsCopy }) {
     setPincode,
     touchPincode,
     pincodeError,
-    roofArea,
-    setRoofArea,
+    sanctionedLoad,
+    setSanctionedLoad,
   } = useEstimate();
   const bounds = billBounds(segment);
   const { controls } = copy;
@@ -61,21 +63,6 @@ export function EstimateControls({ copy }: { copy: EstimateControlsCopy }) {
         value={segment}
         onChange={(event) => setSegment(parseSegment(event.target.value))}
         columns={3}
-      />
-
-      <RangeField
-        id="estimate-bill"
-        name="estimate-bill"
-        label={controls.billLabel}
-        min={bounds.min}
-        max={bounds.max}
-        step={bounds.step}
-        value={monthlyBill}
-        onValueChange={setMonthlyBill}
-        formatValue={(value) => formatInr(value)}
-        minLabel={formatInr(bounds.min, { compact })}
-        maxLabel={formatInr(bounds.max, { compact })}
-        hint={controls.billHint}
       />
 
       <FieldRow gap="roomy">
@@ -98,19 +85,33 @@ export function EstimateControls({ copy }: { copy: EstimateControlsCopy }) {
         />
         <TextField
           className={fieldCellNoHelper}
-          id="estimate-roof"
-          name="estimate-roof"
-          label={controls.roofLabel}
-          optional
-          optionalLabel={copy.optionalMarker}
+          id="estimate-load"
+          name="estimate-load"
+          label={controls.loadLabel}
           type="text"
           inputMode="numeric"
           autoComplete="off"
-          maxLength={7}
-          value={roofArea}
-          onChange={(event) => setRoofArea(digits(event.target.value, 7))}
+          maxLength={4}
+          value={sanctionedLoad}
+          onChange={(event) => setSanctionedLoad(digits(event.target.value, 4))}
         />
       </FieldRow>
+
+      <RangeField
+        id="estimate-bill"
+        name="estimate-bill"
+        label={controls.billLabel}
+        min={bounds.min}
+        max={bounds.max}
+        step={bounds.step}
+        value={monthlyBill}
+        onValueChange={setMonthlyBill}
+        formatValue={(value) => formatInr(value)}
+        minLabel={formatInr(bounds.min, { compact })}
+        maxLabel={formatInr(bounds.max, { compact })}
+        hint={controls.billHint}
+      />
+
     </div>
   );
 }

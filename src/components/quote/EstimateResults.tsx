@@ -7,6 +7,10 @@
  * Every tile is marked `estimated` (brand PDF p.31): these are modelled numbers, never measured
  * ones, and the assumptions they rest on are one disclosure away.
  *
+ * Layout from the redesign (#14): the recommended system size leads in its own callout, with the
+ * roof area it needs, then three tiles — monthly savings, payback, and the subsidy or, where there
+ * is none, the indicative cost. Each engine note carries a small warning mark.
+ *
  * The figures do not wait for a PIN code. It changes none of them — see EstimateProvider — so
  * the bill alone produces a complete estimate, and the tiles carry a note saying which tariffs
  * were assumed until a PIN narrows it.
@@ -18,12 +22,13 @@
 
 import { TickerNumber } from "@/components/motion/TickerNumber";
 import type { ReactNode } from "react";
-import { ChevronDownIcon, StatTile } from "@/components/ui";
+import { ChevronDownIcon, NoteMark, StatTile } from "@/components/ui";
 import type { QuotePage } from "@/content/quote";
 import { describeAssumptions } from "@/lib/solar/assumptions";
 import type { EstimateFlag } from "@/lib/solar/calc";
+import { ROOF_SQFT_PER_KWP } from "@/lib/solar/constants";
+import { fill } from "@/i18n/format";
 import { formatInr } from "@/lib/solar/format";
-import { enIn } from "./copy";
 import { useEstimate } from "./EstimateProvider";
 
 interface Tile {
@@ -57,21 +62,17 @@ export function EstimateResults({ copy }: { copy: EstimateResultsCopy }) {
   const { estimate } = useEstimate();
   const { results } = copy;
 
-  const waiting: { id: string; label: string }[] = [
-    { id: "savings", label: results.savingsLabel },
-    { id: "payback", label: results.paybackLabel },
-    { id: "size", label: results.sizeLabel },
-    { id: "generation", label: results.generationLabel },
+  let tiles: Tile[] = [
+    { id: "savings", label: results.monthlySavingsLabel, value: formatInr(0) },
+    { id: "payback", label: results.paybackLabel, value: "0", unit: copy.units.years },
+    { id: "cost", label: results.indicativeCostLabel, value: formatInr(0) },
   ];
-
-  let tiles: Tile[] = waiting.map((tile) => ({ ...tile, value: "—" }));
   if (estimate) {
     tiles = [
       {
         id: "savings",
-        label: results.savingsLabel,
-        value: ticker(estimate.annualSavingsInr, (n) => formatInr(Math.round(n))),
-        note: results.savingsNote,
+        label: results.monthlySavingsLabel,
+        value: ticker(estimate.monthlySavingsInr, (n) => formatInr(Math.round(n))),
       },
       {
         id: "payback",
@@ -80,33 +81,19 @@ export function EstimateResults({ copy }: { copy: EstimateResultsCopy }) {
         value: estimate.paybackYears === null ? "—" : ticker(estimate.paybackYears, (n) => n.toFixed(1)),
         unit: estimate.paybackYears === null ? undefined : copy.units.years,
       },
-      {
-        id: "size",
-        label: results.sizeLabel,
-        value: ticker(estimate.systemKwp, (n) => n.toFixed(1)),
-        unit: copy.units.kwp,
-      },
-      {
-        id: "generation",
-        label: results.generationLabel,
-        value: ticker(estimate.annualGenerationKwh, (n) => enIn.format(Math.round(n))),
-        unit: copy.units.kwh,
-      },
+      estimate.subsidyInr > 0
+        ? {
+            id: "cost",
+            label: results.subsidyLabel,
+            value: ticker(estimate.subsidyInr, (n) => formatInr(Math.round(n))),
+            note: estimate.flags.includes("subsidy-house-count-unknown") ? results.subsidyNote : undefined,
+          }
+        : {
+            id: "cost",
+            label: results.indicativeCostLabel,
+            value: ticker(estimate.netCostInr, (n) => formatInr(Math.round(n))),
+          },
     ];
-    if (estimate.subsidyInr > 0) {
-      tiles.push({
-        id: "subsidy",
-        label: results.subsidyLabel,
-        value: ticker(estimate.subsidyInr, (n) => formatInr(Math.round(n))),
-        note: estimate.flags.includes("subsidy-house-count-unknown") ? results.subsidyNote : undefined,
-      });
-    }
-    // Payback already leads the block above; cost closes it.
-    tiles.push({
-      id: "cost",
-      label: estimate.subsidyInr > 0 ? results.netCostLabel : results.indicativeCostLabel,
-      value: ticker(estimate.netCostInr, (n) => formatInr(Math.round(n))),
-    });
   }
 
   return (
@@ -120,7 +107,22 @@ export function EstimateResults({ copy }: { copy: EstimateResultsCopy }) {
       <h2 className="font-label text-label text-on-dark-muted uppercase">{results.heading}</h2>
 
       <div aria-live="polite" className="mt-3">
-        <ul className="grid grid-cols-2 gap-3">
+        {estimate && (
+          <div className="mb-3 rounded-md border border-white/15 bg-teal-950 p-4">
+            <span className="block font-label text-label text-green-300 uppercase">{results.recommendedLabel}</span>
+            <span className="mt-2 flex items-baseline gap-1.5">
+              <span className="font-mono text-data-xl font-medium text-white tabular-nums">
+                <TickerNumber value={estimate.systemKwp} format={(n) => n.toFixed(1)} />
+              </span>
+              <span className="text-data text-green-300">{copy.units.kwp}</span>
+            </span>
+            <span className="mt-1 block text-small text-white/60">
+              {fill(results.roofNeeded, { sqft: String(Math.round(estimate.systemKwp * ROOF_SQFT_PER_KWP.value)) })}
+            </span>
+          </div>
+        )}
+
+        <ul className="grid grid-cols-1 gap-3 @sm:grid-cols-3">
           {tiles.map((tile) => (
             <StatTile
               as="li"
@@ -138,8 +140,9 @@ export function EstimateResults({ copy }: { copy: EstimateResultsCopy }) {
         {estimate !== null && estimate.flags.length > 0 && (
           <ul className="mt-4 grid gap-2">
             {estimate.flags.map((flag) => (
-              <li key={flag} className="text-small text-white/80">
-                {copy.flags[flag]}
+              <li key={flag} className="flex items-start gap-2 text-small text-white/80">
+                <NoteMark />
+                <span>{copy.flags[flag]}</span>
               </li>
             ))}
           </ul>

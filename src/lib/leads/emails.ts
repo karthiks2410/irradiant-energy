@@ -29,22 +29,51 @@ import { SEGMENT_LABELS } from "@/lib/solar/constants";
 import { formatInr } from "@/lib/solar/format";
 import type { Lead } from "./schema";
 
+const logoUrl = `${siteUrl}/images/email/ie-logo-white.png`;
+
 export interface EmailContent {
   subject: string;
   html: string;
   text: string;
 }
 
+/** A lead from either form. The quick-quote popup collects no email, so it is optional here. */
+export type EmailLead = Omit<Lead, "email"> & { email?: string };
+
 export interface LeadEmailContext {
-  lead: Lead;
+  lead: EmailLead;
   /** Short reference quoted in both emails and in logs. */
   reference: string;
   /** When the form carried a bill, the server-side recompute for the sales team. */
   estimate: Estimate | null;
   /** Submission time, shown as the consent timestamp. */
   submittedAt: Date;
-  /** The language the form was filled in; it decides the acknowledgement's language only. */
+  /** The language the form was filled in; it decides the customer email's language only. */
   locale: Locale;
+  /** Which form the lead came from, for the consent line. Defaults to the estimate form. */
+  source?: "estimate form" | "quick quote popup";
+  /**
+   * Quick-quote leads give a bill range, not a bill. When set, it replaces the monthly-bill value
+   * and the estimate is labelled as worked out at `representativeBillInr`, never as their bill.
+   * `label` is already in the email's language; `openEnded` marks the top range ("Over ₹8,000"),
+   * whose figures are a floor rather than a middle.
+   */
+  billRange?: { label: string; representativeBillInr: number; openEnded: boolean };
+}
+
+/** The internal alert's bill line (English). */
+function billValue(ctx: LeadEmailContext): string {
+  if (ctx.billRange) return ctx.billRange.label;
+  return ctx.lead.monthlyBill === undefined ? "not given" : formatInr(ctx.lead.monthlyBill);
+}
+
+/** The internal alert's note on which bill a range lead's figures were worked out at (English). */
+function alertRangeNote(ctx: LeadEmailContext): string | null {
+  if (!ctx.billRange) return null;
+  const { label, representativeBillInr, openEnded } = ctx.billRange;
+  return openEnded
+    ? `Worked out at ${formatInr(representativeBillInr)} a month, the lower edge of the "${label}" range, so treat these figures as a minimum.`
+    : `Worked out at ${formatInr(representativeBillInr)} a month, the middle of the ${label} range.`;
 }
 
 const COLOR = {
@@ -104,7 +133,7 @@ function layout(title: string, bodyHtml: string, footerHtml: string, lang: strin
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${COLOR.white};border:1px solid ${COLOR.mist};">
 <tr><td style="background:${COLOR.teal};padding:20px 28px;">
-<span style="font-size:18px;font-weight:700;letter-spacing:0.02em;color:${COLOR.white};">${escapeHtml(site.name)}</span>
+<img src="${logoUrl}" alt="${escapeHtml(site.name)}" width="240" height="57" style="display:block;border:0;outline:none;max-width:240px;height:auto;" />
 </td></tr>
 <tr><td style="padding:28px 28px 8px;font-size:16px;line-height:1.6;">
 ${bodyHtml}
@@ -178,23 +207,25 @@ function htmlTemplate(template: string, values: Readonly<Record<string, string>>
 /** Internal alert to LEAD_EMAIL. Carries the consent flags so sales act within them (17 §6.3). */
 export function renderLeadAlert(ctx: LeadEmailContext): EmailContent {
   const { lead, reference, estimate, submittedAt } = ctx;
+  const source = ctx.source ?? "estimate form";
+  const note = alertRangeNote(ctx);
   const segment = SEGMENT_LABELS[lead.segment];
   const customerWhatsapp = lead.whatsappOptIn ? `https://wa.me/${lead.phone.replace(/\D/g, "")}` : null;
 
   const contact: ReadonlyArray<readonly [string, string]> = [
     ["Name", lead.name],
     ["Phone", lead.phone],
-    ["Email", lead.email],
+    ["Email", lead.email ?? "not given — follow up by phone or WhatsApp"],
     ["WhatsApp opt-in", lead.whatsappOptIn ? "Yes" : "No — do not message on WhatsApp"],
     // Which language this enquiry was sent in, so whoever calls back knows what to expect and
     // can see that the acknowledgement they received was in that language too (§6.12).
     ["Language", ENQUIRY_LANGUAGE[ctx.locale]],
-    ["Consent to contact", `Given ${formatDate(submittedAt)} on the estimate form`],
+    ["Consent to contact", `Given ${formatDate(submittedAt)} on the ${source}`],
   ];
   const enquiry: ReadonlyArray<readonly [string, string]> = [
     ["Property", segment],
     ["PIN code", lead.pincode ?? "not given"],
-    ["Monthly bill", lead.monthlyBill === undefined ? "not given" : formatInr(lead.monthlyBill)],
+    ["Monthly bill", billValue(ctx)],
     ["Message", lead.message ?? "—"],
   ];
 
@@ -210,11 +241,11 @@ ${rows(contact)}
 ${rows(enquiry)}
 ${
   estimate
-    ? `<h2 style="margin:8px 0 0;font-size:16px;color:${COLOR.teal};">Estimate (recomputed on the server)</h2>${rows(estimateRows(estimate))}`
+    ? `<h2 style="margin:8px 0 0;font-size:16px;color:${COLOR.teal};">Estimate (recomputed on the server)</h2>${note ? `<p style="margin:4px 0 0;color:${COLOR.grey};font-size:14px;">${escapeHtml(note)}</p>` : ""}${rows(estimateRows(estimate))}`
     : ""
 }
 ${customerWhatsapp ? button("WhatsApp the customer", customerWhatsapp) : button("Call the customer", `tel:${lead.phone}`)}`,
-    `Sent automatically by the estimate form on ${escapeHtml(siteUrl)}. Replying to this email goes to the customer.`,
+    `Sent automatically by the ${source} on ${escapeHtml(siteUrl)}. ${lead.email ? "Replying to this email goes to the customer." : "The customer gave no email: reply by phone or WhatsApp."}`,
   );
 
   const text = [
@@ -225,27 +256,28 @@ ${customerWhatsapp ? button("WhatsApp the customer", customerWhatsapp) : button(
     "",
     "ENQUIRY",
     textRows(enquiry),
-    ...(estimate ? ["", "ESTIMATE (recomputed on the server)", textRows(estimateRows(estimate))] : []),
+    ...(estimate ? ["", "ESTIMATE (recomputed on the server)", ...(note ? [note] : []), textRows(estimateRows(estimate))] : []),
     "",
     customerWhatsapp ? `WhatsApp the customer: ${customerWhatsapp}` : `Call the customer: ${lead.phone}`,
     "",
-    `Sent automatically by the estimate form on ${siteUrl}. Replying to this email goes to the customer.`,
+    `Sent automatically by the ${source} on ${siteUrl}. ${lead.email ? "Replying to this email goes to the customer." : "The customer gave no email: reply by phone or WhatsApp."}`,
   ].join("\n");
 
   return { subject, html, text };
 }
 
 /**
- * One-time acknowledgement to the customer, in the language they filled the form in.
+ * The customer's email, in the language they filled the form in.
  *
- * No figures, no promises about timing, no free text from the form; a consent reference in the
- * footer (brand PDF p.70, 17 §6.3). Every sentence is a template from `content.quote.email`, so
- * the Kannada version is the reviewers' wording rather than an English sentence with the nouns
- * swapped — and the property type is named from `ui.calculator.segments`, the same words the
- * calculator used.
+ * With an estimate it is a quotation (PR #15): the headline figures in a card, and the subject line
+ * carries the size and net cost. Without one it is a plain acknowledgement. A popup lead's figures
+ * come from a bill range, so a note says which bill they were worked out at. Every sentence is a
+ * template from `content.quote.email`, so the Kannada version is the reviewers' wording rather
+ * than an English sentence with the nouns swapped. No free text from the form; a consent reference
+ * in the footer (brand PDF p.70, 17 §6.3).
  */
-export function renderCustomerAcknowledgement(ctx: LeadEmailContext): EmailContent {
-  const { lead, reference, submittedAt, locale = DEFAULT_LOCALE } = ctx;
+export function renderCustomerQuotation(ctx: LeadEmailContext): EmailContent {
+  const { lead, reference, estimate, submittedAt, locale = DEFAULT_LOCALE } = ctx;
   const content = getContent(locale);
   const copy = content.quote.email;
   const segmentLabel = content.ui.calculator.segments[lead.segment];
@@ -256,12 +288,21 @@ export function renderCustomerAcknowledgement(ctx: LeadEmailContext): EmailConte
   const firstName = lead.name.split(/\s+/)[0];
   const whatsappHref = customerWhatsappHref(reference, locale);
   const when = formatDate(submittedAt, copy.datetime);
+  const note = ctx.billRange
+    ? fill(ctx.billRange.openEnded ? copy.rangeNoteFloor : copy.rangeNoteMiddle, {
+        bill: formatInr(ctx.billRange.representativeBillInr),
+        range: ctx.billRange.label,
+      })
+    : null;
 
   const received: ReadonlyArray<readonly [string, string]> = [
     [copy.rowReference, reference],
     [copy.rowProperty, segmentLabel],
     [copy.rowPincode, lead.pincode ?? copy.notGiven],
-    [copy.rowMonthlyBill, lead.monthlyBill === undefined ? copy.notGiven : formatInr(lead.monthlyBill)],
+    [
+      copy.rowMonthlyBill,
+      ctx.billRange ? ctx.billRange.label : lead.monthlyBill === undefined ? copy.notGiven : formatInr(lead.monthlyBill),
+    ],
     [copy.rowWhatsapp, lead.whatsappOptIn ? copy.yes : copy.no],
   ];
 
@@ -269,7 +310,12 @@ export function renderCustomerAcknowledgement(ctx: LeadEmailContext): EmailConte
   const addressLine = isConfirmed(address.status) ? address.value.lines.join(", ") : null;
   const legalName = site.legal.entityName;
 
-  const subject = fill(copy.subjectLine, { reference });
+  const subject = estimate
+    ? fill(copy.subjectEstimate, { kwp: String(estimate.systemKwp), netCost: formatInr(estimate.netCostInr), reference })
+    : fill(copy.subjectLine, { reference });
+  const heading = fill(estimate ? copy.headingEstimate : copy.heading, { firstName });
+  const intro = fill(estimate ? copy.introEstimate : copy.intro, { segment });
+  const footer = ctx.source === "quick quote popup" ? copy.footerPopup : copy.footer;
 
   /**
    * "Call {phone} or email {email}." names both routes in one sentence, so it needs both. If
@@ -286,16 +332,20 @@ export function renderCustomerAcknowledgement(ctx: LeadEmailContext): EmailConte
     : "";
   const contactText = bothContacts ? fill(copy.contactLine, { phone: contact.phone!, email: contact.email! }) : "";
 
+  const card = estimate ? estimateCard(customerEstimateRows(estimate, copy), copy.estimateTitle, note) : "";
+
   const html = layout(
     subject,
-    `<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLOR.teal};">${escapeHtml(fill(copy.heading, { firstName }))}</h1>
-<p style="margin:0 0 12px;">${escapeHtml(fill(copy.intro, { segment }))}</p>
+    `<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${COLOR.teal};">${escapeHtml(heading)}</h1>
+<p style="margin:0 0 12px;">${escapeHtml(intro)}</p>
+${card}
+<h2 style="margin:${estimate ? "8" : "24"}px 0 8px;font-size:16px;color:${COLOR.teal};">${escapeHtml(copy.submittedTitle)}</h2>
 ${rows(received)}
-<p style="margin:0 0 4px;">${escapeHtml(copy.talkNow)}</p>
+<p style="margin:16px 0 4px;">${escapeHtml(copy.talkNow)}</p>
 ${button(copy.whatsappButton, whatsappHref)}
 ${contactHtml}
 <p style="margin:16px 0 0;color:${COLOR.grey};font-size:14px;">${escapeHtml(copy.disclaimer)}</p>`,
-    `<p style="margin:0 0 8px;">${htmlTemplate(copy.footer, {
+    `<p style="margin:0 0 8px;">${htmlTemplate(footer, {
       site: `<a href="${escapeHtml(siteUrl)}" style="color:${COLOR.green};">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a>`,
       datetime: escapeHtml(when),
     })}</p>
@@ -304,10 +354,12 @@ ${contactHtml}
   );
 
   const text = [
-    fill(copy.heading, { firstName }),
+    heading,
     "",
-    fill(copy.intro, { segment }),
+    intro,
     "",
+    ...(estimate ? [copy.estimateTitle.toUpperCase(), ...(note ? [note] : []), textRows(customerEstimateRows(estimate, copy)), ""] : []),
+    copy.submittedTitle.toUpperCase(),
     textRows(received),
     "",
     fill(copy.talkNowText, { whatsappUrl: whatsappHref }),
@@ -315,11 +367,44 @@ ${contactHtml}
     "",
     copy.disclaimer,
     "",
-    fill(copy.footer, { site: siteUrl, datetime: when }),
+    fill(footer, { site: siteUrl, datetime: when }),
     `${legalName ?? site.name}${addressLine ? ` · ${addressLine}` : ""}`,
   ].join("\n");
 
   return { subject, html, text };
+}
+
+type EmailCopy = ReturnType<typeof getContent>["quote"]["email"];
+
+/** The customer's estimate card rows, in the email's language. */
+function customerEstimateRows(estimate: Estimate, copy: EmailCopy): ReadonlyArray<readonly [string, string]> {
+  return [
+    [copy.rowSystemSize, `${estimate.systemKwp} kWp`],
+    [copy.rowCostBeforeSubsidy, formatInr(estimate.grossCostInr)],
+    [copy.rowSubsidy, formatInr(estimate.subsidyInr)],
+    [copy.rowNetCost, formatInr(estimate.netCostInr)],
+    [
+      copy.rowMonthlySavings,
+      fill(copy.savingsShare, {
+        amount: formatInr(estimate.monthlySavingsInr),
+        share: String(Math.round(estimate.savingsShareOfBill * 100)),
+      }),
+    ],
+    [copy.rowPayback, estimate.paybackYears === null ? "—" : fill(copy.paybackYears, { years: String(estimate.paybackYears) })],
+  ];
+}
+
+function estimateCard(pairs: ReadonlyArray<readonly [string, string]>, title: string, note: string | null): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:8px;background:${COLOR.canvas};border:1px solid ${COLOR.mist};">
+<tr><td style="padding:20px 24px;">
+<h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:${COLOR.teal};">${escapeHtml(title)}</h2>${note ? `<p style="margin:0 0 12px;color:${COLOR.grey};font-size:14px;">${escapeHtml(note)}</p>` : ""}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px;">${pairs
+    .map(
+      ([k, v], i) =>
+        `<tr><td style="padding:8px 0;${i < pairs.length - 1 ? `border-bottom:1px solid ${COLOR.mist};` : ""}color:${COLOR.grey};vertical-align:top;width:45%;">${escapeHtml(k)}</td><td style="padding:8px 0;${i < pairs.length - 1 ? `border-bottom:1px solid ${COLOR.mist};` : ""}vertical-align:top;font-weight:600;color:${COLOR.carbon};">${escapeHtml(v)}</td></tr>`,
+    )
+    .join("")}</table>
+</td></tr></table>`;
 }
 
 /**
@@ -330,4 +415,28 @@ ${contactHtml}
  */
 export function customerWhatsappHref(reference: string, locale: Locale = DEFAULT_LOCALE): string {
   return whatsappLink(fill(getContent(locale).quote.whatsappPrefill, { reference }));
+}
+
+/**
+ * Internal note when a quick-quote visitor later asks for their breakdown by email. The first
+ * alert had no address; this one carries it, matched by reference, and replying reaches them.
+ * English, like every internal email.
+ */
+export function renderQuickEmailNote(reference: string, name: string, email: string): EmailContent {
+  const subject = `Email added to ${reference}`;
+  const line = `${name} asked for their estimate by email. Their address is below; replying to this email goes to them.`;
+  const pairs: ReadonlyArray<readonly [string, string]> = [
+    ["Reference", reference],
+    ["Name", name],
+    ["Email", email],
+  ];
+  const html = layout(
+    subject,
+    `<h1 style="margin:0 0 8px;font-size:22px;line-height:1.3;color:${COLOR.teal};">Email added to ${escapeHtml(reference)}</h1>
+<p style="margin:0 0 12px;">${escapeHtml(line)}</p>
+${rows(pairs)}`,
+    `Sent automatically by the quick quote popup on ${escapeHtml(siteUrl)}.`,
+  );
+  const text = [subject, "", line, "", textRows(pairs), "", `Sent automatically by the quick quote popup on ${siteUrl}.`].join("\n");
+  return { subject, html, text };
 }

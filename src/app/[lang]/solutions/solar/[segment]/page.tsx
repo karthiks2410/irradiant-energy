@@ -141,6 +141,7 @@ export default async function SegmentPage({ params }: SegmentPageProps) {
         // The hero's own estimate button: same label, same `?segment=` href (shared.ts heroCtas).
         primary={data.hero.cta}
         whatsappText={content.solutionsShared.whatsappPrompts[slug].text}
+        siteVisit
       />
     </>
   );

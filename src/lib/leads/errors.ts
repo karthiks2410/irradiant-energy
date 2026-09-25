@@ -30,6 +30,8 @@ export const LEAD_FIELD_ERROR_CODES = [
   "monthlyBill.tooLarge",
   "message.tooLong",
   "consent.required",
+  /** Quick-quote popup: no bill range chosen. */
+  "billBucket.required",
 ] as const;
 
 export type LeadFieldErrorCode = (typeof LEAD_FIELD_ERROR_CODES)[number];

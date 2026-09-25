@@ -22,16 +22,20 @@
  *   slabs (home) or the flat default (society and business), both named under "Assumptions".
  *   The engine keeps that input in its API — it is simply no longer offered to visitors.
  * - the fields sit in <FieldRow>s so the inputs line up whatever the helper text says.
+ *
+ * Redesign (#14): the bill is typed, the sanctioned load from the bill is required and caps the
+ * size, a society gives its number of homes, and the recommended system leads in its own
+ * callout above three tiles. Every engine note carries a small warning mark.
  */
 
 import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
-import { enIn, parseSegment } from "@/components/quote/copy";
+import { parseSegment } from "@/components/quote/copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "@/components/quote/FieldRow";
-import { ChevronDownIcon, SelectField, StatTile, TextField } from "@/components/ui";
+import { ChevronDownIcon, NoteMark, SelectField, StatTile, TextField } from "@/components/ui";
 import { fill } from "@/i18n/format";
 import { describeAssumptions, type AssumptionCopy } from "@/lib/solar/assumptions";
 import { buildEstimate, type EstimateFlag } from "@/lib/solar/calc";
-import { SEGMENTS, type Segment } from "@/lib/solar/constants";
+import { ROOF_SQFT_PER_KWP, SEGMENTS, type Segment } from "@/lib/solar/constants";
 import { TickerNumber } from "@/components/motion/TickerNumber";
 import { useHomeEstimate } from "./HomeEstimateProvider";
 import { formatInr } from "@/lib/solar/format";
@@ -49,9 +53,10 @@ const PINCODE_RE = /(?:^|\D)([1-9][0-9]{5})(?!\d)/;
 export type CalculatorUi = {
   pincodePlaceholder: string;
   pincodeError: string;
-  /** "Over {years} years" — the horizon is a hole, because Kannada puts it first. */
-  savingsNote: string;
+  /** Under the payback tile when a subsidy is counted in it. */
   subsidyNote: string;
+  /** "~{sqft} sq ft of roof" under the recommended size. */
+  roofNeeded: string;
   yearsUnit: string;
   kwpUnit: string;
   kwhUnit: string;
@@ -80,14 +85,13 @@ const ticker = (value: number, format: (n: number) => string) => (
 );
 
 export type HomeCalculatorPanelProps = {
-  fields: Record<"segment" | "location" | "bill" | "roof" | "houses", FieldCopy>;
-  results: { title: string; size: string; generation: string; savings: string; payback: string };
+  fields: Record<"segment" | "location" | "bill" | "load" | "houses", FieldCopy>;
+  results: { title: string; size: string; savings: string; payback: string; subsidy: string; cost: string };
   assumptionsLabel: string;
   disclaimer: string;
   /**
    * The templates behind the assumptions panel. The engine returns keys and figures, never
-   * prose (src/lib/solar/calc.ts), so the words for them have to arrive with the rest of the
-   * copy rather than out of the estimate.
+   * prose (src/lib/solar/calc.ts), so the words for them arrive with the rest of the copy.
    */
   assumptions: AssumptionCopy;
   ui: CalculatorUi;
@@ -110,61 +114,62 @@ export function HomeCalculatorPanel({
   // Segment, bill and PIN come from the page-level provider, so the hero's estimate entry and
   // this panel are working on the same numbers rather than two copies of them.
   const { segment, setSegment, bill, setBill, location, setLocation } = useHomeEstimate();
-  /** The error waits for the visitor to leave the field: an empty form is not a mistake yet. */
   const [locationTouched, setLocationTouched] = useState(false);
-  const [roofArea, setRoofArea] = useState("");
+  const [sanctionedLoad, setSanctionedLoad] = useState("");
   const [houses, setHouses] = useState("");
 
   const pincode = PINCODE_RE.exec(location)?.[1];
 
   const estimate = useMemo(
-    () =>
-      buildEstimate({
-        segment,
-        // Optional: it narrows the tariff note rather than changing a figure. A half-typed one
-        // is withheld so the engine does not resolve the wrong band.
-        pincode,
-        monthlyBillInr: positive(bill),
-        roofAreaSqft: positive(roofArea),
-        houses: segment === "housing-society" ? positive(houses) : undefined,
-      }),
-    [segment, pincode, bill, roofArea, houses],
+    () => {
+      const loadKw = positive(sanctionedLoad);
+      return loadKw !== undefined
+        ? buildEstimate({
+            segment,
+            pincode,
+            monthlyBillInr: positive(bill),
+            sanctionedLoadKw: loadKw,
+            houses: segment === "housing-society" ? positive(houses) : undefined,
+          })
+        : null;
+    },
+    [segment, pincode, bill, sanctionedLoad, houses],
   );
 
-  // The provider resets the bill to the new segment's typical value; see HomeEstimateProvider.
   const changeSegment = (event: ChangeEvent<HTMLSelectElement>) => setSegment(parseSegment(event.target.value));
 
   const payback = estimate?.paybackYears ?? null;
+
   const tiles: Tile[] = estimate
     ? [
-        // Money and payback first, as on /get-quote: the two figures a visitor came for should
-        // not be third and fourth.
         {
           label: results.savings,
-          value: ticker(estimate.projection.cumulativeSavingsInr, (n) => formatInr(Math.round(n))),
-          note: fill(ui.savingsNote, { years: estimate.projection.horizonYears }),
+          value: ticker(estimate.monthlySavingsInr, (n) => formatInr(Math.round(n))),
         },
         {
           label: results.payback,
-          // Payback can be genuinely unavailable, and an em dash is not a number to count to.
           value: payback === null ? "—" : ticker(payback, (n) => n.toFixed(1)),
           unit: payback === null ? undefined : ui.yearsUnit,
           note: estimate.subsidyInr > 0 ? ui.subsidyNote : undefined,
         },
-        { label: results.size, value: ticker(estimate.systemKwp, (n) => n.toFixed(1)), unit: ui.kwpUnit },
-        {
-          label: results.generation,
-          value: ticker(estimate.annualGenerationKwh, (n) => enIn.format(Math.round(n))),
-          unit: ui.kwhUnit,
-        },
+        estimate.subsidyInr > 0
+          ? {
+              label: results.subsidy,
+              value: ticker(estimate.subsidyInr, (n) => formatInr(Math.round(n))),
+            }
+          : {
+              label: results.cost,
+              value: ticker(estimate.netCostInr, (n) => formatInr(Math.round(n))),
+            },
       ]
-    : // Placeholders, so the panel keeps its shape while it waits for a PIN code and nothing
-      // reads as a figure: no value, and no "(estimated)" label on an empty tile.
-      [results.savings, results.payback, results.size, results.generation].map((label) => ({ label, value: "—" }));
+    : [
+        { label: results.savings, value: formatInr(0) },
+        { label: results.payback, value: "0", unit: ui.yearsUnit },
+        { label: results.cost, value: formatInr(0) },
+      ];
 
   return (
     <div className={`p-[22px] md:p-6 ${className}`}>
-      {/* Not a <form>: nothing is submitted here. The figures follow what is typed. */}
       <div className="grid gap-4">
         <FieldRow>
           <SelectField
@@ -182,17 +187,15 @@ export function HomeCalculatorPanel({
             id="home-calc-location"
             name="home-calc-location"
             label={fields.location.label}
-            optional
-            optionalLabel={optionalMarker}
             hint={fields.location.hint}
             required
             type="text"
-            inputMode="text"
+            inputMode="numeric"
             autoComplete="postal-code"
-            maxLength={48}
+            maxLength={6}
             placeholder={ui.pincodePlaceholder}
             value={location}
-            onChange={(event) => setLocation(event.target.value)}
+            onChange={(event) => setLocation(digitsOnly(event.target.value, 6))}
             onBlur={() => setLocationTouched(true)}
             error={locationTouched && pincode === undefined ? ui.pincodeError : undefined}
           />
@@ -216,18 +219,16 @@ export function HomeCalculatorPanel({
 
           <TextField
             className={fieldCell}
-            id="home-calc-roof"
-            name="home-calc-roof"
-            label={fields.roof.label}
-            hint={fields.roof.hint}
-            optional
-            optionalLabel={optionalMarker}
+            id="home-calc-load"
+            name="home-calc-load"
+            label={fields.load.label}
+            hint={fields.load.hint}
             type="text"
             inputMode="numeric"
             autoComplete="off"
-            maxLength={7}
-            value={roofArea}
-            onChange={(event) => setRoofArea(digitsOnly(event.target.value, 7))}
+            maxLength={4}
+            value={sanctionedLoad}
+            onChange={(event) => setSanctionedLoad(digitsOnly(event.target.value, 4))}
           />
         </FieldRow>
 
@@ -251,9 +252,24 @@ export function HomeCalculatorPanel({
 
       <h3 className="mt-7 font-label text-label text-grey-600 uppercase">{results.title}</h3>
 
-      {/* Polite, so the figures are announced once the visitor stops typing rather than per keystroke. */}
       <div aria-live="polite" className="mt-3">
-        <ul className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
+        {/* Promoted system size callout */}
+        {estimate && (
+          <div className="mb-3 rounded-md border border-green-600/20 bg-soft-green p-4">
+            <span className="block font-label text-label text-green-700 uppercase">{results.size}</span>
+            <span className="mt-2 flex items-baseline gap-1.5">
+              <span className="font-mono text-data-xl font-medium tabular-nums text-carbon">
+                <TickerNumber value={estimate.systemKwp} format={(n) => n.toFixed(1)} />
+              </span>
+              <span className="text-data text-green-700">{ui.kwpUnit}</span>
+            </span>
+            <span className="mt-1 block text-small text-grey-600">
+              {fill(ui.roofNeeded, { sqft: String(Math.round(estimate.systemKwp * ROOF_SQFT_PER_KWP.value)) })}
+            </span>
+          </div>
+        )}
+
+        <ul className="grid grid-cols-3 gap-2.5">
           {tiles.map((tile) => (
             <StatTile
               as="li"
@@ -263,9 +279,6 @@ export function HomeCalculatorPanel({
               unit={tile.unit}
               note={tile.note}
               estimated={estimate !== null}
-              // The block's own heading already says estimate and the disclaimer says it again;
-              // repeating it on every tile reads as doubt rather than candour. The dashed rule
-              // under each figure is the brand's mark for a modelled number (brand PDF p.31).
               labelEstimated={false}
             />
           ))}
@@ -274,8 +287,9 @@ export function HomeCalculatorPanel({
         {estimate !== null && estimate.flags.length > 0 && (
           <ul className="mt-4 grid gap-2">
             {estimate.flags.map((flag) => (
-              <li key={flag} className="text-small text-ink-2">
-                {ui.flags[flag]}
+              <li key={flag} className="flex items-start gap-2 text-small text-ink-2">
+                <NoteMark />
+                <span>{ui.flags[flag]}</span>
               </li>
             ))}
           </ul>

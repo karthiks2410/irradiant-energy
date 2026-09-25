@@ -7,6 +7,7 @@ import { EstimateResults } from "@/components/quote/EstimateResults";
 import { fillTags } from "@/components/quote/template";
 import { LeadForm } from "@/components/quote/LeadForm";
 import { mailConfigured } from "@/lib/env.server";
+import { Reveal } from "@/components/motion/Reveal";
 import { MobileSummaryBar } from "@/components/quote/MobileSummaryBar";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { Accent, Card, Eyebrow, Section, SectionHeading } from "@/components/ui";
@@ -76,7 +77,7 @@ export default async function GetQuotePage({
     <EstimateProvider initialSegment={initialSegment} pincodeError={quote.controls.pincodeError}>
       <BreadcrumbJsonLd items={[{ name: quote.breadcrumb.current, path: "/get-quote" }]} />
 
-      <Section surface="canvas" containerClassName="grid-page items-start gap-y-12">
+      <Section surface="canvas" containerClassName="emerge grid-page items-start gap-y-12">
         <nav aria-label={quote.breadcrumb.navLabel} className="col-span-4 md:col-span-8 lg:col-span-12">
           <ol className="flex flex-wrap items-center gap-2 text-small text-grey-600">
             <li>
@@ -98,7 +99,7 @@ export default async function GetQuotePage({
         */}
         <div
           data-surface="dark"
-          className="col-span-4 rounded-lg bg-teal-900 p-6 sm:p-8 md:col-span-8 lg:col-span-5"
+          className="@container col-span-4 rounded-lg bg-teal-900 p-6 sm:p-8 md:col-span-8 lg:col-span-5"
         >
           {/* Owner-approved prototype copy (D-009): calc.eyebrow and calc.title, verbatim. */}
           <Eyebrow tone="signal">{quote.hero.eyebrow}</Eyebrow>
@@ -144,7 +145,7 @@ export default async function GetQuotePage({
         aria-labelledby="lead-form-heading"
         containerClassName="grid-page items-start gap-y-12"
       >
-        <div className="col-span-4 md:col-span-8 lg:col-span-7">
+        <Reveal className="col-span-4 md:col-span-8 lg:col-span-7">
           <SectionHeading
             id="lead-form-heading"
             eyebrow={quote.step2.eyebrow}
@@ -164,9 +165,9 @@ export default async function GetQuotePage({
               locale={locale}
             />
           </div>
-        </div>
+        </Reveal>
 
-        <aside className="col-span-4 md:col-span-8 lg:col-span-4 lg:col-start-9">
+        <Reveal as="aside" delay={0.08} className="col-span-4 md:col-span-8 lg:col-span-4 lg:col-start-9">
           <Card padding="lg">
             <h2 className="font-display text-h4 font-semibold text-carbon">{quote.aside.heading}</h2>
             <ul className="mt-4 grid gap-3 text-body text-ink-2">
@@ -192,7 +193,7 @@ export default async function GetQuotePage({
               </li>
             </ul>
           </Card>
-        </aside>
+        </Reveal>
       </Section>
 
       <MobileSummaryBar targetId="lead-form" copy={{ summary: quote.summary, format: quote.format }} />

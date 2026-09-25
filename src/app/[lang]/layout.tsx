@@ -3,6 +3,8 @@ import { IBM_Plex_Mono, Inter } from "next/font/google";
 import { ConsentManager } from "@/components/consent";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { WhatsAppBubble } from "@/components/ui/WhatsAppBubble";
+import { QuickQuoteDialog } from "@/components/quote/QuickQuote";
+import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { UiProvider } from "@/components/i18n/UiProvider";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
@@ -118,6 +120,15 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
           <SiteFooter content={content} />
           {/* Consent UI mounts last: it renders nothing until a choice is needed. */}
           <WhatsAppBubble label={content.ui.whatsappBubble.srLabel} />
+          <QuickQuoteDialog
+            copy={{
+              ...content.ui.quickQuote,
+              fieldErrors: content.quote.form.fieldErrors,
+              formErrors: content.quote.form.formErrors,
+              segmentNames: content.ui.calculator.segments,
+            }}
+          />
+          <ScrollReveal />
           <ConsentManager />
           <SmoothScroll />
           <JsonLd />

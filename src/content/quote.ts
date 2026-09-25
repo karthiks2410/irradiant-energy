@@ -91,7 +91,8 @@ export const quotePage = {
     pincodeHint: "Confirms which supplier serves you.",
     /** PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Validation microcopy; it makes no claim. */
     pincodeError: "Enter a 6-digit PIN code, for example 560001.",
-    roofLabel: "Usable roof area (sq ft)",
+    /** The redesign (#14) sizes from the sanctioned load on the bill, in place of roof area. */
+    loadLabel: "Sanctioned load (kW)",
   },
 
   /** What each property type is, under its own label (which `ui.calculator.segments` carries). */
@@ -109,15 +110,14 @@ export const quotePage = {
    */
   results: {
     heading: "Your estimate",
-    savingsLabel: "Annual savings",
-    savingsNote: "Year one",
+    /** The redesign (#14) leads with the system size in its own callout, then three tiles. */
+    recommendedLabel: "Recommended system",
+    roofNeeded: "~{sqft} sq ft of roof",
+    monthlySavingsLabel: "Monthly savings",
     paybackLabel: "Payback",
-    sizeLabel: "System size",
-    generationLabel: "Annual generation",
     subsidyLabel: "PM Surya Ghar subsidy",
     /** Shown when the society subsidy was computed without a house count. */
     subsidyNote: "Upper limit",
-    netCostLabel: "Net cost after subsidy",
     indicativeCostLabel: "Indicative cost",
     assumptionsLabel: "Assumptions",
     /**
@@ -298,6 +298,8 @@ export const quotePage = {
       "monthlyBill.tooLarge": "That bill looks too large",
       "message.tooLong": "Keep your message under {max} characters",
       "consent.required": "Please agree so we can contact you about this enquiry",
+      /** Quick-quote popup only. */
+      "billBucket.required": "Choose your monthly bill",
     },
 
     formErrors: {
@@ -317,9 +319,28 @@ export const quotePage = {
   email: {
     /** Not `subject`: `subject` is a FIXED_KEY and would be stripped from the overlay. */
     subjectLine: "We have your solar enquiry ({reference})",
+    /** With an estimate the email is a quotation (PR #15): its subject carries the headline figures. */
+    subjectEstimate: "Your solar estimate: {kwp} kWp at {netCost} ({reference})",
     heading: "Thanks, {firstName}. We have your enquiry.",
+    headingEstimate: "Thanks, {firstName}. Here’s your solar estimate.",
     intro:
-      "You asked about rooftop solar for your {segment}. We will review the details below and get in touch to arrange the next step, usually a site visit so the final system size and figures can be confirmed.",
+      "You asked about rooftop solar for your {segment}. We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.",
+    introEstimate:
+      "You asked about rooftop solar for your {segment}. Below are the indicative figures based on what you told us. We will review the details and get in touch to arrange a site visit so the final system size and figures can be confirmed.",
+    estimateTitle: "Your solar estimate",
+    rowSystemSize: "System size",
+    rowCostBeforeSubsidy: "Cost before subsidy",
+    rowSubsidy: "PM Surya Ghar subsidy",
+    rowNetCost: "Net cost (after subsidy)",
+    rowMonthlySavings: "Monthly savings",
+    savingsShare: "{amount} ({share}% of your bill)",
+    rowPayback: "Simple payback",
+    paybackYears: "~{years} years",
+    /** Popup leads give a bill range; this says which bill their figures were worked out at. */
+    rangeNoteMiddle: "Worked out at {bill} a month, the middle of the {range} range. A site visit confirms the real figures.",
+    rangeNoteFloor:
+      "Worked out at {bill} a month, the lower edge of the “{range}” range, so treat these figures as a minimum. A site visit confirms the real figures.",
+    submittedTitle: "What you submitted",
     rowReference: "Reference",
     rowProperty: "Property",
     rowPincode: "PIN code",
@@ -335,7 +356,10 @@ export const quotePage = {
     disclaimer:
       "Any figures shown by the calculator on our website are estimates, not a quote or a guarantee. Subsidies are decided and paid by the Government after DISCOM inspection.",
     footer:
-      "You are receiving this one-time acknowledgement because you submitted the estimate form on {site} on {datetime} and agreed to be contacted about this enquiry. It is not a marketing email.",
+      "You are receiving this because you submitted the estimate form on {site} on {datetime} and agreed to be contacted about this enquiry. It is not a marketing email.",
+    /** The popup's email is one the visitor asked for after seeing their figures. */
+    footerPopup:
+      "You are receiving this because you asked us to email your estimate on {site} on {datetime}. It is not a marketing email.",
     /** Timestamps are en-IN in both locales (§6.7); only the zone suffix is copy. */
     datetime: "{datetime} IST",
     source: "brand PDF p.70 · 17 §6.3 (consent record) · report §11 (disclaimer)",

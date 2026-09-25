@@ -111,5 +111,10 @@ type CardGridProps = {
 };
 
 export function CardGrid({ columns = 3, as: Tag = "ul", className = "", children }: CardGridProps) {
-  return <Tag className={`grid gap-x-(--grid-gutter) gap-y-6 ${columnClasses[columns]} ${className}`}>{children}</Tag>;
+  // Cards arrive one after another as the grid scrolls into view (components/motion/ScrollReveal.tsx).
+  return (
+    <Tag data-reveal-children="stagger" className={`grid gap-x-(--grid-gutter) gap-y-6 ${columnClasses[columns]} ${className}`}>
+      {children}
+    </Tag>
+  );
 }

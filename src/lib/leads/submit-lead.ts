@@ -15,11 +15,20 @@ import { after } from "next/server";
 import { Resend } from "resend";
 import { site } from "@/content/site";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/i18n/config";
-import { customerWhatsappHref, renderCustomerAcknowledgement, renderLeadAlert } from "@/lib/leads/emails";
+import { getContent } from "@/i18n/content";
+import {
+  customerWhatsappHref,
+  renderCustomerQuotation,
+  renderLeadAlert,
+  renderQuickEmailNote,
+  type EmailLead,
+} from "@/lib/leads/emails";
 import { hashEmailDomain, logLeadEvent } from "@/lib/leads/log";
 import { checkLeadRateLimit } from "@/lib/leads/rate-limit";
-import { parseLeadForm } from "@/lib/leads/schema";
-import type { LeadActionState, LeadFormValues } from "@/lib/leads/state";
+import { findBucket, labelFor, quickEstimate, summarise } from "@/lib/leads/quick";
+import type { LeadFieldErrorCode } from "@/lib/leads/errors";
+import { parseLeadForm, parseQuickLead, quickEmailSchema } from "@/lib/leads/schema";
+import type { LeadActionState, LeadFormValues, QuickEmailState, QuickQuoteState } from "@/lib/leads/state";
 import { buildEstimate, type Estimate } from "@/lib/solar/calc";
 
 // The action-state contract (LeadActionState, initialLeadState) is exported from
@@ -119,9 +128,8 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
           segment: lead.segment,
           pincode: lead.pincode,
           monthlyBillInr: lead.monthlyBill,
-          // Carried from the calculator: it caps the system size, so leaving it out would put a
-          // larger system in the sales alert than the visitor saw on screen.
           roofAreaSqft: lead.roofAreaSqft,
+          sanctionedLoadKw: lead.sanctionedLoadKw,
         });
   const context = { lead, reference, estimate, submittedAt: new Date(), locale };
   const resend = new Resend(apiKey);
@@ -153,7 +161,7 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
 
   // The visitor does not need to wait for their acknowledgement; a failure only gets logged.
   after(async () => {
-    const ack = renderCustomerAcknowledgement(context);
+    const ack = renderCustomerQuotation(context);
     const ackResult = await send(resend, {
       from: `${site.name} <${EMAIL_FROM}>`,
       to: lead.email,
@@ -256,4 +264,228 @@ function echoValues(formData: FormData): LeadFormValues {
     whatsappOptIn: formData.get("whatsappOptIn") !== null,
     consent: formData.get("consent") !== null,
   };
+}
+
+/* ---------------------------------------------------------------------------
+   Quick quote popup
+
+   Same pipeline as the estimate form — validation, rate limit, the sales alert as the only record,
+   PII-free logs, error CODES rather than sentences — with two differences: no email is collected,
+   and the bill is a range. The visitor sees the estimate as ranges straight away, in their
+   language; the sales alert carries one representative figure, says which one, and stays English.
+   --------------------------------------------------------------------------- */
+
+export async function submitQuickQuote(_prev: QuickQuoteState, formData: FormData): Promise<QuickQuoteState> {
+  try {
+    return await handleQuickQuote(formData);
+  } catch (err) {
+    logLeadEvent("error", "lead_action_failed", {
+      errorName: err instanceof Error ? err.name : "unknown",
+      errorStatus: null,
+    });
+    return { ok: false, errorCode: "send" };
+  }
+}
+
+async function handleQuickQuote(formData: FormData): Promise<QuickQuoteState> {
+  const locale = localeOf(formData);
+  const parsed = parseQuickLead(formData);
+  const reference = newReference();
+
+  if (parsed.kind === "spam") {
+    logLeadEvent("warn", "lead_spam_dropped", { reference });
+    return { ok: false, errorCode: "send" };
+  }
+  if (parsed.kind === "too-fast") {
+    logLeadEvent("warn", "lead_too_fast", { reference });
+    return { ok: false, errorCode: "tooFast" };
+  }
+  if (parsed.kind === "invalid") {
+    return { ok: false, errorCode: "invalid", fieldErrors: parsed.fieldErrors };
+  }
+  const quick = parsed.lead;
+
+  const decision = await checkLeadRateLimit(await clientIp());
+  if (!decision.allowed) {
+    logLeadEvent("warn", "lead_rate_limited", { reference, retryAfterSeconds: decision.retryAfterSeconds });
+    return { ok: false, errorCode: "rateLimited" };
+  }
+
+  // The schema already checked the bucket belongs to the segment.
+  const bucket = findBucket(quick.segment, quick.billBucket)!;
+  const estimate = quickEstimate(quick.segment, bucket, quick.pincode);
+  const words = getContent(locale).ui.quickQuote.ranges;
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    // Local development without mail keys: show the result and send nothing, so the whole popup
+    // can be clicked through on a laptop. NODE_ENV is "production" under `next start` and on every
+    // Vercel build, so a deployed site never takes this branch.
+    if (process.env.NODE_ENV !== "production") {
+      logLeadEvent("info", "lead_dry_run", { reference });
+      return {
+        ok: true,
+        reference,
+        whatsappHref: customerWhatsappHref(reference, locale),
+        summary: summarise(quick.segment, quick.billBucket, estimate, words),
+      };
+    }
+    logLeadEvent("error", "lead_email_unconfigured", { reference });
+    return { ok: false, errorCode: "send", whatsappHref: customerWhatsappHref(reference, locale), reference };
+  }
+
+  const lead: EmailLead = {
+    name: quick.name,
+    phone: quick.phone,
+    segment: quick.segment,
+    pincode: quick.pincode,
+    consent: quick.consent,
+    // The popup asks for a WhatsApp number and its consent names WhatsApp, so this is given.
+    whatsappOptIn: true,
+    website: undefined,
+    startedAt: quick.startedAt,
+  };
+  const context = {
+    lead,
+    reference,
+    estimate: estimate.representative,
+    submittedAt: new Date(),
+    // The alert is English whatever the page language, so its bill range is written in English.
+    locale,
+    source: "quick quote popup" as const,
+    billRange: {
+      label: labelFor(quick.segment, quick.billBucket)!,
+      representativeBillInr: estimate.representativeBillInr,
+      openEnded: bucket.max === null,
+    },
+  };
+
+  const alert = renderLeadAlert(context);
+  const alertResult = await send(new Resend(apiKey), {
+    from: `${site.name} <${EMAIL_FROM}>`,
+    to: LEAD_EMAIL,
+    subject: alert.subject,
+    html: alert.html,
+    text: alert.text,
+    idempotencyKey: `lead-alert/${reference}`,
+  });
+  const logFields = { reference, segment: quick.segment, engineVersion: estimate.representative.engineVersion };
+  if (!alertResult.ok) {
+    logLeadEvent("error", "lead_alert_failed", { ...logFields, ...alertResult.error });
+    return { ok: false, errorCode: "send", whatsappHref: customerWhatsappHref(reference, locale), reference };
+  }
+  logLeadEvent("info", "lead_alert_sent", logFields);
+
+  return {
+    ok: true,
+    reference,
+    whatsappHref: customerWhatsappHref(reference, locale),
+    summary: summarise(quick.segment, quick.billBucket, estimate, words),
+  };
+}
+
+/**
+ * The popup's optional second step. Nothing stores the first step, so the visitor's own fields come
+ * back with the reference; they are re-validated like any other input. Only the customer email, in
+ * the visitor's language, and a short English note to sales are sent — both about this enquiry.
+ */
+export async function emailQuickQuote(_prev: QuickEmailState, formData: FormData): Promise<QuickEmailState> {
+  try {
+    const locale = localeOf(formData);
+    const raw = Object.fromEntries(
+      ["reference", "name", "segment", "pincode", "billBucket", "email"].map((key) => {
+        const value = formData.get(key);
+        return [key, typeof value === "string" ? value : undefined];
+      }),
+    );
+    const parsed = quickEmailSchema.safeParse(raw);
+    if (!parsed.success) {
+      const emailIssue = parsed.error.issues.find((issue) => issue.path[0] === "email");
+      return emailIssue
+        ? { ok: false, errorCode: "invalid", fieldError: emailIssue.message as LeadFieldErrorCode }
+        : { ok: false, errorCode: "send" };
+    }
+    const request = parsed.data;
+
+    const decision = await checkLeadRateLimit(await clientIp());
+    if (!decision.allowed) {
+      logLeadEvent("warn", "lead_rate_limited", { reference: request.reference, retryAfterSeconds: decision.retryAfterSeconds });
+      return { ok: false, errorCode: "rateLimited" };
+    }
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      // Same local dry run as submitQuickQuote: nothing is sent.
+      if (process.env.NODE_ENV !== "production") {
+        logLeadEvent("info", "lead_dry_run", { reference: request.reference });
+        return { ok: true };
+      }
+      logLeadEvent("error", "lead_email_unconfigured", { reference: request.reference });
+      return { ok: false, errorCode: "send" };
+    }
+
+    const bucket = findBucket(request.segment, request.billBucket)!;
+    const estimate = quickEstimate(request.segment, bucket, request.pincode);
+    const words = getContent(locale).ui.quickQuote.ranges;
+    const context = {
+      lead: {
+        name: request.name,
+        phone: "",
+        email: request.email,
+        segment: request.segment,
+        pincode: request.pincode,
+        consent: true as const,
+        whatsappOptIn: true,
+        website: undefined,
+        startedAt: 0,
+      },
+      reference: request.reference,
+      estimate: estimate.representative,
+      submittedAt: new Date(),
+      locale,
+      source: "quick quote popup" as const,
+      // The customer's email names the range in their own language.
+      billRange: {
+        label: labelFor(request.segment, request.billBucket, words)!,
+        representativeBillInr: estimate.representativeBillInr,
+        openEnded: bucket.max === null,
+      },
+    };
+    const resend = new Resend(apiKey);
+    const logFields = { reference: request.reference, segment: request.segment, emailDomainHash: hashEmailDomain(request.email) };
+
+    const quotation = renderCustomerQuotation(context);
+    const sent = await send(resend, {
+      from: `${site.name} <${EMAIL_FROM}>`,
+      to: request.email,
+      subject: quotation.subject,
+      html: quotation.html,
+      text: quotation.text,
+      idempotencyKey: `lead-ack/${request.reference}`,
+    });
+    if (!sent.ok) {
+      logLeadEvent("warn", "lead_ack_failed", { ...logFields, ...sent.error });
+      return { ok: false, errorCode: "send" };
+    }
+    logLeadEvent("info", "lead_ack_sent", logFields);
+
+    // Sales already has the enquiry; this only adds the address. A failure here is logged, not shown.
+    after(async () => {
+      const note = renderQuickEmailNote(request.reference, request.name, request.email);
+      const result = await send(resend, {
+        from: `${site.name} <${EMAIL_FROM}>`,
+        to: LEAD_EMAIL,
+        replyTo: request.email,
+        subject: note.subject,
+        html: note.html,
+        text: note.text,
+        idempotencyKey: `lead-email-note/${request.reference}`,
+      });
+      if (!result.ok) logLeadEvent("warn", "lead_alert_failed", { ...logFields, ...result.error });
+    });
+
+    return { ok: true };
+  } catch (err) {
+    logLeadEvent("error", "lead_action_failed", { errorName: err instanceof Error ? err.name : "unknown", errorStatus: null });
+    return { ok: false, errorCode: "send" };
+  }
 }

@@ -4,6 +4,7 @@ import { Link } from "@/components/i18n/LocaleLink";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { LanguageSwitch } from "@/components/i18n/LanguageSwitch";
+import { openQuickQuote } from "@/components/quote/QuickQuote";
 import { LogoLockup } from "@/components/brand/Logo";
 import { Template } from "@/components/i18n/Template";
 
@@ -22,6 +23,8 @@ const isGroup = (item: MenuLink | MenuGroup): item is MenuGroup => "items" in it
 export type MobileMenuCopy = {
   nav: readonly (MenuLink | MenuGroup)[];
   primaryCta: MenuLink;
+  /** Label of the button that opens the quick-quote popup. */
+  quoteLabel: string;
   labels: {
     open: string;
     dialogLabel: string;
@@ -48,7 +51,7 @@ export function MobileMenu({ copy }: { copy: MobileMenuCopy }) {
     dialogRef.current?.close();
   }, [pathname]);
 
-  const { nav, primaryCta, labels, phone } = copy;
+  const { nav, labels, phone, quoteLabel } = copy;
 
   return (
     <>
@@ -74,7 +77,7 @@ export function MobileMenu({ copy }: { copy: MobileMenuCopy }) {
         aria-label={labels.dialogLabel}
         data-surface="dark"
         data-lenis-prevent
-        className="m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-teal-900 text-white backdrop:bg-teal-975/60"
+        className="m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-teal-900 text-white sheet-down"
       >
         <div className="container-page flex min-h-(--header-h) items-center justify-between gap-3 py-1.5">
           <LogoLockup className="h-10 w-auto" />
@@ -123,12 +126,18 @@ export function MobileMenu({ copy }: { copy: MobileMenuCopy }) {
           </ul>
 
           <div className="mt-8 grid gap-3">
-            <Link
-              href={primaryCta.href}
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => {
+                // One modal at a time: close the sheet, then open the quote popup.
+                dialogRef.current?.close();
+                openQuickQuote();
+              }}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 font-semibold text-teal-900"
             >
-              {primaryCta.label}
-            </Link>
+              {quoteLabel}
+            </button>
             <div className="grid grid-cols-2 gap-3">
               <a
                 href={`tel:${phone.tel}`}

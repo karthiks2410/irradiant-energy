@@ -5,14 +5,14 @@
  * Kannada form, a Kannada email — and the internal alert stays English for the sales team, with
  * one row saying which language the enquiry arrived in (architecture.md §6.12).
  *
- * The form itself is never submitted to get here: `renderCustomerAcknowledgement` is a pure
+ * The form itself is never submitted to get here: `renderCustomerQuotation` is a pure
  * function of its context, so both languages can be rendered and read without sending anything.
  */
 
 import { describe, expect, it } from "vitest";
 import { LOCALES } from "@/i18n/config";
 import { getContent } from "@/i18n/content";
-import { customerWhatsappHref, renderCustomerAcknowledgement, renderLeadAlert } from "./emails";
+import { customerWhatsappHref, renderCustomerQuotation, renderLeadAlert } from "./emails";
 import type { Lead } from "./schema";
 
 const KANNADA = /[ಀ-೿]/;
@@ -42,13 +42,13 @@ const context = (locale: (typeof LOCALES)[number]) => ({
 
 describe("the customer acknowledgement", () => {
   it("is written in the language the form was filled in", () => {
-    const english = renderCustomerAcknowledgement(context("en"));
+    const english = renderCustomerQuotation(context("en"));
     expect(english.html).toContain('<html lang="en">');
     expect(english.subject).toBe("We have your solar enquiry (IE-7K3QX2)");
     expect(english.text).toContain("Thanks, Ramesh. We have your enquiry.");
     expect(english.html).not.toMatch(KANNADA);
 
-    const kannada = renderCustomerAcknowledgement(context("kn"));
+    const kannada = renderCustomerQuotation(context("kn"));
     expect(kannada.html).toContain('<html lang="kn">');
     expect(kannada.subject).toMatch(KANNADA);
     expect(kannada.subject).toContain("IE-7K3QX2");
@@ -64,7 +64,7 @@ describe("the customer acknowledgement", () => {
 
   it("leaves no template hole unfilled, in either language", () => {
     for (const locale of LOCALES) {
-      const { subject, html, text } = renderCustomerAcknowledgement(context(locale));
+      const { subject, html, text } = renderCustomerQuotation(context(locale));
       for (const part of [subject, html, text]) {
         expect(part, `${locale}: an unfilled {placeholder}`).not.toMatch(/\{[a-zA-Z]+\}/);
       }
