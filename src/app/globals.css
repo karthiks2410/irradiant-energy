@@ -572,6 +572,77 @@ dialog.sheet-down[open]::backdrop {
 }
 
 /* ---------------------------------------------------------------------------
+   Menu button: ☰ turns into ✕ and back (owner, 2026-09-25, from a 21st.dev component "for mobile
+   screen hamburger"). components/layout/MobileMenu.tsx, <MenuIcon>.
+
+   Plain transitions on the first path's dashes and on the icon's rotation, keyed on `data-open`.
+   Both copies of the icon — the header's and the sheet's — carry the same value from the same
+   React state, so they move in step. Reduced motion: no transition, just the end pose.
+   --------------------------------------------------------------------------- */
+
+.menu-icon {
+  transition: rotate 0.5s ease-out;
+}
+.menu-icon > path:first-child {
+  /* Closed: dash 1 is the top line (right-hand 12 units), dash 2 the bottom line. */
+  stroke-dasharray: 12 63;
+  stroke-dashoffset: 0;
+  transition:
+    stroke-dasharray 0.5s ease-out,
+    stroke-dashoffset 0.5s ease-out;
+}
+.menu-icon[data-open="true"] {
+  rotate: -45deg;
+}
+.menu-icon[data-open="true"] > path:first-child {
+  /* Open: one 20-unit dash, moved 32.91 units along the path — exactly where the 20-unit stem
+     starts (measured with getPointAtLength) — so it IS the stem; the 300 gap leaves no second
+     dash. Stem + middle line = a + centred on (17,16), turned. The reference's 32.42 stops half a
+     unit short, which leaves the stem high and hooked at the top. */
+  stroke-dasharray: 20 300;
+  stroke-dashoffset: -32.91px;
+}
+/* The sheet's copy is display:none until the sheet opens, so it has no earlier pose to move from;
+   without this it would appear as an ✕ already. */
+@starting-style {
+  .menu-icon[data-open="true"] {
+    rotate: 0deg;
+  }
+  .menu-icon[data-open="true"] > path:first-child {
+    stroke-dasharray: 12 63;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The sheet's ✕ must stay exactly over the header button, but `dialog.sheet-down` drops 1.5rem as
+   it opens and rises 1.5rem as it closes. This moves the button the other way by the same
+   distance, over the same duration and curve, so the two cancel on every frame and the button
+   holds still while the sheet slides behind it. Change one, change the other. */
+dialog.sheet-down .menu-close {
+  translate: 0 1.5rem;
+  transition: translate 0.42s var(--ease-controlled);
+}
+dialog.sheet-down[open] .menu-close {
+  translate: 0 0;
+}
+@starting-style {
+  dialog.sheet-down[open] .menu-close {
+    translate: 0 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-icon,
+  .menu-icon > path:first-child,
+  dialog.sheet-down .menu-close {
+    transition: none;
+  }
+  dialog.sheet-down .menu-close {
+    translate: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Scroll reveal (components/motion/ScrollReveal.tsx). The hidden state exists only once the
    script has run (`html.rv-on`), so without JavaScript nothing is ever hidden. Pace after
    sweat-and-fit: a short rise, done in about half a second.
