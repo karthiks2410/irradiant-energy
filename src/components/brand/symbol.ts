@@ -17,8 +17,9 @@ export const SYMBOL_CROP = 52;
 
 /**
  * How large the symbol sits on an icon, as a scale of the master canvas about its centre. The
- * symbol is round (it fits a circle of radius ~24.9 about (50, 50)), so at 1.56 it fills 78% of
- * a round badge's diameter and leaves an even green ring. The favicon, the app icons and the
+ * symbol is round (it fits a circle of radius ~24.9 about (50, 50)), so at 1.66 it fills 83% of
+ * a round badge's diameter and leaves an even green ring. Raised from 1.56 (78%) at the owner's
+ * request (2026-09-26, "a bit bigger"); 1.74 (87%) was tried and brings the rays to the edge. The favicon, the app icons and the
  * Apple touch icon all use it, so the mark is the same size wherever it appears.
  */
-export const ICON_SYMBOL_SCALE = 1.56;
+export const ICON_SYMBOL_SCALE = 1.66;
