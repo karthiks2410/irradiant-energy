@@ -24,3 +24,7 @@ export { aboutPage } from "./about";
 export { contactPage } from "./contact";
 export { segments } from "./solutions-segments";
 export { solutionsShared } from "./solutions-shared";
+export { legalShell } from "./legal-shell";
+export { privacyNotice } from "./legal-privacy";
+export { termsOfUse } from "./legal-terms";
+export { cookieNotice } from "./legal-cookies";

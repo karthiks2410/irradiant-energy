@@ -237,7 +237,6 @@ export type LegalPageStatus = "draft-for-counsel" | "approved";
 interface LegalPageBase {
   slug: "privacy" | "terms" | "cookies";
   href: string;
-  title: string;
   /** Why the page exists (regime or hygiene), for counsel. */
   basis: string;
   /** Section outline counsel drafts against. Not copy. */
@@ -261,3 +260,56 @@ export type LegalPage = LegalPageBase &
         effectiveFrom: string;
       }
   );
+
+/**
+ * One block of a legal notice's body, as <LegalBody> (src/components/pages/LegalBody.tsx)
+ * renders it.
+ *
+ * Every string is a whole sentence (or a whole list item) with its links and emphasis as named
+ * `<slot>…</slot>` tags and its facts as `{holes}` — never English fragments welded around a
+ * value, because Kannada puts the value and the link somewhere else in the sentence. The facts
+ * themselves (`{siteName}`, `{entityName}`, `{email}`, `{phone}`, the cookie's name and
+ * lifetime) are filled in at render time from site.ts and lib/consent.ts, so a translation can
+ * never change one.
+ *
+ * `pending` is the note on the yellow placeholder tag that marks an unconfirmed fact. The tag
+ * renders only outside production (PlaceholderTag), so the note is English-owned scaffolding: it
+ * is left out of the Kannada overlay by the generator (MODULES in scripts/build-kn-content.ts).
+ */
+export type LegalBlock =
+  /** A paragraph. */
+  | string
+  /** A bulleted list, one sentence fragment per item. */
+  | { readonly items: readonly string[] }
+  /** A paragraph set in bold from end to end. */
+  | { readonly emphasis: string }
+  /** A paragraph opened by a placeholder tag, for a line that rests on something still unconfirmed. */
+  | { readonly text: string; readonly pending: string }
+  /** The postal address, then these lines, one per line (`<br />` between them). */
+  | { readonly contactLines: readonly string[] }
+  /**
+   * The operator line, in the form that matches site.legal.entityName: `withEntity` while the
+   * registered entity is known, `withoutEntity` (opened by the placeholder tag) while it is not.
+   */
+  | { readonly withEntity: string; readonly withoutEntity: string; readonly pending: string }
+  /**
+   * The grievance officer's name and email address from site.legal.grievanceOfficer — facts, no
+   * copy — or, while nobody is named, this fallback opened by the placeholder tag.
+   */
+  | { readonly grievanceFallback: string; readonly pending: string };
+
+export interface LegalSection {
+  /** Anchor on the heading, for a section something else links to (`/cookies#cookie-settings`). */
+  readonly id?: string;
+  readonly heading: string;
+  readonly body: readonly LegalBlock[];
+}
+
+/** One notice: its title (H1, breadcrumb, JSON-LD name and <title>), meta description and body. */
+export interface LegalNotice {
+  readonly title: string;
+  readonly description: string;
+  /** One-sentence summary under the title. Plain language, no legal effect. */
+  readonly summary: string;
+  readonly sections: readonly LegalSection[];
+}

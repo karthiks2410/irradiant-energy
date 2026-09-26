@@ -87,6 +87,9 @@ const FACT_KEYS = new Set<string>([
   "whoItsFor",
   "included",
   "leadForm",
+  // The note on a legal notice's placeholder tag, which renders only outside production: English
+  // build scaffolding, left out of the overlay (the legal entries in scripts/build-kn-content.ts).
+  "pending",
 ]);
 
 interface Leaf {
@@ -140,6 +143,9 @@ function comparable(content: Content) {
     contactPage: content.contact,
     segments,
     solutionsShared: content.solutionsShared,
+    // `legalNotices`, not `legal`: "legal" is a FACT key (site.ts's registered entity), and the
+    // walk would skip all three notices by name, as it would have skipped /contact.
+    legalNotices: content.legal,
     ui: content.ui,
   };
 }

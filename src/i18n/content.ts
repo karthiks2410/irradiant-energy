@@ -22,6 +22,10 @@ import { contactPage as enContactPage } from "@/content/contact";
 import { homeFaq as enHomeFaq } from "@/content/faq-home";
 import { homePage as enHomePage } from "@/content/home";
 import { projectImages as enProjectImages } from "@/content/images";
+import { cookieNotice as enCookieNotice } from "@/content/legal/cookies";
+import { privacyNotice as enPrivacyNotice } from "@/content/legal/privacy";
+import { legalShell as enLegalShell } from "@/content/legal/shell";
+import { termsOfUse as enTermsOfUse } from "@/content/legal/terms";
 import { nav as enNav, primaryCta as enPrimaryCta, site as enSite, socialPending as enSocialPending } from "@/content/site";
 import { segments as enSegments } from "@/content/solutions/segments";
 import { faqCardLabels as enFaqCardLabels, solutionsShared as enSolutionsShared } from "@/content/solutions/shared";
@@ -61,7 +65,17 @@ export interface Content {
   readonly solutionsShared: typeof enSolutionsShared;
   /** The calculator and /get-quote, including the customer acknowledgement email. */
   readonly quote: typeof enQuotePage;
+  /** The three legal notices, by slug, and the frame they share. */
+  readonly legal: LegalContent;
   readonly ui: typeof enUi;
+}
+
+interface LegalContent {
+  /** The hero's eyebrow and version line, and the contact block every notice ends with. */
+  readonly shell: typeof enLegalShell;
+  readonly privacy: typeof enPrivacyNotice;
+  readonly terms: typeof enTermsOfUse;
+  readonly cookies: typeof enCookieNotice;
 }
 
 /** The one entry in `nav` that has children. */
@@ -90,6 +104,12 @@ function build(locale: Locale): Content {
     segments: overlay ? localize(enSegments, kn.segments, "segments") : enSegments,
     solutionsShared: overlay ? localize(enSolutionsShared, kn.solutionsShared, "solutionsShared") : enSolutionsShared,
     quote: overlay ? localize(enQuotePage, kn.quotePage, "quotePage") : enQuotePage,
+    legal: {
+      shell: overlay ? localize(enLegalShell, kn.legalShell, "legalShell") : enLegalShell,
+      privacy: overlay ? localize(enPrivacyNotice, kn.privacyNotice, "privacyNotice") : enPrivacyNotice,
+      terms: overlay ? localize(enTermsOfUse, kn.termsOfUse, "termsOfUse") : enTermsOfUse,
+      cookies: overlay ? localize(enCookieNotice, kn.cookieNotice, "cookieNotice") : enCookieNotice,
+    },
     ui: overlay ? localize(enUi, kn.ui, "ui") : enUi,
   };
 }
