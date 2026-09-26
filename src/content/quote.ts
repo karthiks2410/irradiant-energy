@@ -347,7 +347,8 @@ export const quotePage = {
     talkNow: "Prefer to talk now? Message us on WhatsApp and quote your reference.",
     talkNowText: "Prefer to talk now? Message us on WhatsApp and quote your reference: {whatsappUrl}",
     whatsappButton: "Message us on WhatsApp",
-    contactLine: "Call {phone} or email {email}.",
+    /** The sender is do-not-reply@ (owner, 2026-09-26): say so, and point to the inboxes that are read. */
+    contactLine: "Replies to this email do not reach us. Call {phone} or email {email}.",
     disclaimer:
       "Any figures shown by the calculator on our website are estimates, not a quote or a guarantee. Subsidies are decided and paid by the Government after DISCOM inspection.",
     footer:
