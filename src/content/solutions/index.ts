@@ -1,50 +1,33 @@
 /**
  * Solar audience pages (D-009: rooftop solar only). Route params resolve through
- * `getSegment`; unknown slugs return undefined so the page can call notFound().
+ * `isSegmentSlug`; an unknown slug lets the page call notFound().
+ *
+ * Page code does NOT read the segments from here — it reads the localized copy through
+ * `getContent(locale).segments` (src/i18n/content.ts), which is the same object with the
+ * Kannada overlay merged in on `/kn`. What this module exports is the English source those
+ * overlays are built and type-checked against, plus the slug helpers, which are locale-neutral.
  */
 
-import { homePage } from "@/content/home";
-import type { Segment, SegmentSlug } from "@/content/types";
-import { commercialSegment } from "./commercial";
-import { homeSegment } from "./home";
-import { housingSocietySegment } from "./housing-society";
+import type { SegmentSlug } from "@/content/types";
+import { segments } from "./segments";
 
 export {
-  closingCta,
   faqCardLabels,
   heroCtas,
   segmentHref,
   sharedHeld,
-  systemTypes,
+  solutionsShared,
   systemTypesAnchor,
-  systemTypesCopy,
-  whatsappPrompts,
 } from "./shared";
 
-export { homeSegment, housingSocietySegment, commercialSegment };
-
-export const segments: Readonly<Record<SegmentSlug, Segment>> = {
-  home: homeSegment,
-  "housing-society": housingSocietySegment,
-  commercial: commercialSegment,
-};
+export { segments };
+export { homeSegment } from "./home";
+export { housingSocietySegment } from "./housing-society";
+export { commercialSegment } from "./commercial";
 
 export const segmentSlugs = ["home", "housing-society", "commercial"] as const satisfies readonly SegmentSlug[];
 
 export const isSegmentSlug = (value: string): value is SegmentSlug =>
   (segmentSlugs as readonly string[]).includes(value);
 
-export const getSegment = (slug: string): Segment | undefined => (isSegmentSlug(slug) ? segments[slug] : undefined);
-
-/** Noun for the system-chooser heading ("Which solar system suits your {noun}?"). */
-export const segmentNoun: Readonly<Record<SegmentSlug, string>> = {
-  home: "home",
-  "housing-society": "housing society",
-  commercial: "business",
-};
-
-/**
- * Owner-approved proof cards from the prototype, for pages whose legacy trust cards were
- * all held by the status filter (today: commercial).
- */
-export const proofFallback = homePage.why;
+export const getSegment = (slug: string) => (isSegmentSlug(slug) ? segments[slug] : undefined);

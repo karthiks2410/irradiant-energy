@@ -8,6 +8,7 @@
  * different reason (or with different words).
  */
 
+import type { LeadFieldErrorCode } from "./errors";
 import { EMAIL_MAX, NAME_MAX } from "./limits";
 
 /** Letters and combining marks (covers Kannada), spaces, dots, apostrophes and hyphens. */
@@ -21,43 +22,34 @@ export const PINCODE_RE = /^[1-9][0-9]{5}$/;
 /** The lead reference minted by the action: IE- and six characters from an unambiguous alphabet. */
 export const REFERENCE_RE = /^IE-[A-HJ-NP-Z2-9]{6}$/;
 
-export const LEAD_MESSAGES = {
-  name: "Enter your name",
-  nameTooLong: `Keep your name under ${NAME_MAX} characters`,
-  nameLetters: "Use letters only",
-  phoneMissing: "Enter your mobile number",
-  phone: "Enter a 10-digit Indian mobile number",
-  emailMissing: "Enter your email address",
-  emailTooLong: `Keep your email under ${EMAIL_MAX} characters`,
-  email: "Enter a valid email address",
-  segment: "Choose the type of property",
-  pincode: "Enter a 6-digit PIN code",
-  billRange: "Choose your monthly bill",
-  consent: "Please agree so we can contact you about this enquiry",
-} as const;
+/*
+ * The checks return CODES, not sentences (src/lib/leads/errors.ts): the page words them in its own
+ * language, exactly as it words the server's answer, so a Kannada visitor never sees English.
+ */
 
 /** Spaces and dashes are how people type phone numbers; the pattern ignores them. */
 export const compactPhone = (value: string) => value.trim().replace(/[\s-]/g, "");
 
-export function checkName(value: string): string | undefined {
+export function checkName(value: string): LeadFieldErrorCode | undefined {
   const v = value.trim();
-  if (v.length < 2) return LEAD_MESSAGES.name;
-  if (v.length > NAME_MAX) return LEAD_MESSAGES.nameTooLong;
-  if (!NAME_RE.test(v)) return LEAD_MESSAGES.nameLetters;
+  if (v.length < 2) return "name.required";
+  if (v.length > NAME_MAX) return "name.tooLong";
+  if (!NAME_RE.test(v)) return "name.lettersOnly";
   return undefined;
 }
 
-export function checkPhone(value: string): string | undefined {
-  return INDIAN_MOBILE_RE.test(compactPhone(value)) ? undefined : LEAD_MESSAGES.phone;
+export function checkPhone(value: string): LeadFieldErrorCode | undefined {
+  if (value.trim() === "") return "phone.required";
+  return INDIAN_MOBILE_RE.test(compactPhone(value)) ? undefined : "phone.invalid";
 }
 
-export function checkPincode(value: string): string | undefined {
-  return PINCODE_RE.test(value.trim()) ? undefined : LEAD_MESSAGES.pincode;
+export function checkPincode(value: string): LeadFieldErrorCode | undefined {
+  return PINCODE_RE.test(value.trim()) ? undefined : "pincode.invalid";
 }
 
-export function checkEmail(value: string): string | undefined {
+export function checkEmail(value: string): LeadFieldErrorCode | undefined {
   const v = value.trim();
-  if (v === "") return LEAD_MESSAGES.emailMissing;
-  if (v.length > EMAIL_MAX) return LEAD_MESSAGES.emailTooLong;
-  return EMAIL_RE.test(v) ? undefined : LEAD_MESSAGES.email;
+  if (v === "") return "email.required";
+  if (v.length > EMAIL_MAX) return "email.tooLong";
+  return EMAIL_RE.test(v) ? undefined : "email.invalid";
 }

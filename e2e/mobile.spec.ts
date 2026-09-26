@@ -5,7 +5,7 @@ import { dismissConsent, headerNav } from "./helpers";
 // `hidden sm:inline-flex` lost to the button's own base `inline-flex` in the stylesheet, so
 // the phone had no inline nav and no way to open the sheet either.
 test("the navigation is reachable at every width", async ({ page }) => {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/en", { waitUntil: "networkidle" });
   await dismissConsent(page);
 
   const nav = await headerNav(page);

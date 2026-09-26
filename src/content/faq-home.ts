@@ -8,7 +8,10 @@ import type { Cta, Faq, FaqSection, SectionCopy } from "@/content/types";
 
 const picked = ["H-4", "H-5", "H-2", "H-10", "H-8"] as const;
 
-const allHomeFaqs = homeSegment.faq.groups.flatMap((group) => group.items);
+// `flatMap<Faq>`: the groups are `as const` tuples now (so the Kannada overlay keeps their
+// lengths), and without the type argument TypeScript infers the first group's literal type for
+// the whole list.
+const allHomeFaqs = homeSegment.faq.groups.flatMap<Faq>((group) => [...group.items]);
 
 const items: readonly Faq[] = picked.map((id) => {
   const faq = allHomeFaqs.find((item) => item.id === id);
@@ -16,20 +19,22 @@ const items: readonly Faq[] = picked.map((id) => {
   return faq;
 });
 
-const copy: SectionCopy = {
+const copy = {
   title: "Frequently asked questions",
   lead: homeSegment.faq.copy.lead,
   source: "P-SH-6",
   status: "verified-live",
-};
+  // `as const satisfies`: the overlay's shape comes from this literal, so the keys that are
+  // actually set (no eyebrow, no accent) are the keys Kannada has to supply.
+} as const satisfies SectionCopy;
 
-const moreLink: Cta = {
+const moreLink = {
   // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (UX link label).
   label: "All home solar questions",
   href: `${homeSegment.href}#faq`,
   source: "proposed",
   status: "proposed",
-};
+} as const satisfies Cta;
 
 export const homeFaq = {
   copy,

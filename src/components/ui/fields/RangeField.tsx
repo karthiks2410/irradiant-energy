@@ -84,7 +84,7 @@ export function RangeField({
             className="mt-2 block h-11 w-full cursor-pointer accent-teal-900 disabled:cursor-not-allowed disabled:opacity-60"
           />
           {(minLabel || maxLabel) && (
-            <div className={`flex justify-between font-mono text-label ${hintClass}`}>
+            <div className={`flex justify-between font-label text-label ${hintClass}`}>
               <span>{minLabel}</span>
               <span>{maxLabel}</span>
             </div>

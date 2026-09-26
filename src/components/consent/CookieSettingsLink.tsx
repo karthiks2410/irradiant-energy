@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import type { MouseEvent, ReactNode } from "react";
 import { openConsentSettings } from "@/lib/consent";
 
@@ -19,10 +19,12 @@ import { openConsentSettings } from "@/lib/consent";
  */
 export function CookieSettingsLink({
   className = "",
-  children = "Cookie settings",
+  children,
 }: {
   className?: string;
-  children?: ReactNode;
+  /** The label, from `ui.footer.cookieSettings`. Required: there is no English default to fall
+   * back to, because a default would render English inside a Kannada footer. */
+  children: ReactNode;
 }) {
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.defaultPrevented) return;

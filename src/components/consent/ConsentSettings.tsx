@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { useEffect, useId, useRef } from "react";
+import { RichText } from "@/components/i18n/RichText";
 import { acceptButton, inlineLink, rejectButton } from "@/components/consent/styles";
+import type { Ui } from "@/content/ui";
 import { CONSENT_COOKIE_DAYS, CONSENT_COOKIE_NAME, REJECT_ALL, type ConsentChoice } from "@/lib/consent";
 
 /**
@@ -23,6 +25,8 @@ import { CONSENT_COOKIE_DAYS, CONSENT_COOKIE_NAME, REJECT_ALL, type ConsentChoic
  */
 
 type ConsentSettingsProps = {
+  /** `ui.consent.settings`, handed down by <ConsentManager> from the page's own locale. */
+  copy: Ui["consent"]["settings"];
   open: boolean;
   value: ConsentChoice;
   onChange: (choice: ConsentChoice) => void;
@@ -32,7 +36,7 @@ type ConsentSettingsProps = {
   onClose: () => void;
 };
 
-export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, onClose }: ConsentSettingsProps) {
+export function ConsentSettings({ copy, open, value, onChange, onSave, onRejectAll, onClose }: ConsentSettingsProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const analyticsId = useId();
   const analyticsHintId = `${analyticsId}-hint`;
@@ -57,14 +61,14 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
     >
       <div className="flex items-start justify-between gap-4 border-b border-mist p-5 sm:p-6">
         <h2 id="consent-settings-title" className="font-display text-h3 font-bold text-carbon">
-          Cookie and analytics preferences
+          {copy.title}
         </h2>
         <button
           type="button"
           onClick={close}
           className="inline-grid size-11 shrink-0 place-items-center rounded-full border border-mist text-teal-900 transition-colors hover:bg-canvas"
         >
-          <span className="sr-only">Close preferences without saving</span>
+          <span className="sr-only">{copy.closeAria}</span>
           <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.75">
             <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
           </svg>
@@ -77,27 +81,26 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
               look like a choice that had been taken away. */}
           <section className="rounded-md border border-mist bg-canvas p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-display text-h4 font-semibold text-carbon">Strictly necessary</h3>
-              <span className="rounded-full bg-soft-green px-3 py-1 font-mono text-label text-green-700 uppercase">
-                Always on
+              <h3 className="font-display text-h4 font-semibold text-carbon">{copy.necessary.heading}</h3>
+              <span className="rounded-full bg-soft-green px-3 py-1 font-label text-label text-green-700 uppercase">
+                {copy.necessary.badge}
               </span>
             </div>
             <p className="mt-3 text-small text-ink-2">
-              Your answer to this question, kept in a first-party cookie named{" "}
-              <code className="font-mono text-ink-2">{CONSENT_COOKIE_NAME}</code> that is written only once you choose.
-              It holds your answer, the date and a version number — no name, no identifier. It lasts{" "}
-              {CONSENT_COOKIE_DAYS} days and is read only by this site. Without it we would have to ask you again on
-              every page.
+              {/* The cookie's name and its lifetime are facts, so they stay here and drop into the
+                  sentence through the template rather than being retyped in the content. */}
+              <RichText
+                text={copy.necessary.body}
+                values={{ cookieName: CONSENT_COOKIE_NAME, days: CONSENT_COOKIE_DAYS }}
+                slots={{ code: (inner) => <code className="font-mono text-ink-2">{inner}</code> }}
+              />
             </p>
-            <p className="mt-2 text-small text-ink-2">
-              Our hosting provider may also set a short-lived cookie to check that a request comes from a person
-              rather than an automated tool. That protects the site; it is not used to follow you.
-            </p>
+            <p className="mt-2 text-small text-ink-2">{copy.necessary.security}</p>
           </section>
 
           <section className="rounded-md border border-mist p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="font-display text-h4 font-semibold text-carbon">Analytics</h3>
+              <h3 className="font-display text-h4 font-semibold text-carbon">{copy.analytics.heading}</h3>
               {/* The visible label IS the accessible name ("Allow analytics"), and the whole row is
                   the hit target, so it clears 44px comfortably. */}
               <label
@@ -112,14 +115,11 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
                   onChange={(event) => onChange({ ...value, analytics: event.target.checked })}
                   className="size-5 shrink-0 accent-green-700"
                 />
-                <span>Allow analytics</span>
+                <span>{copy.analytics.label}</span>
               </label>
             </div>
             <p id={analyticsHintId} className="mt-3 text-small text-ink-2">
-              Not loaded today: no measurement script runs on this site. If we switch one on, it would count page
-              visits — which page, the broad region the visit came from, the kind of device — with no name, no profile
-              and no tracking across other websites. It will not load while this is off, and turning it off later stops
-              it again.
+              {copy.analytics.hint}
             </p>
           </section>
         </div>
@@ -127,7 +127,7 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
         {/* Same rule as the banner: saving and refusing are the same control in two hues. */}
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button type="button" onClick={onSave} className={acceptButton}>
-            Save preferences
+            {copy.save}
           </button>
           <button
             type="button"
@@ -137,20 +137,26 @@ export function ConsentSettings({ open, value, onChange, onSave, onRejectAll, on
             }}
             className={rejectButton}
           >
-            Reject all
+            {copy.rejectAll}
           </button>
         </div>
 
         <p className="mt-4 text-small text-grey-600">
-          More detail in our{" "}
-          <Link href="/cookies" className={inlineLink} onClick={close}>
-            cookie notice
-          </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className={inlineLink} onClick={close}>
-            privacy notice
-          </Link>
-          .
+          <RichText
+            text={copy.moreDetail}
+            slots={{
+              cookieLink: (inner) => (
+                <Link href="/cookies" className={inlineLink} onClick={close}>
+                  {inner}
+                </Link>
+              ),
+              privacyLink: (inner) => (
+                <Link href="/privacy" className={inlineLink} onClick={close}>
+                  {inner}
+                </Link>
+              ),
+            }}
+          />
         </p>
       </div>
     </dialog>

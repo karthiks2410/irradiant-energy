@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { quotePage } from "@/content/quote";
+import { placeholdersIn } from "@/i18n/format";
+import { describeAssumption, type AssumptionCopy } from "./assumptions";
 import {
   billFromKwh,
   buildEstimate,
@@ -207,7 +210,7 @@ describe("sizing limits", () => {
     const e = buildEstimate(home({ monthlyBillInr: 3_500, roofAreaSqft: 150 }));
     expect(e.systemKwp).toBe(2);
     expect(e.flags).toContain("size-capped-roof");
-    expect(e.assumptions.some((a) => a.label === "Roof area")).toBe(true);
+    expect(e.assumptions.some((a) => a.key === "roofArea")).toBe(true);
   });
 });
 
@@ -255,17 +258,36 @@ describe("monotonicity and sanity", () => {
 });
 
 describe("assumptions and constants", () => {
-  it("lists every assumption with a label, value and source", () => {
+  /**
+   * The engine returns keys and figures, not sentences (architecture.md §6.7), so these assert
+   * the two halves separately: that the estimate names an assumption and the numbers that go in
+   * it, and that the English copy still renders the figures a reader used to see.
+   */
+  it("lists every assumption with a key, a citation and the figures its sentence needs", () => {
     const e = buildEstimate(home({ monthlyBillInr: 3_500 }));
     expect(e.assumptions.length).toBeGreaterThanOrEqual(7);
+    const copy: AssumptionCopy = { assumptions: quotePage.assumptions, citations: quotePage.citations };
     for (const a of e.assumptions) {
-      expect(a.label.length).toBeGreaterThan(0);
-      expect(a.value.length).toBeGreaterThan(0);
-      expect(a.source.length).toBeGreaterThan(0);
+      expect(copy.assumptions[a.key], `no template for ${a.key}`).toBeDefined();
+      expect(copy.citations[a.citation], `no citation for ${a.citation}`).toBeDefined();
+      // Every hole the template opens is a hole the engine filled.
+      for (const name of placeholdersIn(copy.assumptions[a.key].value)) {
+        expect(a.params[name], `${a.key} is missing {${name}}`).toBeDefined();
+      }
+      const described = describeAssumption(a, copy);
+      expect(described.label.length).toBeGreaterThan(0);
+      expect(described.value.length).toBeGreaterThan(0);
+      expect(described.citation.length).toBeGreaterThan(0);
+      expect(described.value).not.toMatch(/\{\w+\}/);
     }
-    expect(e.assumptions.find((a) => a.label === "PM Surya Ghar subsidy")?.value).toContain("₹30,000");
-    expect(buildEstimate({ segment: "housing-society", monthlyBillInr: 45_000 }).assumptions.find((a) => a.label === "PM Surya Ghar subsidy")?.value).toContain("₹18,000");
-    expect(buildEstimate({ segment: "commercial", monthlyBillInr: 1_00_000 }).assumptions.find((a) => a.label === "PM Surya Ghar subsidy")?.value).toContain("Not applicable");
+
+    const subsidy = (input: EstimateInput) => {
+      const found = buildEstimate(input).assumptions.find((a) => a.key.startsWith("subsidy"));
+      return found ? describeAssumption(found, copy).value : "";
+    };
+    expect(subsidy(home({ monthlyBillInr: 3_500 }))).toContain("₹30,000");
+    expect(subsidy({ segment: "housing-society", monthlyBillInr: 45_000 })).toContain("₹18,000");
+    expect(subsidy({ segment: "commercial", monthlyBillInr: 1_00_000 })).toContain("Not applicable");
   });
 
   it("carries a source and effective date on every constant", () => {
@@ -295,10 +317,12 @@ describe("assumptions and constants", () => {
       { segment: "housing-society", monthlyBillInr: 45_000, roofAreaSqft: 4_000 },
       { segment: "commercial", monthlyBillInr: 2_00_000, roofAreaSqft: 20_000 },
     ];
+    const copy: AssumptionCopy = { assumptions: quotePage.assumptions, citations: quotePage.citations };
     for (const input of inputs) {
       for (const a of buildEstimate(input).assumptions) {
+        const described = describeAssumption(a, copy);
         for (const pattern of internal) {
-          expect(`${a.label}: ${a.value} — ${a.source}`).not.toMatch(pattern);
+          expect(`${described.label}: ${described.value} — ${described.citation}`).not.toMatch(pattern);
         }
       }
     }

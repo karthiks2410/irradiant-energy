@@ -10,22 +10,22 @@
 import { projectImages } from "@/content/images";
 import type { ProjectImage } from "@/content/images";
 import { primaryCta } from "@/content/site";
-import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, LabelValue, SectionCopy } from "@/content/types";
+import type { AudiencePath, Cta, Feature, HeldItem, HeroCopy, LabelValue, SectionCopy, Sourced } from "@/content/types";
 import { navFor, segmentHref } from "@/content/solutions/shared";
 
-const requestConsultation: Cta = {
+const requestConsultation = {
   label: "Request a site consultation",
   href: "/contact",
   source: "brand PDF p.29 (approved CTA phrase)",
   status: "brand-pdf",
-};
+} as const satisfies Cta;
 
-const estimate: Cta = {
+const estimate = {
   label: primaryCta.label,
   href: primaryCta.href,
   source: "site.ts primaryCta",
   status: "proposed",
-};
+} as const satisfies Cta;
 
 const audiencePath = (slug: AudiencePath["slug"], tile: string): AudiencePath => {
   const nav = navFor(slug);
@@ -83,7 +83,7 @@ const heroScenes = [
   },
 ] as const satisfies readonly HeroSlide[];
 
-const hero: HeroCopy & { slides: readonly HeroSlide[] } = {
+const hero = {
   // Scene 1 doubles as the static hero copy: the server renders it, and the h1 keeps it
   // without JavaScript.
   eyebrow: heroScenes[0].eyebrow,
@@ -95,14 +95,15 @@ const hero: HeroCopy & { slides: readonly HeroSlide[] } = {
   secondaryCta: requestConsultation,
   source: "prototype hero[0]–hero[1] · brand PDF p.24 (campaign line)",
   status: "owner-approved-template",
-};
+} as const satisfies HeroCopy & { slides: readonly HeroSlide[] };
 
-const audiencePaths: { copy: SectionCopy; items: readonly AudiencePath[] } = {
+const audiencePaths = {
   copy: {
     // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (UX heading + place qualifier). Karnataka is
     // owner-stated (2026-09-20): the business installs across the state, not only in Bengaluru,
     // where it is registered. The old site named only the city, which under-claimed the coverage.
     title: "Solar for your home, society or business in Karnataka.",
+    accent: "in Karnataka.",
     source: "title proposed",
     status: "proposed",
   },
@@ -111,19 +112,13 @@ const audiencePaths: { copy: SectionCopy; items: readonly AudiencePath[] } = {
     audiencePath("housing-society", "Common-area & towers"),
     audiencePath("commercial", "Factories & businesses"),
   ],
-};
+} as const satisfies { copy: SectionCopy; items: readonly AudiencePath[] };
 
-const about: {
-  copy: SectionCopy;
-  capEyebrow: string;
-  caption: string;
-  tags: readonly string[];
-  points: readonly LabelValue[];
-  cta: Cta;
-} = {
+const about = {
   copy: {
     eyebrow: "About us",
     title: "An energy partner built around real-world performance.",
+    accent: "real-world performance.",
     // "agriculture" removed from the prototype line: it is not an offering (D-009); see held.
     lead: "Irradiant Energy designs, installs and supports solar systems for homes, housing societies and businesses.",
     source: "prototype about",
@@ -146,16 +141,24 @@ const about: {
     { label: "Maintenance", value: "Free for 5 years, for homes and societies" },
   ],
   cta: { label: "About Irradiant", href: "/about", source: "prototype about.capEyebrow", status: "owner-approved-template" },
+} as const satisfies {
+  copy: SectionCopy;
+  capEyebrow: string;
+  caption: string;
+  tags: readonly string[];
+  points: readonly LabelValue[];
+  cta: Cta;
 };
 
 /**
  * Only Generate links out. Charge (EV) carries a "Coming next" label and no CTA; batteries and
  * monitoring are sold today (owner, 2026-09-21). The lead is held (designer note).
  */
-const system: { copy: SectionCopy; comingNextLabel: string; cards: readonly (Feature & { href?: string })[] } = {
+const system = {
   copy: {
     eyebrow: "Complete energy system",
     title: "More than solar. A better energy future.",
+    accent: "A better energy future.",
     source: "prototype system",
     status: "owner-approved-template",
   },
@@ -192,7 +195,7 @@ const system: { copy: SectionCopy; comingNextLabel: string; cards: readonly (Fea
       status: "owner-approved-template",
     },
   ],
-};
+} as const satisfies { copy: SectionCopy; comingNextLabel: string; cards: readonly (Feature & { href?: string })[] };
 
 /** `protoIndex` is the card's position in the prototype, which no longer matches its number. */
 const whyCard = (
@@ -223,10 +226,11 @@ const proposedWhyCard = (
   status: "proposed",
 });
 
-const why: { copy: SectionCopy; cards: readonly Feature[] } = {
+const why = {
   copy: {
     eyebrow: "Why Irradiant?",
     title: "Design based on your actual power needs.",
+    accent: "actual power needs.",
     // Lead removed on owner direction (2026-09-20). It was the prototype's, and it spent a
     // sentence saying we do not over-promise, immediately above the cards that demonstrate it.
     // The original wording is held below as `proto:why:lead`.
@@ -245,7 +249,7 @@ const why: { copy: SectionCopy; cards: readonly Feature[] } = {
     whyCard("05", 4, "dash", "Digital monitoring", "Visibility into generation and system health over time."),
     whyCard("06", 5, "support", "Long-term support", "Service thinking that continues beyond project handover."),
   ],
-};
+} as const satisfies { copy: SectionCopy; cards: readonly Feature[] };
 
 /**
  * The band of the owner's own installation photography.
@@ -259,7 +263,7 @@ const why: { copy: SectionCopy; cards: readonly Feature[] } = {
  * `photos` names entries in `projectImages`, so the pictures have one home and the alt text
  * cannot drift from the file that owns it.
  */
-const projects: { copy: SectionCopy; photos: readonly (keyof typeof projectImages)[] } = {
+const projects = {
   // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (eyebrow, title and lead). The approved
   // "Featured projects · Projects for homes, societies and commercial energy." headed a band of
   // case studies: "featured" implies a curated selection out of a larger set, which is a count,
@@ -270,6 +274,7 @@ const projects: { copy: SectionCopy; photos: readonly (keyof typeof projectImage
   copy: {
     eyebrow: "Our work",
     title: "Rooftop systems we have installed.",
+    accent: "have installed.",
     source: "photographs src/content/images.ts (owner-supplied 2026-09-20) · copy proposed",
     status: "proposed",
   },
@@ -285,7 +290,7 @@ const projects: { copy: SectionCopy; photos: readonly (keyof typeof projectImage
     "palmRooftop",
     "hillsideArray",
   ],
-};
+} as const satisfies { copy: SectionCopy; photos: readonly (keyof typeof projectImages)[] };
 
 /**
  * The equipment rail.
@@ -315,13 +320,14 @@ export interface Brand {
   logo?: `/images/brands/${string}`;
 }
 
-const brands: { copy: SectionCopy; items: readonly Brand[] } = {
+const brands = {
   copy: {
     // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (eyebrow). The title is the prototype's own
     // line and is owner-approved; the eyebrow replaces the prototype's "Channel partners",
     // which asserts a commercial agreement we hold no evidence of.
     eyebrow: "Equipment we install",
     title: "Brands we work with.",
+    accent: "work with.",
     source: "prototype partners (brand list, owner-directed 2026-09-20) · eyebrow proposed",
     status: "proposed",
   },
@@ -350,17 +356,17 @@ const brands: { copy: SectionCopy; items: readonly Brand[] } = {
     { name: "JSW", category: "Steel", domain: "jsw.in" , logo: "/images/brands/jsw.png" },
     { name: "APL Apollo", category: "Steel", domain: "aplapollo.com" , logo: "/images/brands/apl-apollo.png" },
   ],
-};
+} as const satisfies { copy: SectionCopy; items: readonly Brand[] };
 
 // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (CTA phrasing). The band now carries a working
 // estimate, so the site-wide "Get a free estimate" would point at what the visitor just used;
 // this CTA names what /get-quote adds instead. Destination unchanged (site.ts primaryCta).
-const calculatorCta: Cta = {
+const calculatorCta = {
   label: "Get a proposal for your site",
   href: primaryCta.href,
   source: "site.ts primaryCta (href) · label proposed",
   status: "proposed",
-};
+} as const satisfies Cta;
 
 /**
  * The calculator band, which runs the real estimate engine (src/lib/solar) inline.
@@ -374,18 +380,11 @@ const calculatorCta: Cta = {
  * Hints are new UX copy; none of them is a claim, and every figure the panel prints carries the
  * engine's own assumptions and sources with it.
  */
-const calculator: {
-  copy: SectionCopy;
-  bullets: readonly string[];
-  fields: Readonly<Record<"segment" | "location" | "bill" | "tariff" | "load" | "houses", { label: string; hint?: string }>>;
-  results: { title: string; size: string; savings: string; payback: string; subsidy: string; cost: string };
-  assumptionsLabel: string;
-  disclaimer: string;
-  cta: Cta;
-} = {
+const calculator = {
   copy: {
     eyebrow: "Solar calculator",
     title: "Estimate the right solar system for your site.",
+    accent: "your site.",
     source: "prototype calc",
     status: "owner-approved-template",
   },
@@ -420,19 +419,28 @@ const calculator: {
   disclaimer:
     "Indicative only. Final figures and eligibility depend on site assessment, design and current policy checks.",
   cta: calculatorCta,
+} as const satisfies {
+  copy: SectionCopy;
+  bullets: readonly string[];
+  fields: Readonly<Record<"segment" | "location" | "bill" | "tariff" | "load" | "houses", { label: string; hint?: string }>>;
+  results: { title: string; size: string; savings: string; payback: string; subsidy: string; cost: string };
+  assumptionsLabel: string;
+  disclaimer: string;
+  cta: Cta;
 };
 
-const finalCta: { copy: SectionCopy; primary: Cta; secondary: Cta } = {
+const finalCta = {
   copy: {
     // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (eyebrow). The title is the legacy CTA band H2.
     eyebrow: "Next step",
     title: "Ready to see your savings?",
+    accent: "your savings?",
     source: "title P-SG-6 · eyebrow proposed",
     status: "proposed",
   },
   primary: estimate,
   secondary: requestConsultation,
-};
+} as const satisfies { copy: SectionCopy; primary: Cta; secondary: Cta };
 
 const held: readonly HeldItem[] = [
   {
@@ -544,7 +552,19 @@ const held: readonly HeldItem[] = [
   },
 ];
 
+/**
+ * The page's own <title>. It was a literal in the route file; it is copy, it has a character
+ * budget (seo.ts: 60 including the " | Irradiant Energy" suffix) and it needs a Kannada version,
+ * so it lives here with everything else the page says.
+ */
+const meta = {
+  title: "Rooftop solar across Karnataka",
+  source: "P-HM-1 · seo.ts budget",
+  status: "proposed",
+} as const satisfies Sourced & { title: string };
+
 export const homePage = {
+  meta,
   hero,
   audiencePaths,
   about,

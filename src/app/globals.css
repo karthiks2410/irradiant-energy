@@ -1,6 +1,39 @@
 @import "tailwindcss";
 
 /*
+ * Noto Sans Kannada — the Google Fonts "kannada" subset of v32, self-hosted in public/fonts/
+ * (OFL-1.1, public/fonts/OFL.txt). Chosen in docs/kannada/research/typography.md §1: it is the
+ * family the brand PDF names and the closest metric match to Inter of the ten Google Kannada
+ * families, so no size-adjust is needed.
+ *
+ * Declared here rather than through next/font because one root layout serves both locales: a
+ * next/font call would put its preload link and its own stylesheet on English pages too. A
+ * declaration on its own downloads nothing — the face is only fetched when rendered text names
+ * the family, and `--font-kannada` is named only inside the `html:lang(kn)` block below. English
+ * pages therefore download zero Kannada bytes, including the "ಕನ್ನಡ" switcher label, which falls
+ * to the system Kannada stack (typography.md §5.9). Kannada routes preload it from the layout.
+ *
+ * The family name is deliberately NOT the bare "Noto Sans Kannada": that would shadow the
+ * identically named system font, which is the fallback with the same metrics (§5.7).
+ *
+ * unicode-range is the subset the file actually covers. Keeping ₹ (U+20B9) and ZWNJ/ZWJ
+ * (U+200C-200D) in it is what stops a Kannada page from also fetching Inter latin-ext (+83 KB)
+ * and, in WebKit, Noto latin (+27 KB) (§5.6).
+ */
+@font-face {
+  font-family: "Noto Sans Kannada Web";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/noto-sans-kannada-v32-kannada-wght.woff2") format("woff2");
+  unicode-range: U+0951-0952, U+0964-0965, U+0C80-0CF3, U+1CD0, U+1CD2-1CD3, U+1CDA, U+1CF2,
+    U+1CF4, U+200C-200D, U+20B9, U+25CC, U+A830-A835;
+}
+
+/* `kn:` utility variant, for the handful of component-level exceptions Kannada needs. */
+@custom-variant kn (&:lang(kn));
+
+/*
  * Irradiant Energy design tokens.
  * Source of truth: Brand Identity Guidelines PDF (decisions.md D-004), extracted in
  * docs/discovery/report-parts/05-06.md §6. "derived" greens are accessibility
@@ -45,8 +78,24 @@
   --font-display: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  /*
+   * Words that are SET like data — eyebrows, labels, breadcrumbs, stage names. Identical to
+   * --font-mono in English, so nothing changes here; it exists so Kannada can move those words
+   * to the Kannada face while figures, codes and ₹ amounts stay in Plex Mono
+   * (typography.md §2.2, §6.2 "eyebrow"/"label"). Use font-label for words, font-mono for digits.
+   */
+  --font-label: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
   /* Type scale */
+  /* The home hero headline as tokens rather than arbitrary values on the component, so the
+     Kannada block below can retune it. The values are the ones HeroBackdrop used inline, so
+     English output is unchanged (typography.md §6.4 item 1). */
+  --text-hero: clamp(3rem, 6vw, 3.625rem);
+  --text-hero--line-height: 0.96;
+  --text-hero--letter-spacing: -0.045em;
+  --text-hero-md: clamp(3.625rem, 6vw, 6rem);
+  --text-hero-md--line-height: 0.96;
+  --text-hero-md--letter-spacing: -0.045em;
   --text-display: clamp(2.5rem, 1.2rem + 5.2vw, 6rem);
   --text-display--line-height: 1.05;
   --text-display--letter-spacing: -0.015em;
@@ -116,6 +165,19 @@
   padding-inline: var(--page-margin);
 }
 
+/*
+ * The language switcher's "ಕನ್ನಡ" label.
+ *
+ * It names the SYSTEM Kannada families only and never `--font-kannada`, so the label can appear on
+ * an English page without that page fetching a single byte of the webfont (typography.md §5.9).
+ * The system Noto comes first because its widths match the webfont exactly, so the pill does not
+ * change size between locales; the Apple and Windows families follow (§5.7).
+ */
+@utility font-kn-system {
+  font-family: "Noto Sans Kannada", "Kannada Sangam MN", "Nirmala UI", "Tunga", var(--font-inter),
+    ui-sans-serif, system-ui, sans-serif;
+}
+
 @utility section-y {
   padding-block: var(--section-space-y);
 }
@@ -175,11 +237,107 @@
     color: var(--color-white);
   }
 
-  :lang(kn) {
-    letter-spacing: normal;
-    text-transform: none;
-    line-height: 1.75;
+  /*
+   * Kannada typography (docs/kannada/research/typography.md §6.3), replacing the earlier
+   * three-line :lang(kn) rule. That rule did nothing useful: it sat in @layer base while the
+   * Tailwind utilities that set tracking, case and leading sit in @layer utilities, and a later
+   * layer wins whatever the specificity (§2.1 — an eyebrow still computed 0.2em tracking and
+   * UPPERCASE on a lang="kn" page). Its blanket `line-height: 1.75` also landed on bare inline
+   * spans inside headings and made two-tone headlines 28% taller than the same heading without a
+   * span.
+   *
+   * This block instead redefines the DESIGN TOKENS the utilities read. `text-h2` compiles to
+   * `font-size: var(--text-h2); line-height: var(--text-h2--line-height); …`, so changing the
+   * variable on `html:lang(kn)` retunes every component without touching a single class list,
+   * and it cannot lose a layer fight because it is not competing — it is the input.
+   *
+   * Kannada has its own size scale, not the English one. Kannada letters look larger than Latin
+   * at the same font-size, so the English sizes made every Kannada line read about a fifth bigger
+   * than its English twin and the hero filled the screen (owner, 2026-09-25: "it is too big on the
+   * screen … Kannada is bigger in general, it's inherent with the shape of the letters … do not
+   * map 1:1 … keep the overall Kannada text a px or 2 smaller"). So body, lead, UI and small text
+   * run 1px under English, eyebrows and labels about 1px under, h4 1px under, h1–h3 about 0.85×
+   * and hero/display about 0.65×. Figures (`data`) keep the English size: they are Latin digits.
+   * Leading is raised because Kannada ink is ~1.27em per line against Latin's ~0.95em and the
+   * English values collide (§5.1: the hero overlapped by 0.37em at lh 0.96).
+   */
+  html:lang(kn) {
+    /* System Kannada, in order of metric fidelity to the webfont: the system Noto first
+       (identical widths — zero reflow when the webfont swaps in), then the Apple and Windows
+       families (§5.7). */
+    --font-kn-system: "Noto Sans Kannada", "Kannada Sangam MN", "Nirmala UI", "Tunga";
+    --font-kannada: "Noto Sans Kannada Web";
+    /* Inter stays FIRST so it remains the metrics font: it owns U+0020, which decides where the
+       baseline sits in the line box. Putting the Kannada face first drops Kannada 0.14em high in
+       single-line UI (§5.2). Latin words keep rendering in Inter either way. */
+    --font-sans: var(--font-inter), var(--font-kannada), var(--font-kn-system), ui-sans-serif,
+      system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-display: var(--font-sans);
+    /* Eyebrows and labels are words, so they leave Plex Mono, which has no Kannada glyphs. */
+    --font-label: var(--font-sans);
+    /* Figures keep Plex Mono; a stray Kannada word in a data style falls through to the Kannada
+       face rather than to a random system font. */
+    --font-mono: var(--font-plex-mono), var(--font-kannada), var(--font-kn-system), ui-monospace,
+      "SFMono-Regular", Menlo, Consolas, monospace;
+    /* Kannada at the same weight reads darker than Latin (ink 0.403 vs 0.348 at 700/800), so the
+       site's 800 maps to 700 (§4). */
+    --font-weight-extrabold: 700;
+
+    --text-hero: clamp(1.75rem, 8.5vw, 2.5rem);
+    --text-hero--line-height: 1.35;
+    --text-hero--letter-spacing: normal;
+    --text-hero-md: clamp(2.5rem, 3.9vw, 4rem);
+    --text-hero-md--line-height: 1.35;
+    --text-hero-md--letter-spacing: normal;
+    --text-display: clamp(1.875rem, 1rem + 3.4vw, 4.25rem);
+    --text-display--line-height: 1.35;
+    --text-display--letter-spacing: normal;
+    --text-h1: clamp(1.875rem, 1.35rem + 2.1vw, 3.625rem);
+    --text-h1--line-height: 1.35;
+    --text-h1--letter-spacing: normal;
+    --text-h1--font-weight: 700;
+    --text-h2: clamp(1.5rem, 1.1rem + 1.3vw, 2.375rem);
+    --text-h2--line-height: 1.4;
+    --text-h2--letter-spacing: normal;
+    --text-h3: clamp(1.125rem, 0.98rem + 0.5vw, 1.4375rem);
+    --text-h3--line-height: 1.45;
+    --text-h4: 1.0625rem;
+    --text-h4--line-height: 1.5;
+    --text-lead: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+    --text-lead--line-height: 1.75;
+    --text-body: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+    --text-body--line-height: 1.8;
+    --text-small: 0.8125rem;
+    --text-small--line-height: 1.7;
+    --text-ui: 0.9375rem;
+    --text-ui--line-height: 1.5;
+    --text-eyebrow: 0.75rem;
+    --text-eyebrow--line-height: 1.5;
+    --text-eyebrow--letter-spacing: normal;
+    --text-label: 0.71875rem;
+    --text-label--line-height: 1.5;
+    --text-label--letter-spacing: normal;
+    --text-data--line-height: 1.4;
   }
+
+  /* Last-resort net against horizontal overflow only. It can break after a virama and leave a
+     dangling halant, so copy and token sizes must keep words inside the box (§5.8). */
+  :lang(kn) {
+    overflow-wrap: break-word;
+  }
+}
+
+/*
+ * Unlayered on purpose, so it outranks every layered utility — `uppercase`, `tracking-*` and the
+ * arbitrary `tracking-[…]` values the hero and EnergyPath use. Chromium inserts letter-spacing
+ * between akshara clusters and WebKit inserts it INSIDE conjuncts, which reads as broken to a
+ * native reader; `uppercase` also turns "8.4 kWp" into "8.4 KWP" (§5.5, brand PDF p.50 NEVER
+ * list). It matches a Kannada fragment on an English page too — the switcher label — without
+ * pulling the webfont, because it sets no font-family.
+ */
+:lang(kn) {
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

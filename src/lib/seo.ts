@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import { site } from "@/content/site";
+import { HREFLANG, OG_LOCALE, type Locale } from "@/i18n/config";
+import { getContent } from "@/i18n/content";
+import { fill } from "@/i18n/format";
+import { localizePath } from "@/i18n/paths";
+import { publishedLocales, routeForPath } from "@/i18n/registry";
 import { siteUrl } from "@/lib/env";
 
 /**
@@ -37,14 +42,26 @@ import { siteUrl } from "@/lib/env";
 export interface PageMetadataInput {
   title: string;
   description: string;
-  /** The page's own route, starting with "/". Home is "/". */
+  /**
+   * The page's own route WITHOUT the locale prefix, starting with "/". Home is "/".
+   * The prefix is added here, so a call site never has to think about it.
+   */
   path: `/${string}`;
+  /** The locale this page is being rendered in. Server pages read it with getLocale(). */
+  locale: Locale;
   /** Page-specific social image. Absolute URL or a site path such as "/about/opengraph-image". */
   image?: { url: string; alt: string; width?: number; height?: number };
   noindex?: boolean;
 }
 
-/** Route and dimensions of the site-wide social images; the image routes read these too. */
+/**
+ * Route and dimensions of the site-wide social images; the image routes read these too.
+ *
+ * The artwork is the wordmark and the brand line, which stay Latin in both locales (brand PDF
+ * p.30/p.40), so there is one card and a Kannada page references this same route. `alt` here is
+ * the fallback for the two image routes, which sit outside the `[lang]` tree and have no locale
+ * to read; `pageMetadata` writes the reader's own language into the card's alt text instead.
+ */
 export const socialImage = {
   openGraphPath: "/opengraph-image",
   twitterPath: "/twitter-image",
@@ -59,10 +76,21 @@ export function absoluteUrl(path: string): string {
   return path === "/" ? url.origin : url.href;
 }
 
-export function pageMetadata({ title, description, path, image, noindex = false }: PageMetadataInput): Metadata {
+export function pageMetadata({ title, description, path, locale, image, noindex = false }: PageMetadataInput): Metadata {
+  const canonical = localizePath(path, locale);
+  // hreflang is published only for a pair that actually resolves in both locales; a link to a
+  // 404 is worse than no link. The registry is the single source of that truth.
+  const entry = routeForPath(path);
+  const alternateLocales = entry ? publishedLocales(entry.key) : [locale];
+  const languages = Object.fromEntries([
+    ...alternateLocales.map((l) => [HREFLANG[l], localizePath(path, l)]),
+    ["x-default", localizePath(path, "en")],
+  ]);
+  const { ui, site: localizedSite } = getContent(locale);
   const ogImage = image ?? {
     url: socialImage.openGraphPath,
-    alt: socialImage.alt,
+    // The card is the same picture in both locales; the sentence that describes it is not.
+    alt: fill(ui.meta.socialImageAlt, { siteName: site.name, tagline: localizedSite.tagline }),
     width: socialImage.width,
     height: socialImage.height,
   };
@@ -74,12 +102,12 @@ export function pageMetadata({ title, description, path, image, noindex = false 
     // spells the suffix out; every other route inherits the template.
     title: path === "/" ? { absolute: `${title} | ${site.name}` } : title,
     description,
-    ...(noindex ? { robots: { index: false, follow: true } } : { alternates: { canonical: path } }),
+    ...(noindex ? { robots: { index: false, follow: true } } : { alternates: { canonical, languages } }),
     openGraph: {
       type: "website",
       siteName: site.name,
-      locale: "en_IN",
-      url: path,
+      locale: OG_LOCALE[locale],
+      url: canonical,
       description,
       images: [ogImage],
     },

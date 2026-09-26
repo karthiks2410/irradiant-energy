@@ -90,14 +90,14 @@ export function EnergyPath({
               </span>
               <span
                 aria-hidden="true"
-                className="block font-mono text-label font-medium text-green-700 uppercase in-data-[surface=dark]:text-green-300"
+                className="block font-label text-label font-medium text-green-700 uppercase in-data-[surface=dark]:text-green-300"
               >
                 {step.number}
               </span>
               <h3
                 className={
                   variant === "stage"
-                    ? "mt-2 font-mono text-h4 font-medium tracking-[0.08em] uppercase"
+                    ? "mt-2 font-label text-h4 font-medium tracking-[0.08em] uppercase"
                     : "mt-2 font-display text-h4 font-semibold"
                 }
               >

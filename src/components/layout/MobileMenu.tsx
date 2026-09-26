@@ -1,11 +1,43 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { isNavGroup, nav, quoteCta, site, whatsappLink } from "@/content/site";
+import { LanguageSwitch } from "@/components/i18n/LanguageSwitch";
 import { openQuickQuote } from "@/components/quote/QuickQuote";
 import { LogoLockup } from "@/components/brand/Logo";
+import { Template } from "@/components/i18n/Template";
+
+/**
+ * Everything the sheet says, plus the two links it builds.
+ *
+ * The sheet hydrates, so it may not import a content module: that would ship both languages'
+ * copy to the browser. <SiteHeader> reads the merged content and passes this down.
+ */
+type MenuLink = { readonly label: string; readonly href: string };
+type MenuGroup = { readonly label: string; readonly items: readonly MenuLink[] };
+
+/** Same test as `isNavGroup`, over the narrower shape this sheet is handed. */
+const isGroup = (item: MenuLink | MenuGroup): item is MenuGroup => "items" in item;
+
+export type MobileMenuCopy = {
+  nav: readonly (MenuLink | MenuGroup)[];
+  primaryCta: MenuLink;
+  /** Label of the button that opens the quick-quote popup. */
+  quoteLabel: string;
+  labels: {
+    open: string;
+    dialogLabel: string;
+    close: string;
+    navLabel: string;
+    /** "{groupLabel} · Rooftop solar" */
+    groupLabel: string;
+    call: string;
+  };
+  phone: { display: string; tel: string };
+  /** Already built with the localised prefill, so no content module is needed here. */
+  whatsappHref: string;
+};
 
 /**
  * Three lines that turn into an ✕ and back (owner, 2026-09-25: a 21st.dev component they wanted
@@ -50,7 +82,7 @@ function MenuIcon({ open }: { open: boolean }) {
  * an ✕, and back. `open` follows the dialog's own `close` event, so Esc, the ✕, a link and the
  * quote button all reset it.
  */
-export function MobileMenu() {
+export function MobileMenu({ copy }: { copy: MobileMenuCopy }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -61,7 +93,7 @@ export function MobileMenu() {
     dialogRef.current?.close();
   }, [pathname]);
 
-  const phone = site.contact.phonePrimary.value;
+  const { nav, labels, phone, quoteLabel } = copy;
 
   return (
     <>
@@ -71,7 +103,8 @@ export function MobileMenu() {
           dialogRef.current?.showModal();
           setOpen(true);
           // Start on the ✕, which is where the button just pressed appears to be: a keyboard
-          // user's focus ring stays put. Focus still returns to this button on close (native <dialog>).
+          // user's focus ring stays put instead of jumping to the language switch, the sheet's
+          // first control. Focus still returns to this button on close (native <dialog>).
           closeRef.current?.focus();
         }}
         aria-haspopup="dialog"
@@ -79,10 +112,14 @@ export function MobileMenu() {
         // menu"; the control named "Close menu" is the ✕ that takes its place.
         aria-expanded={open}
         aria-controls={sheetId}
+        // A hook for the e2e suite, which runs against both locales: the accessible name is
+        // "Open menu" on /en and "ಮೆನು ತೆರೆಯಿರಿ" on /kn, so a test cannot find it by name the way
+        // it used to. Same convention as [data-language-switch].
         data-menu-toggle
-        className="inline-grid size-11 shrink-0 place-items-center rounded-full border border-white/30 lg:hidden"
+        // xl, matching SiteHeader's nav breakpoint: the sheet owns 1024–1279 now.
+        className="inline-grid size-11 shrink-0 place-items-center rounded-full border border-white/30 xl:hidden"
       >
-        <span className="sr-only">Open menu</span>
+        <span className="sr-only">{labels.open}</span>
         <MenuIcon open={open} />
       </button>
 
@@ -90,13 +127,22 @@ export function MobileMenu() {
         ref={dialogRef}
         id={sheetId}
         onClose={() => setOpen(false)}
-        aria-label="Menu"
+        aria-label={labels.dialogLabel}
         data-surface="dark"
         data-lenis-prevent
         className="m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-teal-900 text-white sheet-down"
       >
-        <div className="container-page flex h-(--header-h) items-center justify-between">
-          <LogoLockup className="h-10 w-auto" />
+        <div className="container-page flex min-h-(--header-h) items-center justify-between gap-3 py-1.5">
+          {/* The logo is what gives when the row is tight. Logo + language switch + ✕ need ~352px
+              and a 390px phone has 341, so the row overflowed: the ✕ was squeezed to ~33px wide
+              (24px at 360), and held at 44px it would sit 10.5px right of the header button it
+              has to cover. min-w-0 lets the logo's box shrink; object-contain scales the drawing
+              with it. From ~402px up nothing changes. */}
+          <LogoLockup className="h-10 w-auto min-w-0 object-contain object-left" />
+          {/* The switch is the first thing in the sheet, not an afterthought at the bottom: below
+              lg this is the ONLY place a visitor can change language (layout-risks.md B1 budgets
+              ~24px of slack in the bar itself at 390px). */}
+          <LanguageSwitch className="ml-auto" />
           {/* Same size and right edge as the header button in the same row geometry, so it lands
               exactly on top of it; `menu-close` holds it still while the sheet drops in. */}
           <button
@@ -105,17 +151,19 @@ export function MobileMenu() {
             onClick={() => dialogRef.current?.close()}
             className="menu-close inline-grid size-11 shrink-0 place-items-center rounded-full border border-white/30"
           >
-            <span className="sr-only">Close menu</span>
+            <span className="sr-only">{labels.close}</span>
             <MenuIcon open={open} />
           </button>
         </div>
 
-        <nav aria-label="Mobile" className="container-page pt-6 pb-10">
+        <nav aria-label={labels.navLabel} className="container-page pt-6 pb-10">
           <ul className="divide-y divide-white/10 border-y border-white/10">
             {nav.map((item) =>
-              isNavGroup(item) ? (
+              isGroup(item) ? (
                 <li key={item.label} className="py-4">
-                  <p className="font-mono text-label text-green-300 uppercase">{item.label} · Rooftop solar</p>
+                  <p className="font-label text-label text-green-300 uppercase">
+                    <Template text={labels.groupLabel} values={{ groupLabel: item.label }} />
+                  </p>
                   <ul className="mt-2">
                     {item.items.map((sub) => (
                       <li key={sub.href}>
@@ -147,17 +195,17 @@ export function MobileMenu() {
               }}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 font-semibold text-teal-900"
             >
-              {quoteCta.label}
+              {quoteLabel}
             </button>
             <div className="grid grid-cols-2 gap-3">
               <a
                 href={`tel:${phone.tel}`}
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/40 px-4 font-semibold"
               >
-                Call us
+                {labels.call}
               </a>
               <a
-                href={whatsappLink(`Hi ${site.name}, I'd like to know more about rooftop solar.`)}
+                href={copy.whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/40 px-4 font-semibold"

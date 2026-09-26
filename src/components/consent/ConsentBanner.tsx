@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { useEffect, useRef } from "react";
+import { RichText } from "@/components/i18n/RichText";
 import { acceptButton, inlineLink, rejectButton, secondaryButton } from "@/components/consent/styles";
+import type { Ui } from "@/content/ui";
 
 /**
  * The first-visit consent prompt.
@@ -37,12 +39,14 @@ import { acceptButton, inlineLink, rejectButton, secondaryButton } from "@/compo
  */
 
 type ConsentBannerProps = {
+  /** `ui.consent.banner`, handed down by <ConsentManager> from the page's own locale. */
+  copy: Ui["consent"]["banner"];
   onAccept: () => void;
   onReject: () => void;
   onManage: () => void;
 };
 
-export function ConsentBanner({ onAccept, onReject, onManage }: ConsentBannerProps) {
+export function ConsentBanner({ copy, onAccept, onReject, onManage }: ConsentBannerProps) {
   const region = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -85,33 +89,57 @@ export function ConsentBanner({ onAccept, onReject, onManage }: ConsentBannerPro
             what we load today, what an accept would allow, and that a refusal costs nothing.
             The detail behind it is one tap away in Manage preferences and in the cookie notice. */}
         <h2 id="consent-banner-title" className="sr-only">
-          We value your privacy
+          {copy.title}
         </h2>
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
           <p className="text-small text-ink-2">
-            <span className="font-medium text-carbon">This site loads no analytics and sets no tracking cookies.</span>{" "}
-            Accept and we may count page visits — no name, no profile, no tracking across other sites. Refuse and
-            nothing loads.{" "}
-            <Link href="/cookies" className={inlineLink}>
-              Cookie notice
-            </Link>
-            .
+            {/* One sentence in the content, with the opening emphasis and the notice link as named
+                slots. Kannada does not put the link where English does, and this is the string a
+                DPDP notice is judged on, so it is not broken into three JSX children. */}
+            <RichText
+              text={copy.body}
+              slots={{
+                lead: (inner) => <span className="font-medium text-carbon">{inner}</span>,
+                cookieLink: (inner) => (
+                  <Link href="/cookies" className={inlineLink}>
+                    {inner}
+                  </Link>
+                ),
+              }}
+            />
           </p>
 
           {/* The two answers are the same size, side by side, at every width, so neither reads
               as the expected one. "Manage preferences" is the only secondary control. */}
           <div className="grid shrink-0 grid-cols-2 gap-2 lg:flex lg:items-center lg:gap-3">
-            <button type="button" onClick={onAccept} className={acceptButton}>
-              Accept
-              <span className="sr-only"> analytics</span>
+            {/* The accessible name is a whole string, not the visible label plus a hidden suffix:
+                "Accept" + " analytics" only reads as a phrase in English. */}
+            <button
+              type="button"
+              data-consent-accept
+              onClick={onAccept}
+              aria-label={copy.acceptAria}
+              className={acceptButton}
+            >
+              {copy.accept}
             </button>
-            <button type="button" onClick={onReject} className={rejectButton}>
-              Reject
-              <span className="sr-only"> analytics</span>
+            {/* Found by attribute in the e2e suite: the accessible name is localised. */}
+            <button
+              type="button"
+              data-consent-reject
+              onClick={onReject}
+              aria-label={copy.rejectAria}
+              className={rejectButton}
+            >
+              {copy.reject}
             </button>
-            <button type="button" onClick={onManage} className={`${secondaryButton} col-span-2 lg:col-span-1 lg:whitespace-nowrap`}>
-              Manage preferences
+            <button
+              type="button"
+              onClick={onManage}
+              className={`${secondaryButton} col-span-2 lg:col-span-1 lg:whitespace-nowrap`}
+            >
+              {copy.manage}
             </button>
           </div>
         </div>

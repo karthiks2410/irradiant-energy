@@ -4,11 +4,8 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Section, SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
-import { homePage } from "@/content/home";
 import type { Brand } from "@/content/home";
 import { AccentTitle } from "./AccentTitle";
-
-const { brands } = homePage;
 
 /**
  * The equipment brands, as the owner's prototype has them: two rails travelling in opposite
@@ -25,7 +22,16 @@ const { brands } = homePage;
  *
  * The duplicate half is `aria-hidden` and `inert`, so assistive technology hears seventeen brands
  * rather than thirty-four and nothing in the copy can be tabbed into.
+ *
+ * The heading and the brand list arrive as props. This is a client component, so importing
+ * src/content would put both locales' copy in the browser bundle and the Kannada strings in an
+ * English page's payload (scripts/check-client-content.ts fails the build on that).
  */
+
+export type BrandRailProps = {
+  copy: { eyebrow: string; title: string; accent: string };
+  items: readonly Brand[];
+};
 function BrandCard({ brand }: { brand: Brand }) {
   return (
     <div className="flex h-[92px] min-w-[280px] items-center gap-3.5 rounded-lg border border-mist bg-white px-4 py-3.5">
@@ -55,7 +61,7 @@ function BrandCard({ brand }: { brand: Brand }) {
         </span>
       )}
       <span className="min-w-0">
-        <span className="block font-mono text-label text-green-700 uppercase">{brand.category}</span>
+        <span className="block font-label text-label text-green-700 uppercase">{brand.category}</span>
         <span className="mt-1.5 block truncate font-display text-h4 font-bold text-teal-900">{brand.name}</span>
       </span>
     </div>
@@ -95,8 +101,8 @@ function Rail({ items, direction }: { items: readonly Brand[]; direction: "left"
   );
 }
 
-export function BrandRail() {
-  const half = Math.ceil(brands.items.length / 2);
+export function BrandRail({ copy, items }: BrandRailProps) {
+  const half = Math.ceil(items.length / 2);
 
   return (
     // Canvas, not the prototype's white: WhyBand directly above is already white, and white
@@ -105,17 +111,16 @@ export function BrandRail() {
       <Reveal>
         <SectionHeading
           id="brands-heading"
-          eyebrow={brands.copy.eyebrow}
-          title={<AccentTitle text={brands.copy.title} words={2} />}
-          lead={brands.copy.lead}
+          eyebrow={copy.eyebrow}
+          title={<AccentTitle text={copy.title} accent={copy.accent} />}
         />
       </Reveal>
 
       {/* Outside <Reveal> on purpose: the reveal animates a transform on its wrapper, and a
           transformed ancestor makes the rails' own transforms judder while it runs. */}
       <div className="mt-12 grid gap-4">
-        <Rail items={brands.items.slice(0, half)} direction="right" />
-        <Rail items={brands.items.slice(half)} direction="left" />
+        <Rail items={items.slice(0, half)} direction="right" />
+        <Rail items={items.slice(half)} direction="left" />
       </div>
     </Section>
   );

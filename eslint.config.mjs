@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Local QA scratch: gitignored, never shipped, and not worth linting.
     ".qa/**",
+    // Planning record and research scratch (docs/kannada/tmp/**): kept out of git via
+    // .git/info/exclude, never bundled, and full of throwaway CommonJS probe scripts. Linting it
+    // measured the research, not the site.
+    "docs/**",
     "test-results/**",
     "playwright-report/**",
   ]),

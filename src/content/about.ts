@@ -4,30 +4,46 @@
  * §2.2–2.6, §3.5–3.7), team as names and roles only (F-30 to F-32; bios held, CL-31).
  */
 
-import { primaryCta, site } from "@/content/site";
-import type { Cta, Feature, HeldItem, SectionCopy, Step, TeamMember, TextItem } from "@/content/types";
+import { primaryCta } from "@/content/site";
+import type { Cta, Feature, HeldItem, LabelValue, SectionCopy, Step, TeamMember, TextItem } from "@/content/types";
 
 const brandText = (text: string, page: string): TextItem => ({ text, source: `brand PDF ${page}`, status: "brand-pdf" });
 
+/**
+ * The page's own <title> and meta description, which /about used to spell out in its
+ * generateMetadata. They live here so the Kannada overlay can reach them; the brand PDF's
+ * 10-word introduction, which this key used to hold and which nothing rendered, is kept as
+ * `brand.introduction`.
+ */
 const meta = {
-  title: "About",
-  description: "Intelligent clean-energy systems for homes, communities and businesses.",
-  source: "brand PDF p.25 (10-word introduction)",
-  status: "brand-pdf",
+  title: "About us",
+  description:
+    "How Irradiant Energy works — understand, design, deliver, support — plus the mission, values and people behind the company.",
+  source: "proposed · the four verbs are the How-we-work steps (brand PDF p.6)",
+  status: "proposed",
 } as const;
 
-const mission: SectionCopy = {
+/** Breadcrumb and JSON-LD name for this page; the nav label, kept in one place. */
+const breadcrumb = "About";
+
+/** Section eyebrow over the positioning line. */
+const stands = { eyebrow: "What we stand for" } as const;
+
+const mission = {
   eyebrow: "Our mission",
   title: "Powering a Greener Tomorrow",
+  /** The green run, written out: the old rule took the last word (accent-split.test.ts). */
+  accent: "Tomorrow",
   lead: "Built in Bengaluru. We make rooftop solar simple, transparent and built to last.",
   source: "F-35 · F-36 · P-AB-2 (the team-authored original F-37 is held for the owner's decision)",
   status: "verified-live",
-};
+} as const satisfies SectionCopy;
 
-const story: { copy: SectionCopy; steps: readonly Step[] } = {
+const story = {
   copy: {
     // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (heading adapted from the page's meta description).
     title: "How we work",
+    accent: "work",
     source: "proposed · /about meta description",
     status: "proposed",
   },
@@ -37,11 +53,13 @@ const story: { copy: SectionCopy; steps: readonly Step[] } = {
     { number: "03", title: "Deliver", description: "Professional execution", source: "brand PDF p.6", status: "brand-pdf" },
     { number: "04", title: "Support", description: "Performance over time", source: "brand PDF p.6", status: "brand-pdf" },
   ],
-};
+} as const satisfies { copy: SectionCopy; steps: readonly Step[] };
 
 const brand = {
   tagline: brandText("Energy Made Intelligent", "p.5"),
   purposeShort: brandText("Make intelligent energy practical", "p.5"),
+  /** The 10-word company introduction. Nothing renders it; it is kept so the claim is not lost. */
+  introduction: brandText("Intelligent clean-energy systems for homes, communities and businesses.", "p.25"),
   positioning: brandText("Irradiant is a professional energy-system partner, not a low-cost product seller.", "p.17"),
   /** "Measurable performance" needs monitoring evidence before it carries weight (report §7.1). */
   promise: brandText("Clear advice. Reliable engineering. Measurable performance. Long-term support.", "p.19"),
@@ -59,11 +77,11 @@ const brand = {
  * things a customer can act on, each owner-confirmed: coverage across Karnataka, the system types
  * sold including batteries and monitoring, and what residential customers get.
  */
-export const facts: readonly { label: string; value: string }[] = [
+export const facts = [
   { label: "Who we work with", value: "Homes, housing societies and businesses across Karnataka." },
   { label: "What we install", value: "On-grid, off-grid and hybrid rooftop systems, with batteries and monitoring." },
   { label: "Included for homes and societies", value: "A free site visit and quote, the paperwork, and 5 years of free maintenance." },
-];
+] as const satisfies readonly LabelValue[];
 
 const value = (number: string, title: string, description: string): Feature => ({
   number,
@@ -73,11 +91,12 @@ const value = (number: string, title: string, description: string): Feature => (
   status: "proposed",
 });
 
-const values: { copy: SectionCopy; items: readonly Feature[] } = {
+const values = {
   copy: {
     eyebrow: "Values",
     // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (heading reworded; the values are brand PDF p.9).
     title: "How we keep our promise.",
+    accent: "our promise.",
     source: "proposed · values brand PDF p.9",
     status: "proposed",
   },
@@ -89,7 +108,7 @@ const values: { copy: SectionCopy; items: readonly Feature[] } = {
     value("05", "Customer control", "You can see how your system performs, understand the numbers, and reach us when you need to."),
     value("06", "Responsible impact", "We describe results in figures you can check, not green slogans."),
   ],
-};
+} as const satisfies { copy: SectionCopy; items: readonly Feature[] };
 
 const member = (name: string, role: string, ref: string): TeamMember => ({
   name,
@@ -98,7 +117,7 @@ const member = (name: string, role: string, ref: string): TeamMember => ({
   status: "verified-live",
 });
 
-const team: { copy: SectionCopy; members: readonly TeamMember[] } = {
+const team = {
   copy: {
     eyebrow: "Team",
     // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (heading adapted from the page's meta description).
@@ -111,11 +130,12 @@ const team: { copy: SectionCopy; members: readonly TeamMember[] } = {
     member("Maruthi S Pavan", "Co-Founder", "F-31"),
     member("Maruthi S Tejas", "Head of Marketing", "F-32"),
   ],
-};
+} as const satisfies { copy: SectionCopy; members: readonly TeamMember[] };
 
-const closingCta: { copy: SectionCopy; primary: Cta; whatsappPrompt: TextItem } = {
+const closingCta = {
   copy: {
     title: "Let's power your space.",
+    accent: "your space.",
     // "Free site visit anywhere in India." trimmed (F-41); see held.
     lead: "Transparent quote in rupees, no pressure. We'll design the right system for your roof and your bill.",
     source: "P-AB-4",
@@ -123,11 +143,13 @@ const closingCta: { copy: SectionCopy; primary: Cta; whatsappPrompt: TextItem } 
   },
   primary: { label: primaryCta.label, href: primaryCta.href, source: "site.ts primaryCta", status: "proposed" },
   whatsappPrompt: {
-    text: `Hi ${site.name} — I'd like to talk about going solar.`,
+    // A template, not a concatenation: Kannada opens with ನಮಸ್ಕಾರ and puts the brand elsewhere
+    // in the line. `fill()` substitutes it at render (src/i18n/format.ts).
+    text: "Hi {siteName} — I'd like to talk about going solar.",
     source: "W2 (renamed per D-001)",
     status: "verified-live",
   },
-};
+} as const satisfies { copy: SectionCopy & { accent: string }; primary: Cta; whatsappPrompt: TextItem };
 
 const held: readonly HeldItem[] = [
   {
@@ -197,6 +219,8 @@ const held: readonly HeldItem[] = [
 
 export const aboutPage = {
   meta,
+  breadcrumb,
+  stands,
   mission,
   story,
   brand,

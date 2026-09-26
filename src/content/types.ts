@@ -56,6 +56,21 @@ export interface SectionCopy extends Sourced {
   /** Sentence case (report §6). */
   title: string;
   lead?: string;
+  /**
+   * The run of `title` that renders in the accent green, written out rather than derived.
+   *
+   * The two-tone headline used to take the last N words, which only works in a language whose
+   * emphasised phrase lands last. Kannada puts the verb there, so a positional rule paints the
+   * verb green and leaves the noun phrase in ink, and because Kannada compounds, two words can
+   * be the whole line (docs/kannada/research/layout-risks.md M9). Each locale therefore names
+   * its own run: English repeats what the positional rule produced (accent-split.test.ts
+   * proves it, character for character), and the Kannada overlay carries the reviewer's
+   * `accentPhrase`.
+   *
+   * Optional because not every heading is two-tone. Where it is set, the Kannada overlay must
+   * set it too — `Translation<T>` sees the key on the `as const` literal and requires it.
+   */
+  accent?: string;
 }
 
 export interface HeroCopy extends SectionCopy {
@@ -125,7 +140,15 @@ export type SystemTypeId = "on-grid" | "off-grid" | "hybrid";
 
 export interface SystemType extends Sourced {
   id: SystemTypeId;
-  name: string;
+  /**
+   * The mono label above the card headline ("On-Grid").
+   *
+   * `label`, not `name`: `name` is English-owned at every depth of a Kannada overlay
+   * (FIXED_KEYS in src/i18n/translation.ts) because it holds proper names — the brand, a team
+   * member. These three are translated technical labels, and the home page's system tags already
+   * carry the same words in Kannada.
+   */
+  label: string;
   /** Card headline. */
   plainName: string;
   /** Audience-neutral one-liner: use it on the housing-society and business pages. */

@@ -1,10 +1,11 @@
-export { Accent } from "./Accent";
+export { Accent, AccentRun } from "./Accent";
 export { Accordion, type AccordionItem } from "./Accordion";
 export { Button, ButtonLink } from "./Button";
 export { Card, CardGrid, LinkCard, cardSurface, type CardTag } from "./Card";
 export { Eyebrow, type EyebrowTone } from "./Eyebrow";
 export { FeatureCard } from "./FeatureCard";
 export { ArrowRightIcon, BusinessAudienceIcon, ChatIcon, CheckIcon, ChevronDownIcon, ErrorIcon, FeatureIcon, HomeAudienceIcon, PhoneIcon, SocietyAudienceIcon } from "./Icons";
+export { NoteMark } from "./NoteMark";
 export { PlaceholderPanel } from "./PlaceholderPanel";
 export { Section, type Surface } from "./Section";
 export { SectionHeading } from "./SectionHeading";

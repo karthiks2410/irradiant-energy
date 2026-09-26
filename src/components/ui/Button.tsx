@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import type { ComponentProps, ReactNode } from "react";
 
 /**
@@ -8,6 +8,12 @@ import type { ComponentProps, ReactNode } from "react";
  * - light:   carbon label on white, for dark/photo surfaces
  * - outline: teal-900 outline + label on light surfaces
  * - outline-light: white outline + label on dark surfaces
+ *
+ * The label span is `whitespace-nowrap` (layout-risks.md M4): a wrapped pill puts the circular
+ * arrow beside the last line instead of the middle and turns `rounded-full` into a stadium around
+ * two lines. The header CTA did that at 768 and 1280 on every route under Kannada-length copy.
+ * The cost is that a label longer than the viewport would overflow rather than wrap, so Kannada
+ * CTA copy carries a width budget (layout-risks.md §4 M4) and the e2e overflow check covers /kn.
  *
  * `className` is appended after the base classes, but Tailwind resolves conflicts by the order
  * rules appear in the stylesheet, not in the attribute — and `.inline-flex` is emitted after
@@ -62,7 +68,9 @@ export function ButtonLink({ variant = "primary", arrow = true, className = "", 
   const v = variants[variant];
   return (
     <Link {...props} className={`${base} ${v.root} ${arrow ? "py-1.5 pr-1.5 pl-5" : "px-5 py-2.5"} ${className}`}>
-      <span>{children}</span>
+      {/* An arrow pill must not wrap (its arrow would drop to a second line); an arrowless button
+          may, so a long Kannada label wraps inside a 320px screen instead of pushing past it. */}
+      <span className={arrow ? "whitespace-nowrap" : "text-center"}>{children}</span>
       {arrow && <Arrow className={v.node} />}
     </Link>
   );
@@ -82,7 +90,7 @@ export function Button({ variant = "primary", arrow = false, className = "", chi
       {...props}
       className={`${base} ${v.root} ${arrow ? "py-1.5 pr-1.5 pl-5" : "px-5 py-2.5"} disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
     >
-      <span>{children}</span>
+      <span className="whitespace-nowrap">{children}</span>
       {arrow && <Arrow className={v.node} />}
     </button>
   );

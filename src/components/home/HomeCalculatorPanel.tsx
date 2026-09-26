@@ -1,19 +1,68 @@
 "use client";
 
+/**
+ * The home page's working estimate panel: the white half of the prototype's `.calc-shell`.
+ *
+ * It is the only client code in the band — the dark half, the heading and the CTA are server
+ * rendered and passed around it — and it holds nothing but the inputs. Every figure it prints
+ * comes from `buildEstimate` (src/lib/solar/calc.ts), the same engine /get-quote and the lead
+ * alert use, so the home page can never quote a number the proposal flow disagrees with.
+ * No constant is defined here.
+ *
+ * The prototype's own maths is deliberately not reproduced: it multiplied savings by an invented
+ * daytime-use factor and priced systems at a flat ₹52,000/kWp. The engine's constants carry a
+ * source and a status, and the panel shows them under the figures.
+ *
+ * Owner review round 2:
+ * - point 8: the PIN code is required, and no figure is computed until one is present. The PIN
+ *   decides which tariffs apply, so without it the engine would quietly price a Karnataka
+ *   (BESCOM) estimate for a visitor anywhere in India.
+ * - point 9: the "Average tariff" input is gone. It overrode the slab table, which is the
+ *   documented basis for every figure here; the estimate now always uses the BESCOM domestic
+ *   slabs (home) or the flat default (society and business), both named under "Assumptions".
+ *   The engine keeps that input in its API — it is simply no longer offered to visitors.
+ * - the fields sit in <FieldRow>s so the inputs line up whatever the helper text says.
+ *
+ * Redesign (#14): the bill is typed, the sanctioned load from the bill is required and caps the
+ * size, a society gives its number of homes, and the recommended system leads in its own
+ * callout above three tiles. Every engine note carries a small warning mark.
+ */
+
 import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
-import { enIn, flagNotes, parseSegment } from "@/components/quote/copy";
+import { parseSegment } from "@/components/quote/copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "@/components/quote/FieldRow";
-import { ChevronDownIcon, SelectField, StatTile, TextField } from "@/components/ui";
-import { buildEstimate } from "@/lib/solar/calc";
-import { SEGMENTS, SEGMENT_LABELS, ROOF_SQFT_PER_KWP } from "@/lib/solar/constants";
+import { ChevronDownIcon, NoteMark, SelectField, StatTile, TextField } from "@/components/ui";
+import { fill } from "@/i18n/format";
+import { describeAssumptions, type AssumptionCopy } from "@/lib/solar/assumptions";
+import { buildEstimate, type EstimateFlag } from "@/lib/solar/calc";
+import { ROOF_SQFT_PER_KWP, SEGMENTS, type Segment } from "@/lib/solar/constants";
 import { TickerNumber } from "@/components/motion/TickerNumber";
 import { useHomeEstimate } from "./HomeEstimateProvider";
 import { formatInr } from "@/lib/solar/format";
 
+/** The visitor may type a city, a PIN code or both; only a well-formed PIN reaches the engine. */
 const PINCODE_RE = /(?:^|\D)([1-9][0-9]{5})(?!\d)/;
-const PINCODE_ERROR = "Enter a 6-digit PIN code, for example 560001.";
 
-const segmentOptions = SEGMENTS.map((value) => ({ value, label: SEGMENT_LABELS[value] }));
+/**
+ * Every word this panel prints, handed down by <HomeCalculator>.
+ *
+ * It is a client island, so it may not import a content module: that would put both languages'
+ * copy in the browser bundle, and Kannada strings in an English page's payload. The engine keeps
+ * the keys — segment ids, flag ids — and this carries the wording for them.
+ */
+export type CalculatorUi = {
+  pincodePlaceholder: string;
+  pincodeError: string;
+  /** Under the payback tile when a subsidy is counted in it. */
+  subsidyNote: string;
+  /** "~{sqft} sq ft of roof" under the recommended size. */
+  roofNeeded: string;
+  yearsUnit: string;
+  kwpUnit: string;
+  kwhUnit: string;
+  segments: Record<Segment, string>;
+  flags: Record<EstimateFlag, string>;
+};
 
 const digitsOnly = (value: string, max: number) => value.replace(/\D/g, "").slice(0, max);
 
@@ -26,6 +75,11 @@ type FieldCopy = { label: string; hint?: string };
 
 type Tile = { label: string; value: ReactNode; unit?: string; note?: string };
 
+/**
+ * Figures travel to their new value rather than cutting to it. `key` is deliberately absent:
+ * React must keep the same TickerNumber instance across an estimate change, or the spring
+ * restarts from the new value and nothing moves.
+ */
 const ticker = (value: number, format: (n: number) => string) => (
   <TickerNumber value={value} format={format} />
 );
@@ -35,10 +89,30 @@ export type HomeCalculatorPanelProps = {
   results: { title: string; size: string; savings: string; payback: string; subsidy: string; cost: string };
   assumptionsLabel: string;
   disclaimer: string;
+  /**
+   * The templates behind the assumptions panel. The engine returns keys and figures, never
+   * prose (src/lib/solar/calc.ts), so the words for them arrive with the rest of the copy.
+   */
+  assumptions: AssumptionCopy;
+  ui: CalculatorUi;
+  /** The "(optional)" marker beside an optional field's label. */
+  optionalMarker: string;
   className?: string;
 };
 
-export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclaimer, className = "" }: HomeCalculatorPanelProps) {
+export function HomeCalculatorPanel({
+  fields,
+  results,
+  assumptionsLabel,
+  disclaimer,
+  assumptions,
+  ui,
+  optionalMarker,
+  className = "",
+}: HomeCalculatorPanelProps) {
+  const segmentOptions = SEGMENTS.map((value) => ({ value, label: ui.segments[value] }));
+  // Segment, bill and PIN come from the page-level provider, so the hero's estimate entry and
+  // this panel are working on the same numbers rather than two copies of them.
   const { segment, setSegment, bill, setBill, location, setLocation } = useHomeEstimate();
   const [locationTouched, setLocationTouched] = useState(false);
   const [sanctionedLoad, setSanctionedLoad] = useState("");
@@ -75,8 +149,8 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
         {
           label: results.payback,
           value: payback === null ? "—" : ticker(payback, (n) => n.toFixed(1)),
-          unit: payback === null ? undefined : "years",
-          note: estimate.subsidyInr > 0 ? "After the estimated subsidy" : undefined,
+          unit: payback === null ? undefined : ui.yearsUnit,
+          note: estimate.subsidyInr > 0 ? ui.subsidyNote : undefined,
         },
         estimate.subsidyInr > 0
           ? {
@@ -90,7 +164,7 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
       ]
     : [
         { label: results.savings, value: formatInr(0) },
-        { label: results.payback, value: "0", unit: "years" },
+        { label: results.payback, value: "0", unit: ui.yearsUnit },
         { label: results.cost, value: formatInr(0) },
       ];
 
@@ -119,11 +193,11 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
             inputMode="numeric"
             autoComplete="postal-code"
             maxLength={6}
-            placeholder="e.g. 560001"
+            placeholder={ui.pincodePlaceholder}
             value={location}
             onChange={(event) => setLocation(digitsOnly(event.target.value, 6))}
             onBlur={() => setLocationTouched(true)}
-            error={locationTouched && pincode === undefined ? PINCODE_ERROR : undefined}
+            error={locationTouched && pincode === undefined ? ui.pincodeError : undefined}
           />
         </FieldRow>
 
@@ -165,6 +239,7 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
             label={fields.houses.label}
             hint={fields.houses.hint}
             optional
+            optionalLabel={optionalMarker}
             type="text"
             inputMode="numeric"
             autoComplete="off"
@@ -175,21 +250,21 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
         )}
       </div>
 
-      <h3 className="mt-7 font-mono text-label text-grey-600 uppercase">{results.title}</h3>
+      <h3 className="mt-7 font-label text-label text-grey-600 uppercase">{results.title}</h3>
 
       <div aria-live="polite" className="mt-3">
         {/* Promoted system size callout */}
         {estimate && (
-          <div className="mb-3 rounded-md border border-green-600/20 bg-green-50 p-4">
-            <span className="block font-mono text-label text-green-800 uppercase">{results.size}</span>
+          <div className="mb-3 rounded-md border border-green-600/20 bg-soft-green p-4">
+            <span className="block font-label text-label text-green-700 uppercase">{results.size}</span>
             <span className="mt-2 flex items-baseline gap-1.5">
               <span className="font-mono text-data-xl font-medium tabular-nums text-carbon">
                 <TickerNumber value={estimate.systemKwp} format={(n) => n.toFixed(1)} />
               </span>
-              <span className="text-data text-green-800">kWp</span>
+              <span className="text-data text-green-700">{ui.kwpUnit}</span>
             </span>
             <span className="mt-1 block text-small text-grey-600">
-              ~{Math.round(estimate.systemKwp * ROOF_SQFT_PER_KWP.value)} sq ft of roof
+              {fill(ui.roofNeeded, { sqft: String(Math.round(estimate.systemKwp * ROOF_SQFT_PER_KWP.value)) })}
             </span>
           </div>
         )}
@@ -212,8 +287,9 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
         {estimate !== null && estimate.flags.length > 0 && (
           <ul className="mt-4 grid gap-2">
             {estimate.flags.map((flag) => (
-              <li key={flag} className="text-small text-ink-2">
-                {flagNotes[flag]}
+              <li key={flag} className="flex items-start gap-2 text-small text-ink-2">
+                <NoteMark />
+                <span>{ui.flags[flag]}</span>
               </li>
             ))}
           </ul>
@@ -227,11 +303,11 @@ export function HomeCalculatorPanel({ fields, results, assumptionsLabel, disclai
             <ChevronDownIcon className="size-4 shrink-0 transition-transform duration-200 ease-controlled group-open:rotate-180" />
           </summary>
           <dl className="mt-3 grid gap-3">
-            {estimate.assumptions.map((assumption) => (
-              <div key={assumption.label}>
-                <dt className="font-mono text-label text-grey-600 uppercase">{assumption.label}</dt>
+            {describeAssumptions(estimate.assumptions, assumptions).map((assumption) => (
+              <div key={assumption.key}>
+                <dt className="font-label text-label text-grey-600 uppercase">{assumption.label}</dt>
                 <dd className="mt-1 text-small text-ink-2">{assumption.value}</dd>
-                <dd className="mt-1 text-small text-grey-600">{assumption.source}</dd>
+                <dd className="mt-1 text-small text-grey-600">{assumption.citation}</dd>
               </div>
             ))}
           </dl>

@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { usePathname } from "next/navigation";
+import { stripLocale } from "@/i18n/paths";
 import { useEffect, useId, useRef, useState, type ComponentType, type PointerEvent } from "react";
 import { ArrowRightIcon, BusinessAudienceIcon, HomeAudienceIcon, SocietyAudienceIcon } from "@/components/ui";
 import type { NavGroup } from "@/content/site";
@@ -49,7 +50,17 @@ const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
  * order and the accessibility tree without unmounting them. Under a reduced-motion preference the
  * global rule in globals.css collapses the transitions, so it simply appears and disappears.
  */
-export function SolutionsMenu({ group }: { group: NavGroup }) {
+export function SolutionsMenu({
+  group,
+  labels,
+}: {
+  group: NavGroup;
+  /**
+   * The panel's own wording. A client island may not import a content module, so it arrives from
+   * <SiteHeader> with the rest of the merged copy.
+   */
+  labels: { panelLabel: string; notSure: string; compareAll: string };
+}) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -59,7 +70,8 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
   const openedByHover = useRef(false);
   const panelId = useId();
   const pathname = usePathname();
-  const active = group.items.some((item) => pathname.startsWith(item.href));
+  // Compare without the locale prefix, so a Kannada audience page marks the menu current too.
+  const active = group.items.some((item) => stripLocale(pathname).path.startsWith(item.href));
 
   // Close on navigation. Adjusting during render rather than in an effect avoids the cascading
   // re-render React warns about, and closes before the new route paints.
@@ -140,7 +152,7 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={onClick}
-        className={`inline-flex min-h-11 items-center gap-1.5 px-3 text-[0.9375rem] font-medium transition-colors hover:text-yellow-400 ${
+        className={`inline-flex min-h-11 items-center gap-1.5 px-3 text-[0.9375rem] font-medium whitespace-nowrap transition-colors hover:text-yellow-400 kn:px-2.5 kn:text-[0.875rem] ${
           active || open ? "text-yellow-400" : ""
         }`}
       >
@@ -182,7 +194,7 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
               : "invisible -translate-y-2 scale-[0.97] opacity-0 duration-150"
           }`}
         >
-          <p className="px-3 pt-2.5 pb-1.5 font-mono text-label text-on-dark-muted uppercase">Rooftop solar</p>
+          <p className="px-3 pt-2.5 pb-1.5 font-label text-label text-on-dark-muted uppercase">{labels.panelLabel}</p>
 
           <ul>
             {group.items.map((item, index) => {
@@ -209,7 +221,11 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
                     <span className="min-w-0 flex-1">
                       <span className="block font-display text-ui font-semibold">{item.label}</span>
                       {item.description && (
-                        <span className="block truncate text-small text-white/75">{item.description}</span>
+                        // M3: `truncate` cut 1 of 3 descriptions in real Kannada at every desktop
+                        // width. English never truncates, so only Kannada is allowed a second line.
+                        <span className="block truncate text-small text-white/75 kn:line-clamp-2 kn:whitespace-normal">
+                          {item.description}
+                        </span>
                       )}
                     </span>
                     <ArrowRightIcon className="size-4 shrink-0 -translate-x-1 text-green-300 opacity-0 transition-[opacity,translate] duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" />
@@ -220,7 +236,7 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
           </ul>
 
           <div className="mt-1 flex items-center justify-between border-t border-white/10 px-3 pt-2.5 pb-1.5">
-            <p className="text-small text-white/75">Not sure which fits?</p>
+            <p className="text-small text-white/75">{labels.notSure}</p>
             <Link
               href="/solutions"
               // White, not green-300: over the frosted panel green-300 measured 2.99:1 at worst
@@ -228,7 +244,7 @@ export function SolutionsMenu({ group }: { group: NavGroup }) {
               // measures 7.6:1 there. The green survives on the arrow, which is decoration.
               className="group inline-flex items-center gap-1.5 text-small font-semibold text-white hover:underline"
             >
-              Compare all three
+              {labels.compareAll}
               <ArrowRightIcon className="size-3.5 text-green-300 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
           </div>

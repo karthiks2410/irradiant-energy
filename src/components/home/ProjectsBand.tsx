@@ -1,11 +1,8 @@
 import Image from "next/image";
 import { Section, SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
-import { homePage } from "@/content/home";
-import { projectImages } from "@/content/images";
+import type { Content } from "@/i18n/content";
 import { AccentTitle } from "./AccentTitle";
-
-const { projects } = homePage;
 
 /**
  * The owner's own installation photographs, and nothing else.
@@ -28,8 +25,11 @@ const { projects } = homePage;
  * same shot would read as wallpaper. Below `lg` there are two columns and no feature cell, since
  * six equal portraits tile perfectly there and a wide first cell would strand the sixth.
  */
-export function ProjectsBand() {
-  const [lead, ...rest] = projects.photos.map((key) => projectImages[key]);
+export function ProjectsBand({ content }: { content: Content }) {
+  const { projects } = content.home;
+  // `photos` names entries in the images module, and the alt text comes from the merged copy, so
+  // a Kannada page describes the same photograph in Kannada.
+  const [lead, ...rest] = projects.photos.map((key) => content.images[key]);
 
   return (
     <Section aria-labelledby="projects-heading">
@@ -38,7 +38,7 @@ export function ProjectsBand() {
           id="projects-heading"
           align="stacked"
           eyebrow={projects.copy.eyebrow}
-          title={<AccentTitle text={projects.copy.title} words={2} />}
+          title={<AccentTitle text={projects.copy.title} accent={projects.copy.accent} />}
         />
 
         <ul className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">

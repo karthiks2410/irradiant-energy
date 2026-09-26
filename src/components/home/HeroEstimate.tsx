@@ -22,10 +22,20 @@ import { useHomeEstimate } from "./HomeEstimateProvider";
  * band, which shows the figures and, just as importantly, the assumptions behind them. Putting
  * a bare number in the hero with its caveats four sections away would be the wrong trade.
  *
- * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: every string below is new UX copy. None of it
- * states a fact about the business; the promise it makes ("no phone number") is about this form.
+ * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: every string it renders is new UX copy (see
+ * `ui.home` in src/content/ui.ts). None of it states a fact about the business; the promise it
+ * makes ("no phone number") is about this form. The strings arrive as props because this is a
+ * client island: importing them would ship both languages to the browser.
  */
-export function HeroEstimate() {
+export function HeroEstimate({
+  billLabel,
+  submitLabel,
+  note,
+}: {
+  billLabel: string;
+  submitLabel: string;
+  note: string;
+}) {
   const { bill, setBill } = useHomeEstimate();
   const billId = useId();
 
@@ -39,7 +49,7 @@ export function HeroEstimate() {
   return (
     <form onSubmit={submit} className="mt-7 max-w-[520px]">
       <label htmlFor={billId} className="block text-small font-medium text-white/85">
-        Your monthly electricity bill
+        {billLabel}
       </label>
 
       <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
@@ -66,7 +76,7 @@ export function HeroEstimate() {
           type="submit"
           className="group inline-flex min-h-[54px] shrink-0 items-center gap-3 rounded-full bg-white py-1.5 pr-1.5 pl-6 text-ui font-semibold text-carbon transition-colors duration-200 ease-controlled hover:bg-canvas"
         >
-          See my estimate
+          {submitLabel}
           <span
             aria-hidden="true"
             className="grid size-10 shrink-0 place-items-center rounded-full bg-green-700 text-white transition-transform duration-200 ease-controlled group-hover:translate-x-0.5"
@@ -76,9 +86,7 @@ export function HeroEstimate() {
         </button>
       </div>
 
-      <p className="mt-2.5 text-small text-white/80">
-        No phone number, no sign-up.
-      </p>
+      <p className="mt-2.5 text-small text-white/80">{note}</p>
     </form>
   );
 }

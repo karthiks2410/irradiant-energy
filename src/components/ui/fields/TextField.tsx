@@ -8,6 +8,8 @@ type TextFieldProps = Omit<ComponentProps<"input">, "id" | "name" | "className" 
   hint?: string;
   error?: string;
   optional?: boolean;
+  /** The "(optional)" marker's wording, for a localised page. */
+  optionalLabel?: string;
   /** Static adornment inside the field, e.g. "+91" or "₹". Decorative: put the unit in the label too. */
   prefix?: string;
   suffix?: string;
@@ -17,9 +19,9 @@ type TextFieldProps = Omit<ComponentProps<"input">, "id" | "name" | "className" 
 const adornment = "pointer-events-none absolute inset-y-0 flex items-center font-mono text-ui text-grey-600";
 
 /** Set type, inputMode and autoComplete on every field (tel + tel-national, email, postal-code, numeric…). */
-export function TextField({ id, name, label, hint, error, optional, prefix, suffix, className, type = "text", ...input }: TextFieldProps) {
+export function TextField({ id, name, label, hint, error, optional, optionalLabel, prefix, suffix, className, type = "text", ...input }: TextFieldProps) {
   return (
-    <FieldShell id={id} label={label} hint={hint} error={error} optional={optional} className={className}>
+    <FieldShell id={id} label={label} hint={hint} error={error} optional={optional} optionalLabel={optionalLabel} className={className}>
       {(a11y) => (
         <div className="relative">
           {prefix && (

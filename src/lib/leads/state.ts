@@ -1,11 +1,16 @@
 /**
- * Action-state contract between `submitLead` (src/app/get-quote/actions.ts) and the quote form.
+ * Action-state contract between `submitLead` (src/lib/leads/submit-lead.ts) and the quote form.
  * Lives outside the "use server" module because that file may only export async functions.
  */
 
+import type { LeadFieldErrorCode, LeadFormErrorCode } from "./errors";
 import type { QuickEstimateSummary } from "./quick";
 import type { LeadField, QuickLeadField } from "./schema";
 
+/**
+ * Codes, not sentences (src/lib/leads/errors.ts). The action serves both locale trees from one
+ * endpoint, so the form looks the wording up in the copy its page handed it.
+ */
 export type LeadFieldErrors = Partial<Record<LeadField, string>>;
 
 /** What the form re-renders after a failed submit so nothing typed is lost (also without JS). */
@@ -33,8 +38,14 @@ export type LeadActionState =
     }
   | {
       ok: false;
-      /** Form-level message; shown in an alert region. */
-      error: string;
+      /** Which form-level refusal this is; shown in an alert region, worded by the form. */
+      errorCode: LeadFormErrorCode;
+      /**
+       * A developer hint shown instead of the worded message, outside production only — today,
+       * "set RESEND_API_KEY in .env.local". It is an instruction to whoever is running the site,
+       * not copy for a visitor, so it stays English and is never translated.
+       */
+      devMessage?: string;
       /**
        * Set only when the enquiry was valid and we could not deliver it. Nothing durable holds
        * the lead at that point — the lead log is deliberately PII-free — so this carries the
@@ -63,8 +74,9 @@ export type QuickQuoteState =
     }
   | {
       ok: false;
-      error: string;
-      fieldErrors?: Partial<Record<QuickLeadField, string>>;
+      /** A code, not a sentence: the popup words it in the page's language. */
+      errorCode: LeadFormErrorCode;
+      fieldErrors?: Partial<Record<QuickLeadField, LeadFieldErrorCode>>;
       /** Set when the enquiry was valid but could not be delivered: finish it on WhatsApp. */
       whatsappHref?: string;
       reference?: string;
@@ -72,6 +84,9 @@ export type QuickQuoteState =
 
 export const initialQuickQuoteState: QuickQuoteState = { ok: null };
 
-export type QuickEmailState = { ok: null } | { ok: true } | { ok: false; error: string; fieldError?: string };
+export type QuickEmailState =
+  | { ok: null }
+  | { ok: true }
+  | { ok: false; errorCode: LeadFormErrorCode; fieldError?: LeadFieldErrorCode };
 
 export const initialQuickEmailState: QuickEmailState = { ok: null };

@@ -24,22 +24,26 @@
  * this enquiry only (DPDP: free, specific, informed, unambiguous, an affirmative act). Closing the
  * dialog is as easy as submitting it: a plain close button, no "no thanks" link, no urgency.
  *
- * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: every string in COPY, and the society and business
- * bill ranges in src/lib/leads/quick.ts.
+ * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: the popup's words (src/content/ui.ts `quickQuote`,
+ * overlaid in Kannada) and the society and business bill ranges in src/lib/leads/quick.ts.
  */
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useActionState, useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { createContext, useActionState, useCallback, useContext, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { emailQuickQuote, submitQuickQuote } from "@/app/get-quote/actions";
+import { Link, useLocale } from "@/components/i18n/LocaleLink";
+import type { QuotePage } from "@/content/quote";
+import type { Ui } from "@/content/ui";
+import { fill } from "@/i18n/format";
+import { LEAD_ERROR_PARAMS, type LeadFieldErrorCode } from "@/lib/leads/errors";
+import { emailQuickQuote, submitQuickQuote } from "@/lib/leads/submit-lead";
 import { Button, CheckboxField, controlClass, FieldError, TextField } from "@/components/ui";
 import { ChoiceChips } from "@/components/ui/fields/ChoiceChips";
 import { BILL_BUCKETS, bucketLabel } from "@/lib/leads/quick";
-import { checkEmail, checkName, checkPhone, checkPincode, LEAD_MESSAGES } from "@/lib/leads/rules";
+import { checkEmail, checkName, checkPhone, checkPincode } from "@/lib/leads/rules";
 import type { QuickLeadField } from "@/lib/leads/schema";
 import { initialQuickEmailState, initialQuickQuoteState } from "@/lib/leads/state";
-import { SEGMENT_LABELS, SEGMENTS, type Segment } from "@/lib/solar/constants";
+import { SEGMENTS, type Segment } from "@/lib/solar/constants";
 
 export type QuickQuoteIntent = "quote" | "site-visit";
 
@@ -50,41 +54,30 @@ export function openQuickQuote(intent: QuickQuoteIntent = "quote") {
   window.dispatchEvent(new CustomEvent<QuickQuoteIntent>(OPEN_EVENT, { detail: intent }));
 }
 
-const COPY = {
-  quote: {
-    title: "Get a free quote",
-    lead: "See your estimate now. We follow up with a free site visit.",
-    submit: "See my estimate",
-  },
-  "site-visit": {
-    title: "Book a free site visit",
-    lead: "We check your roof and send a written quotation. Your estimate shows straight away.",
-    submit: "Book my visit",
-  },
-  close: "Close",
-  name: "Name",
-  phone: "WhatsApp number",
-  pincode: "PIN code",
-  segment: "Property",
-  bill: "Monthly electricity bill",
-  consent: "Irradiant Energy may call or WhatsApp me about this enquiry. I have read the",
-  privacy: "privacy notice",
-  sending: "Sending…",
-  resultTitle: "Your estimate",
-  resultFor: (bill: string, segment: string) => `For a ${segment.toLowerCase()} with a bill of ${bill} a month`,
-  systemSize: "System size",
-  monthlySavings: "Monthly savings",
-  subsidy: "Subsidy",
-  note: (ref: string) =>
-    `Estimates from your bill range, not a quote — a site visit confirms the final price. Reference ${ref}; we will call you on the number you gave.`,
-  fullBreakdown: "See the full breakdown",
-  whatsapp: "Talk to us on WhatsApp",
-  emailLabel: "Email me the full breakdown",
-  emailHint: "Optional. One email, no newsletters.",
-  emailSubmit: "Send",
-  emailSent: (to: string) => `Sent to ${to}, with the cost and payback too.`,
-  failedWhatsapp: "Send it on WhatsApp instead",
-} as const;
+/**
+ * Every word the popup prints, handed down from the layout in the page's language. This is a
+ * client island, so it may not import a content module (scripts/check-client-content.ts): that
+ * would ship both languages' copy to the browser.
+ */
+export type QuickQuoteCopy = Ui["quickQuote"] & {
+  fieldErrors: QuotePage["form"]["fieldErrors"];
+  formErrors: QuotePage["form"]["formErrors"];
+  /** Full property names, for the sentence under the result ("For a home with a bill of…"). */
+  segmentNames: Readonly<Record<Segment, string>>;
+};
+
+const CopyContext = createContext<QuickQuoteCopy | null>(null);
+
+function useCopy(): QuickQuoteCopy {
+  const copy = useContext(CopyContext);
+  if (!copy) throw new Error("QuickQuote copy is missing: mount <QuickQuoteDialog copy={…}>.");
+  return copy;
+}
+
+const intentCopy = (c: QuickQuoteCopy, intent: QuickQuoteIntent) => (intent === "site-visit" ? c.siteVisit : c.quote);
+
+/** A field error code in the page's language, with its limits filled in ("under 80 characters"). */
+const message = (c: QuickQuoteCopy, code: LeadFieldErrorCode) => fill(c.fieldErrors[code], LEAD_ERROR_PARAMS[code] ?? {});
 
 /** The page decides the starting property type; everywhere else starts on "Home". */
 function segmentFromPath(pathname: string): Segment {
@@ -92,9 +85,6 @@ function segmentFromPath(pathname: string): Segment {
   return (match?.[1] as Segment | undefined) ?? "home";
 }
 
-/** Short enough for three chips beside the PIN field. */
-const SEGMENT_SHORT: Record<Segment, string> = { home: "Home", "housing-society": "Society", commercial: "Business" };
-const SEGMENT_OPTIONS = SEGMENTS.map((value) => ({ value, label: SEGMENT_SHORT[value] }));
 
 export function QuickQuoteButton({
   intent = "quote",
@@ -115,7 +105,7 @@ export function QuickQuoteButton({
 }
 
 /** Mounted once, in the root layout. */
-export function QuickQuoteDialog() {
+export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
   const [intent, setIntent] = useState<QuickQuoteIntent>("quote");
@@ -150,7 +140,7 @@ export function QuickQuoteDialog() {
     close();
   }, [pathname, close]);
 
-  const copy = COPY[intent];
+  const copy = intentCopy(c, intent);
 
   return (
     <dialog
@@ -172,13 +162,14 @@ export function QuickQuoteDialog() {
           onClick={close}
           className="-mr-1 inline-grid size-10 shrink-0 place-items-center rounded-full border border-mist text-teal-900 transition-colors hover:bg-canvas"
         >
-          <span className="sr-only">{COPY.close}</span>
+          <span className="sr-only">{c.close}</span>
           <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.75">
             <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
           </svg>
         </button>
       </div>
 
+      <CopyContext.Provider value={c}>
       <QuickQuoteBody
         key={session}
         intent={intent}
@@ -189,6 +180,7 @@ export function QuickQuoteDialog() {
           finished.current = true;
         }}
       />
+      </CopyContext.Provider>
     </dialog>
   );
 }
@@ -206,11 +198,13 @@ function QuickQuoteBody({
   startedAt: number;
   onFinished: () => void;
 }) {
+  const c = useCopy();
+  const locale = useLocale();
   const [state, formAction] = useActionState(submitQuickQuote, initialQuickQuoteState);
   const [bucket, setBucket] = useState("");
   const [name, setName] = useState("");
   const [pincode, setPincode] = useState("");
-  const [errors, setErrors] = useState<Partial<Record<QuickLeadField, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<QuickLeadField, LeadFieldErrorCode>>>({});
   const errorSummaryRef = useRef<HTMLParagraphElement>(null);
 
   // A new result from the server replaces the field errors. Adjusting during render rather than in
@@ -229,20 +223,21 @@ function QuickQuoteBody({
 
   // The bill ranges belong to the property type, so changing one clears the other.
   const buckets = BILL_BUCKETS[segment];
-  const bucketOptions = buckets.map((b, i) => ({ value: b.id, label: bucketLabel(b, i === 0) }));
+  const bucketOptions = buckets.map((b, i) => ({ value: b.id, label: bucketLabel(b, i === 0, c.ranges) }));
+  const segmentOptions = SEGMENTS.map((value) => ({ value, label: c.segmentShort[value] }));
 
-  const validate = (form: HTMLFormElement): Partial<Record<QuickLeadField, string>> => {
+  const validate = (form: HTMLFormElement): Partial<Record<QuickLeadField, LeadFieldErrorCode>> => {
     const data = new FormData(form);
     const text = (key: string) => String(data.get(key) ?? "");
-    const found: Partial<Record<QuickLeadField, string>> = {};
+    const found: Partial<Record<QuickLeadField, LeadFieldErrorCode>> = {};
     const nameError = checkName(text("name"));
     if (nameError) found.name = nameError;
-    const phoneError = text("phone").trim() === "" ? LEAD_MESSAGES.phoneMissing : checkPhone(text("phone"));
+    const phoneError = checkPhone(text("phone"));
     if (phoneError) found.phone = phoneError;
     const pinError = checkPincode(text("pincode"));
     if (pinError) found.pincode = pinError;
-    if (!data.get("billBucket")) found.billBucket = LEAD_MESSAGES.billRange;
-    if (!data.get("consent")) found.consent = LEAD_MESSAGES.consent;
+    if (!data.get("billBucket")) found.billBucket = "billBucket.required";
+    if (!data.get("consent")) found.consent = "consent.required";
     return found;
   };
 
@@ -285,16 +280,17 @@ function QuickQuoteBody({
     <form action={formAction} onSubmit={onSubmit} noValidate className="grid gap-4 px-5 pt-4 pb-5">
       {state.ok === false && (
         <p ref={errorSummaryRef} tabIndex={-1} role="alert" className="rounded-md bg-error-tint p-4 text-small text-carbon">
-          {state.error}{" "}
+          {c.formErrors[state.errorCode]}{" "}
           {state.whatsappHref && (
             <a href={state.whatsappHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-green-700 underline underline-offset-2">
-              {COPY.failedWhatsapp}
+              {c.failedWhatsapp}
             </a>
           )}
         </p>
       )}
 
       <input type="hidden" name="startedAt" value={String(startedAt)} />
+      <input type="hidden" name="locale" value={locale} />
       <div aria-hidden="true" className="absolute -left-[9999px] size-px overflow-hidden">
         <label htmlFor="qq-website">Website</label>
         <input id="qq-website" name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
@@ -304,7 +300,7 @@ function QuickQuoteBody({
       <TextField
         id="qq-name"
         name="name"
-        label={COPY.name}
+        label={c.name}
         autoComplete="name"
         required
         value={name}
@@ -312,19 +308,19 @@ function QuickQuoteBody({
           setName(event.target.value);
           recheck("name", event.target.value);
         }}
-        error={errors.name}
+        error={errors.name && message(c, errors.name)}
       />
       <TextField
         id="qq-phone"
         name="phone"
         type="tel"
-        label={COPY.phone}
+        label={c.phone}
         prefix="+91"
         inputMode="tel"
         autoComplete="tel-national"
         required
         onChange={(event) => recheck("phone", event.target.value)}
-        error={errors.phone}
+        error={errors.phone && message(c, errors.phone)}
       />
       </div>
 
@@ -332,7 +328,7 @@ function QuickQuoteBody({
       <TextField
         id="qq-pincode"
         name="pincode"
-        label={COPY.pincode}
+        label={c.pincode}
         inputMode="numeric"
         autoComplete="postal-code"
         maxLength={6}
@@ -343,14 +339,14 @@ function QuickQuoteBody({
           setPincode(digits);
           recheck("pincode", digits);
         }}
-        error={errors.pincode}
+        error={errors.pincode && message(c, errors.pincode)}
       />
 
       <ChoiceChips
         name="segment"
-        legend={COPY.segment}
+        legend={c.segment}
         size="sm"
-        options={SEGMENT_OPTIONS}
+        options={segmentOptions}
         value={segment}
         onChange={(event) => {
           onSegmentChange(event.target.value as Segment);
@@ -360,7 +356,7 @@ function QuickQuoteBody({
       </div>
       <ChoiceChips
         name="billBucket"
-        legend={COPY.bill}
+        legend={c.bill}
         size="sm"
         options={bucketOptions}
         value={bucket}
@@ -369,27 +365,27 @@ function QuickQuoteBody({
           setErrors((prev) => ({ ...prev, billBucket: undefined }));
         }}
         required
-        error={errors.billBucket}
+        error={errors.billBucket && message(c, errors.billBucket)}
       />
 
       <CheckboxField
         id="qq-consent"
         name="consent"
         required
-        error={errors.consent}
+        error={errors.consent && message(c, errors.consent)}
         onChange={(event) => event.target.checked && setErrors((prev) => ({ ...prev, consent: undefined }))}
         label={
           <>
-            {COPY.consent}{" "}
+            {c.consent.split("{privacy}")[0]}
             <Link href="/privacy" className="font-medium text-green-700 underline underline-offset-2 hover:no-underline">
-              {COPY.privacy}
+              {c.privacy}
             </Link>
-            .
+            {c.consent.split("{privacy}")[1]}
           </>
         }
       />
 
-      <SubmitButton label={COPY[intent].submit} />
+      <SubmitButton label={intentCopy(c, intent).submit} />
     </form>
   );
 }
@@ -398,9 +394,10 @@ const QUICK_ORDER: QuickLeadField[] = ["name", "phone", "pincode", "billBucket",
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
+  const c = useCopy();
   return (
     <Button type="submit" arrow disabled={pending} className="w-full justify-between pl-6">
-      {pending ? COPY.sending : label}
+      {pending ? c.sending : label}
     </Button>
   );
 }
@@ -418,9 +415,11 @@ function QuickQuoteResult({
   pincode: string;
   billBucket: string;
 }) {
+  const c = useCopy();
+  const locale = useLocale();
   const [emailState, emailAction] = useActionState(emailQuickQuote, initialQuickEmailState);
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState<string | undefined>();
+  const [emailError, setEmailError] = useState<LeadFieldErrorCode | undefined>();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const statusId = useId();
   const { summary } = state;
@@ -434,18 +433,18 @@ function QuickQuoteResult({
   }
 
   const tiles: [string, string][] = [
-    [COPY.systemSize, summary.systemSize],
-    [COPY.monthlySavings, summary.monthlySavings],
-    [COPY.subsidy, summary.subsidy],
+    [c.systemSize, summary.systemSize],
+    [c.monthlySavings, summary.monthlySavings],
+    [c.subsidy, summary.subsidy],
   ];
 
   return (
     <div className="grid gap-4 px-5 pt-4 pb-5">
       <div>
         <h3 ref={headingRef} tabIndex={-1} className="font-display text-ui font-bold text-carbon outline-none">
-          {COPY.resultTitle}
+          {c.resultTitle}
         </h3>
-        <p className="mt-1 text-small text-ink-2">{COPY.resultFor(summary.billRangeLabel, SEGMENT_LABELS[segment])}</p>
+        <p className="mt-1 text-small text-ink-2">{fill(c.resultFor, { segment: c.segmentNames[segment].toLowerCase(), bill: summary.billRangeLabel })}</p>
       </div>
 
       <dl className="grid grid-cols-3 gap-2">
@@ -457,14 +456,14 @@ function QuickQuoteResult({
         ))}
       </dl>
 
-      <p className="text-small text-ink-2">{COPY.note(state.reference)}</p>
+      <p className="text-small text-ink-2">{fill(c.note, { reference: state.reference })}</p>
 
       <div className="flex flex-wrap gap-2">
         <Link
           href={`/get-quote?segment=${segment}`}
           className="inline-flex min-h-10 items-center rounded-full border-2 border-teal-900 px-4 text-small font-semibold text-teal-900 transition-colors hover:bg-teal-900 hover:text-white"
         >
-          {COPY.fullBreakdown}
+          {c.fullBreakdown}
         </Link>
         <a
           href={state.whatsappHref}
@@ -472,14 +471,14 @@ function QuickQuoteResult({
           rel="noopener noreferrer"
           className="inline-flex min-h-10 items-center rounded-full border-2 border-teal-900 px-4 text-small font-semibold text-teal-900 transition-colors hover:bg-teal-900 hover:text-white"
         >
-          {COPY.whatsapp}
+          {c.whatsapp}
         </a>
       </div>
 
       <div className="border-t border-mist pt-4">
         {emailState.ok === true ? (
           <p role="status" className="rounded-md bg-success-tint p-4 text-small text-carbon">
-            {COPY.emailSent(email)}
+            {fill(c.emailSent, { email })}
           </p>
         ) : (
           <form
@@ -494,12 +493,13 @@ function QuickQuoteResult({
             aria-describedby={emailState.ok === false ? statusId : undefined}
           >
             <input type="hidden" name="reference" value={state.reference} />
+            <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="name" value={name} />
             <input type="hidden" name="segment" value={segment} />
             <input type="hidden" name="pincode" value={pincode} />
             <input type="hidden" name="billBucket" value={billBucket} />
             <label htmlFor="qq-email" className="text-small font-semibold text-carbon">
-              {COPY.emailLabel}
+              {c.emailLabel}
             </label>
             <div className="flex gap-2">
               <input
@@ -515,21 +515,21 @@ function QuickQuoteResult({
                 }}
                 aria-invalid={emailError ? true : undefined}
                 aria-describedby={emailError ? "qq-email-error" : "qq-email-hint"}
-                placeholder="you@example.com"
+                placeholder={c.emailPlaceholder}
                 className={`${controlClass} min-h-11 flex-1`}
               />
               <EmailButton />
             </div>
             {emailError ? (
-              <FieldError id="qq-email-error">{emailError}</FieldError>
+              <FieldError id="qq-email-error">{message(c, emailError)}</FieldError>
             ) : (
               <p id="qq-email-hint" className="text-small text-grey-600">
-                {COPY.emailHint}
+                {c.emailHint}
               </p>
             )}
             {emailState.ok === false && !emailState.fieldError && (
               <p id={statusId} role="alert" className="text-small text-error">
-                {emailState.error}
+                {c.formErrors[emailState.errorCode]}
               </p>
             )}
           </form>
@@ -541,9 +541,10 @@ function QuickQuoteResult({
 
 function EmailButton() {
   const { pending } = useFormStatus();
+  const c = useCopy();
   return (
     <Button type="submit" variant="outline" disabled={pending} className="min-h-11 shrink-0 px-5">
-      {pending ? COPY.sending : COPY.emailSubmit}
+      {pending ? c.sending : c.emailSubmit}
     </Button>
   );
 }

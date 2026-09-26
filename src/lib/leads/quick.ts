@@ -55,21 +55,44 @@ export const BILL_BUCKETS: Record<Segment, readonly BillBucket[]> = {
 
 export const ALL_BUCKET_IDS: readonly string[] = Object.values(BILL_BUCKETS).flatMap((list) => list.map((b) => b.id));
 
+/**
+ * The words around the figures, per language: "Under ₹1,500", "From 6.5 kWp", "Up to ₹2,25,000".
+ * Templates rather than prefixes, because Kannada puts the figure first ("₹1,500ಕ್ಕಿಂತ ಕಡಿಮೆ").
+ * The English defaults are the English site's copy; a Kannada page passes its own.
+ */
+export interface RangeWords {
+  under: string;
+  over: string;
+  from: string;
+  upTo: string;
+  noSubsidy: string;
+}
+
+export const ENGLISH_RANGE_WORDS: RangeWords = {
+  under: "Under {value}",
+  over: "Over {value}",
+  from: "From {value}",
+  upTo: "Up to {value}",
+  noSubsidy: "Not available for businesses",
+};
+
+const put = (template: string, value: string) => template.replace("{value}", value);
+
 export function findBucket(segment: Segment, id: string): BillBucket | undefined {
   return BILL_BUCKETS[segment].find((bucket) => bucket.id === id);
 }
 
 /** "Under ₹1,500", "₹1,500–2,500", "Over ₹8,000" — how the chip and every result label read. */
-export function bucketLabel(bucket: BillBucket, first: boolean): string {
-  if (bucket.max === null) return `Over ${formatInr(bucket.min)}`;
-  if (first) return `Under ${formatInr(bucket.max)}`;
+export function bucketLabel(bucket: BillBucket, first: boolean, words: RangeWords = ENGLISH_RANGE_WORDS): string {
+  if (bucket.max === null) return put(words.over, formatInr(bucket.min));
+  if (first) return put(words.under, formatInr(bucket.max));
   return `${formatInr(bucket.min)}–${formatInr(bucket.max, { bare: true })}`;
 }
 
-export function labelFor(segment: Segment, id: string): string | undefined {
+export function labelFor(segment: Segment, id: string, words: RangeWords = ENGLISH_RANGE_WORDS): string | undefined {
   const list = BILL_BUCKETS[segment];
   const index = list.findIndex((bucket) => bucket.id === id);
-  return index === -1 ? undefined : bucketLabel(list[index], index === 0);
+  return index === -1 ? undefined : bucketLabel(list[index], index === 0, words);
 }
 
 /**
@@ -122,9 +145,14 @@ interface RangeFormat {
  * A range for display: "2.5–3.5 kWp", "₹2,250–3,600". Equal ends collapse to one value (the
  * subsidy is capped, so a whole bucket often shares it); an open bucket reads "From …".
  */
-export function formatRange(low: number, high: number | null, { number, prefix = "", unit = "" }: RangeFormat): string {
+export function formatRange(
+  low: number,
+  high: number | null,
+  { number, prefix = "", unit = "" }: RangeFormat,
+  words: RangeWords = ENGLISH_RANGE_WORDS,
+): string {
   const one = (value: number) => `${prefix}${number(value)}${unit}`;
-  if (high === null) return `From ${one(low)}`;
+  if (high === null) return put(words.from, one(low));
   if (number(low) === number(high)) return one(low);
   return `${prefix}${number(low)}–${number(high)}${unit}`;
 }
@@ -140,13 +168,18 @@ export interface QuickEstimateSummary {
   subsidy: string;
 }
 
-export function summarise(segment: Segment, bucketId: string, estimate: QuickEstimate): QuickEstimateSummary {
+export function summarise(
+  segment: Segment,
+  bucketId: string,
+  estimate: QuickEstimate,
+  words: RangeWords = ENGLISH_RANGE_WORDS,
+): QuickEstimateSummary {
   const { low, high } = estimate;
   return {
-    billRangeLabel: labelFor(segment, bucketId) ?? "",
-    systemSize: formatRange(low.systemKwp, high?.systemKwp ?? null, KWP),
-    monthlySavings: formatRange(low.monthlySavingsInr, high?.monthlySavingsInr ?? null, INR),
-    subsidy: subsidyText(estimate),
+    billRangeLabel: labelFor(segment, bucketId, words) ?? "",
+    systemSize: formatRange(low.systemKwp, high?.systemKwp ?? null, KWP, words),
+    monthlySavings: formatRange(low.monthlySavingsInr, high?.monthlySavingsInr ?? null, INR, words),
+    subsidy: subsidyText(estimate, words),
   };
 }
 
@@ -156,9 +189,9 @@ export function summarise(segment: Segment, bucketId: string, estimate: QuickEst
  * figure is a ceiling until the number of homes is known, so it is shown as one "Up to" figure.
  * For the open top bucket the upper end is the segment ceiling, because the subsidy is capped.
  */
-function subsidyText({ low, high, ceiling }: QuickEstimate): string {
-  if (low.flags.includes("subsidy-not-applicable")) return "Not available for businesses";
+function subsidyText({ low, high, ceiling }: QuickEstimate, words: RangeWords): string {
+  if (low.flags.includes("subsidy-not-applicable")) return words.noSubsidy;
   const top = (high ?? ceiling ?? low).subsidyInr;
-  if (low.flags.includes("subsidy-house-count-unknown")) return `Up to ₹${INR.number(top)}`;
-  return formatRange(low.subsidyInr, top, INR);
+  if (low.flags.includes("subsidy-house-count-unknown")) return put(words.upTo, `₹${INR.number(top)}`);
+  return formatRange(low.subsidyInr, top, INR, words);
 }

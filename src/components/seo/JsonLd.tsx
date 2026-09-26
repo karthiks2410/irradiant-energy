@@ -1,4 +1,8 @@
 import { isConfirmed, site, type Fact } from "@/content/site";
+import { HREFLANG, type Locale } from "@/i18n/config";
+import { getContent } from "@/i18n/content";
+import { localizePath } from "@/i18n/paths";
+import { getLocale } from "@/i18n/server";
 import { absoluteUrl, socialImage } from "@/lib/seo";
 
 /**
@@ -28,7 +32,7 @@ const organizationId = absoluteUrl("/#organization");
 const businessId = absoluteUrl("/#business");
 const websiteId = absoluteUrl("/#website");
 
-function siteGraph(): JsonLd {
+function siteGraph(locale: Locale): JsonLd {
   const homeUrl = absoluteUrl("/");
   const telephone = confirmed(site.contact.phonePrimary)?.tel;
   const email = confirmed(site.contact.email);
@@ -86,7 +90,10 @@ function siteGraph(): JsonLd {
         name: site.name,
         alternateName: site.legacyName,
         url: homeUrl,
-        inLanguage: "en-IN",
+        // This page's own language. `availableLanguage` on the contact point stays ["en"] until
+        // the owner confirms the team can answer in Kannada — that is a service claim, not a
+        // property of the website (architecture.md §11 Q3).
+        inLanguage: HREFLANG[locale],
         publisher: { "@id": organizationId },
       },
     ],
@@ -94,8 +101,8 @@ function siteGraph(): JsonLd {
 }
 
 /** Site-wide Organization, local business and WebSite nodes. Mount once, in the root layout. */
-export function JsonLd() {
-  return <JsonLdScript data={siteGraph()} />;
+export async function JsonLd() {
+  return <JsonLdScript data={siteGraph(await getLocale())} />;
 }
 
 export interface BreadcrumbItem {
@@ -103,9 +110,18 @@ export interface BreadcrumbItem {
   path: `/${string}`;
 }
 
-/** Mirrors the visible breadcrumb trail. Home is added automatically; pass the rest in order. */
-export function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
-  const trail: BreadcrumbItem[] = [{ name: "Home", path: "/" }, ...items];
+/**
+ * Mirrors the visible breadcrumb trail. Home is added automatically; pass the rest in order.
+ * Paths are given unprefixed and localized here, so the graph points at URLs that resolve in the
+ * locale the reader is actually on.
+ */
+export async function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
+  const locale = await getLocale();
+  // The same string the visible trail starts with (components/pages/Breadcrumbs.tsx), so the
+  // graph mirrors what is on the page — which is what Google's breadcrumb guidance asks for, and
+  // the reason it is read from the content layer here rather than written twice.
+  const { ui } = getContent(locale);
+  const trail: BreadcrumbItem[] = [{ name: ui.breadcrumbs.home, path: "/" }, ...items];
   return (
     <JsonLdScript
       data={{
@@ -115,7 +131,7 @@ export function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
           "@type": "ListItem",
           position: index + 1,
           name: item.name,
-          item: absoluteUrl(item.path),
+          item: absoluteUrl(localizePath(item.path, locale)),
         })),
       }}
     />

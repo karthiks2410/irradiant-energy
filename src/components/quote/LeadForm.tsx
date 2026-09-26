@@ -7,36 +7,95 @@
  * The property, bill and PIN code chosen in step 1 travel as hidden fields (never as URL
  * parameters). `startedAt` is rendered by the server at request time, which both feeds the
  * action's minimum-fill-time check and stays immune to a wrong clock on the visitor's device.
+ *
+ * The action answers in CODES, not sentences. One action id serves both locale trees, so it
+ * cannot know which language to refuse in until it has read the request, and a Kannada page
+ * meeting an English error at the moment of submitting is the worst place to find one. The
+ * wording is looked up here, from copy this component was handed
+ * (docs/kannada/research/architecture.md §6.12). The locale itself rides along as a hidden
+ * field, because a Server Action cannot read `next/root-params`.
  */
 
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { submitLead } from "@/app/get-quote/actions";
+import { submitLead } from "@/lib/leads/submit-lead";
 import { Button, CheckboxField, controlClass, FieldShell, TextField } from "@/components/ui";
-import { site, whatsappLink } from "@/content/site";
+import type { QuotePage } from "@/content/quote";
+import type { Locale } from "@/i18n/config";
+import { fill } from "@/i18n/format";
+import { LEAD_ERROR_PARAMS, isLeadFieldErrorCode } from "@/lib/leads/errors";
 import { initialLeadState, type LeadFieldErrors } from "@/lib/leads/state";
 import { fieldLimits } from "./copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "./FieldRow";
+import { fillTags } from "./template";
 import { useEstimate } from "./EstimateProvider";
 
 const linkClass = "font-medium text-green-700 underline underline-offset-2 hover:no-underline";
 
-/** Where the error summary sends focus for each field the action can reject. */
-const errorAnchors: Record<string, { id: string; label: string }> = {
-  name: { id: "lead-name", label: "Your name" },
-  phone: { id: "lead-phone", label: "Mobile number" },
-  email: { id: "lead-email", label: "Email address" },
-  message: { id: "lead-message", label: "Your message" },
-  consent: { id: "lead-consent", label: "Permission to contact you" },
-  whatsappOptIn: { id: "lead-whatsapp", label: "WhatsApp updates" },
-  // Carried from step 1, so the summary points back at the control that set them.
-  segment: { id: "estimate-segment-home", label: "What you are putting solar on" },
-  pincode: { id: "estimate-pincode", label: "PIN code" },
-  monthlyBill: { id: "estimate-bill", label: "Monthly electricity bill" },
+export type LeadFormCopy = QuotePage["form"];
+
+/**
+ * Where the error summary sends focus for each field the action can reject, and which name the
+ * link goes by. The ids are English-owned (they are element ids); the names are copy.
+ */
+function errorAnchors(copy: LeadFormCopy): Record<string, { id: string; label: string }> {
+  const names = copy.errorSummary;
+  return {
+    name: { id: "lead-name", label: names.yourName },
+    phone: { id: "lead-phone", label: names.phone },
+    email: { id: "lead-email", label: names.email },
+    message: { id: "lead-message", label: names.message },
+    consent: { id: "lead-consent", label: names.consent },
+    whatsappOptIn: { id: "lead-whatsapp", label: names.whatsappOptIn },
+    // Carried from step 1, so the summary points back at the control that set them.
+    segment: { id: "estimate-segment-home", label: names.segment },
+    pincode: { id: "estimate-pincode", label: names.pincode },
+    monthlyBill: { id: "estimate-bill", label: names.monthlyBill },
+  };
+}
+
+/**
+ * The sentence for a field error code.
+ *
+ * An unknown code is shown as itself rather than swallowed: it means the action and the copy
+ * have drifted, which is a bug worth seeing, and it is never a sentence a visitor can mistake
+ * for advice.
+ */
+function fieldMessage(copy: LeadFormCopy, code: string): string {
+  if (!isLeadFieldErrorCode(code)) return code;
+  return fill(copy.fieldErrors[code], LEAD_ERROR_PARAMS[code] ?? {});
+}
+
+/**
+ * The two ways through that are not this form: WhatsApp and the phone.
+ *
+ * They arrive as props rather than from `@/content/site`, because this module hydrates and a
+ * client bundle may not import copy (scripts/check-client-content.ts).
+ */
+export type ContactFallbackProps = {
+  phone: { display: string; tel: string };
+  /** The default WhatsApp link; a failed submission replaces it with one carrying a reference. */
+  whatsappHref: string;
 };
 
-export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: boolean }) {
+export function LeadForm({
+  startedAt,
+  canSend,
+  contact,
+  copy,
+  optionalMarker,
+  locale,
+}: {
+  startedAt: number;
+  canSend: boolean;
+  contact: ContactFallbackProps;
+  copy: LeadFormCopy;
+  /** "(optional)" beside an optional field's label; it belongs to `ui.fields`, not to this form. */
+  optionalMarker: string;
+  /** Posted with the form so the action knows which language to send the customer's email in. */
+  locale: Locale;
+}) {
   const { segment, monthlyBill, estimate, sanctionedLoad } = useEstimate();
   const [state, formAction] = useActionState(submitLead, initialLeadState);
   const noticeRef = useRef<HTMLDivElement>(null);
@@ -54,13 +113,19 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
         role="status"
         className="rounded-md border border-green-700 bg-success-tint p-6 sm:p-8"
       >
-        <h3 className="font-display text-h3 font-bold text-carbon">Thanks — we have your request.</h3>
+        <h3 className="font-display text-h3 font-bold text-carbon">{copy.successHeading}</h3>
         <p className="mt-3 text-body text-ink-2">
-          Your reference is{" "}
-          <span className="font-mono font-medium text-carbon tabular-nums">{state.reference}</span>. Quote it if you
-          get in touch.
+          {fillTags(copy.successReference, {
+            spacing: "detach",
+            values: { reference: state.reference },
+            tags: {
+              ref: (children) => (
+                <span className="font-mono font-medium text-carbon tabular-nums">{children}</span>
+              ),
+            },
+          })}
         </p>
-        <ContactFallbacks whatsappHref={state.whatsappHref} />
+        <ContactFallbacks contact={contact} copy={copy} whatsappHref={state.whatsappHref} />
       </div>
     );
   }
@@ -68,6 +133,7 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
   const fieldErrors: LeadFieldErrors = (state.ok === false && state.fieldErrors) || {};
   const values = state.ok === false ? state.values : undefined;
   const listedErrors = Object.entries(fieldErrors);
+  const anchors = errorAnchors(copy);
 
   return (
     <form action={formAction} noValidate className="grid gap-6">
@@ -78,17 +144,21 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
           role="alert"
           className="rounded-md border border-error bg-error-tint p-4 sm:p-5"
         >
-          <p className="text-body font-medium text-carbon">{state.error}</p>
+          {/* `devMessage` is the local "set RESEND_API_KEY" hint, which stays English: it is an
+              instruction to whoever is running the site, not copy for a visitor. */}
+          <p className="text-body font-medium text-carbon">
+            {state.devMessage ?? copy.formErrors[state.errorCode]}
+          </p>
           {listedErrors.length > 0 && (
             <ul className="mt-2 grid gap-1">
-              {listedErrors.map(([field, message]) => {
-                const anchor = errorAnchors[field];
+              {listedErrors.map(([field, code]) => {
+                const anchor = anchors[field];
                 return (
                   <li key={field} className="text-small text-ink-2">
                     <a href={`#${anchor?.id ?? "lead-name"}`} className={linkClass}>
                       {anchor?.label ?? field}
                     </a>
-                    : {message}
+                    : {fieldMessage(copy, code)}
                   </li>
                 );
               })}
@@ -100,12 +170,22 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
               link is right. */}
           {state.ok === false && state.reference && (
             <p className="mt-2 text-small text-ink-2">
-              Your reference is{" "}
-              <span className="font-mono font-medium text-carbon tabular-nums">{state.reference}</span>. Quote it and
-              we can pick up from your details.
+              {fillTags(copy.errorReference, {
+                spacing: "detach",
+                values: { reference: state.reference },
+                tags: {
+                  ref: (children) => (
+                    <span className="font-mono font-medium text-carbon tabular-nums">{children}</span>
+                  ),
+                },
+              })}
             </p>
           )}
-          <ContactFallbacks whatsappHref={state.ok === false ? state.whatsappHref : undefined} />
+          <ContactFallbacks
+            contact={contact}
+            copy={copy}
+            whatsappHref={state.ok === false ? state.whatsappHref : undefined}
+          />
         </div>
       )}
 
@@ -117,8 +197,12 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
       <input type="hidden" name="pincode" value={estimate?.region.pincode ?? ""} />
       <input type="hidden" name="sanctionedLoadKw" value={Number(sanctionedLoad) > 0 ? sanctionedLoad : ""} />
       <input type="hidden" name="startedAt" defaultValue={String(startedAt)} />
+      {/* Which page this was sent from, so the acknowledgement is written in the language the
+          visitor was reading. A Server Action has no access to next/root-params. */}
+      <input type="hidden" name="locale" defaultValue={locale} />
 
-      {/* Honeypot: off-screen rather than display:none, which naive bots skip. */}
+      {/* Honeypot: off-screen rather than display:none, which naive bots skip. The label is
+          English on purpose — it is hidden from people and read only by the bots it catches. */}
       <div aria-hidden="true" className="absolute -left-[9999px] size-px overflow-hidden">
         <label htmlFor="website">Website</label>
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
@@ -132,26 +216,26 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
           id="lead-name"
           name="name"
           required
-          label="Your name"
+          label={copy.labels.yourName}
           type="text"
           autoComplete="name"
           maxLength={fieldLimits.name}
           defaultValue={values?.name ?? ""}
-          error={fieldErrors.name}
+          error={fieldErrors.name && fieldMessage(copy, fieldErrors.name)}
         />
         <TextField
           className={fieldCell}
           id="lead-phone"
           name="phone"
           required
-          label="Mobile number"
+          label={copy.labels.phone}
           type="tel"
           inputMode="tel"
           autoComplete="tel"
           maxLength={16}
           defaultValue={values?.phone ?? ""}
-          error={fieldErrors.phone}
-          hint="A 10-digit Indian mobile number."
+          error={fieldErrors.phone && fieldMessage(copy, fieldErrors.phone)}
+          hint={copy.labels.phoneHint}
         />
       </FieldRow>
 
@@ -159,16 +243,22 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
         id="lead-email"
         name="email"
         required
-        label="Email address"
+        label={copy.labels.email}
         type="email"
         inputMode="email"
         autoComplete="email"
         maxLength={fieldLimits.email}
         defaultValue={values?.email ?? ""}
-        error={fieldErrors.email}
+        error={fieldErrors.email && fieldMessage(copy, fieldErrors.email)}
       />
 
-      <FieldShell id="lead-message" label="Anything we should know?" optional error={fieldErrors.message}>
+      <FieldShell
+        id="lead-message"
+        label={copy.labels.message}
+        optional
+        optionalLabel={optionalMarker}
+        error={fieldErrors.message && fieldMessage(copy, fieldErrors.message)}
+      >
         {(a11y) => (
           <textarea
             id="lead-message"
@@ -183,32 +273,31 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
       </FieldShell>
 
       <div className="grid gap-2">
-        {/* PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: consent wording carries legal weight
-            and the privacy notice it points to is still with counsel (content-inventory CL-25). */}
         <CheckboxField
           id="lead-consent"
           name="consent"
           required
-          error={fieldErrors.consent}
-          label={
-            <>
-              I agree to be contacted about my enquiry and have read the{" "}
-              <Link href="/privacy" className={linkClass}>
-                privacy notice
-              </Link>
-              .
-            </>
-          }
+          error={fieldErrors.consent && fieldMessage(copy, fieldErrors.consent)}
+          label={fillTags(copy.labels.consent, {
+            spacing: "detach",
+            tags: {
+              privacy: (children) => (
+                <Link href="/privacy" className={linkClass}>
+                  {children}
+                </Link>
+              ),
+            },
+          })}
         />
         <CheckboxField
           id="lead-whatsapp"
           name="whatsappOptIn"
-          error={fieldErrors.whatsappOptIn}
-          label="You can also reach me on WhatsApp about this enquiry."
+          error={fieldErrors.whatsappOptIn && fieldMessage(copy, fieldErrors.whatsappOptIn)}
+          label={copy.labels.whatsappOptIn}
         />
       </div>
 
-      <SubmitButton canSend={canSend} />
+      <SubmitButton canSend={canSend} copy={copy} />
     </form>
   );
 }
@@ -218,42 +307,52 @@ export function LeadForm({ startedAt, canSend }: { startedAt: number; canSend: b
  * Resend cannot be verified. Only the button is disabled: everything above it still works, and
  * the calculator is a different component entirely, so the figures are unaffected.
  */
-function SubmitButton({ canSend }: { canSend: boolean }) {
+function SubmitButton({ canSend, copy }: { canSend: boolean; copy: LeadFormCopy }) {
   const { pending } = useFormStatus();
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap items-center gap-4">
         <Button type="submit" arrow disabled={pending || !canSend}>
-          {pending ? "Sending…" : "Send my request"}
+          {pending ? copy.submitPending : copy.submit}
         </Button>
         <p role="status" className="sr-only">
-          {pending ? "Sending your request" : ""}
+          {pending ? copy.srSending : ""}
         </p>
       </div>
-      {!canSend && (
-        <p className="text-small text-ink-2">
-          Sending is switched off until our email domain is verified. The figures above are live —
-          use WhatsApp or the phone number below to send them to us.
-        </p>
-      )}
+      {!canSend && <p className="text-small text-ink-2">{copy.sendingOff}</p>}
     </div>
   );
 }
 
 /** Always offered beside an error and after a success: the form is never the only way through. */
-function ContactFallbacks({ whatsappHref }: { whatsappHref?: string }) {
-  const phone = site.contact.phonePrimary.value;
+function ContactFallbacks({
+  contact,
+  copy,
+  whatsappHref,
+}: {
+  contact: ContactFallbackProps;
+  copy: LeadFormCopy;
+  whatsappHref?: string;
+}) {
+  const phone = contact.phone;
   return (
     <p className="mt-4 text-body text-ink-2">
-      Prefer to talk?{" "}
-      <a href={whatsappHref ?? whatsappLink()} target="_blank" rel="noopener noreferrer" className={linkClass}>
-        WhatsApp us
-      </a>{" "}
-      or call{" "}
-      <a href={`tel:${phone.tel}`} className={`${linkClass} tabular-nums`}>
-        {phone.display}
-      </a>
-      .
+      {fillTags(copy.fallback, {
+        spacing: "detach",
+        values: { phone: phone.display },
+        tags: {
+          whatsapp: (children) => (
+            <a href={whatsappHref ?? contact.whatsappHref} target="_blank" rel="noopener noreferrer" className={linkClass}>
+              {children}
+            </a>
+          ),
+          tel: (children) => (
+            <a href={`tel:${phone.tel}`} className={`${linkClass} tabular-nums`}>
+              {children}
+            </a>
+          ),
+        },
+      })}
     </p>
   );
 }

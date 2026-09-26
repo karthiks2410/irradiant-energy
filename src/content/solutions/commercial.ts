@@ -10,13 +10,13 @@
  */
 
 import type { Segment } from "@/content/types";
-import { faqCardLabels, heroCtas, navFor, segmentHref, whatsappPrompts } from "./shared";
+import { faqCardLabels, heroCtas, navFor, segmentHref, solutionsShared } from "./shared";
 
 const slug = "commercial" as const;
 const nav = navFor(slug);
 const ctas = heroCtas(slug);
 
-export const commercialSegment: Segment = {
+export const commercialSegment = {
   slug,
   href: segmentHref(slug),
   label: nav.label,
@@ -198,7 +198,7 @@ export const commercialSegment: Segment = {
         source: "P-SC-6 · OLD commercial-segment-content.ts:211-213",
         status: "verified-live",
       },
-      whatsappPrompt: whatsappPrompts[slug],
+      whatsappPrompt: solutionsShared.whatsappPrompts[slug],
       ...faqCardLabels,
     },
   },
@@ -368,4 +368,4 @@ export const commercialSegment: Segment = {
       ref: "P-SC-7 · N-44",
     },
   ],
-};
+} as const satisfies Segment;

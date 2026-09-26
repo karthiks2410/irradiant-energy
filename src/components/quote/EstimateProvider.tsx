@@ -29,9 +29,6 @@ import type { Segment } from "@/lib/solar/constants";
 /** The engine's own rule (resolveRegion), restated so the field can validate before it calls. */
 const PINCODE_RE = /^[1-9][0-9]{5}$/;
 
-/** PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Validation microcopy; it makes no claim. */
-const PINCODE_ERROR = "Enter a 6-digit PIN code, for example 560001.";
-
 interface EstimateContextValue {
   segment: Segment;
   setSegment: (segment: Segment) => void;
@@ -56,9 +53,16 @@ export function useEstimate(): EstimateContextValue {
 
 export function EstimateProvider({
   initialSegment,
+  pincodeError,
   children,
 }: {
   initialSegment: Segment;
+  /**
+   * What to say when the PIN code does not parse. It arrives as a prop rather than sitting here
+   * as a literal: this module hydrates, and a client bundle may not reach a content module
+   * (scripts/check-client-content.ts), so an inline string could only ever be English.
+   */
+  pincodeError: string;
   children: ReactNode;
 }) {
   const [segment, setSegmentState] = useState<Segment>(initialSegment);
@@ -97,7 +101,9 @@ export function EstimateProvider({
     pincode,
     setPincode,
     touchPincode: () => setPincodeTouched(true),
-    pincodeError: !pincodeComplete && (pincodeTouched || pincode.length === 6) ? PINCODE_ERROR : undefined,
+    // Six typed digits that still do not parse (a leading zero) are a mistake straight away;
+    // anything shorter waits until the visitor has left the field.
+    pincodeError: !pincodeComplete && (pincodeTouched || pincode.length === 6) ? pincodeError : undefined,
     sanctionedLoad,
     setSanctionedLoad,
     estimate,

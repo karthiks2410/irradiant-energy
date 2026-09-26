@@ -1,5 +1,4 @@
 import { ButtonLink } from "@/components/ui";
-import { faqCardLabels } from "@/content/solutions";
 import { site, whatsappLink } from "@/content/site";
 
 type Variant = "primary" | "light" | "outline" | "outline-light";
@@ -7,16 +6,21 @@ type Variant = "primary" | "light" | "outline" | "outline-light";
 /**
  * WhatsApp CTA with a page-specific prefill (report §11.1 level 3). The prefill carries no
  * personal data — only the question the visitor is likely to be asking on this page.
+ *
+ * The label is a required prop rather than a default read from the content module: this button
+ * appears on four pages, and each of them already holds the merged content for its locale
+ * (`content.faqCardLabels.whatsappLabel`). A default imported here would always be the English
+ * one, which is exactly the bug that makes a Kannada page half English.
  */
 export function WhatsAppButton({
   text,
-  label = faqCardLabels.whatsappLabel,
+  label,
   variant = "outline",
   className = "",
 }: {
   /** Page-specific prefill. Left out where no approved prefill exists. */
   text?: string;
-  label?: string;
+  label: string;
   variant?: Variant;
   className?: string;
 }) {
@@ -35,7 +39,7 @@ export function WhatsAppButton({
 }
 
 /** Call CTA. One link per number (report §11.1); opening hours are never shown (site.ts). */
-export function CallLink({ label = faqCardLabels.callLabel, className = "" }: { label?: string; className?: string }) {
+export function CallLink({ label, className = "" }: { label: string; className?: string }) {
   const phone = site.contact.phonePrimary.value;
   return (
     <a

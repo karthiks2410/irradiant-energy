@@ -1,8 +1,8 @@
-import Link from "next/link";
+import { Link } from "@/components/i18n/LocaleLink";
 import { Accordion, ArrowRightIcon, Section, SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
 import { FaqJsonLd } from "@/components/seo/JsonLd";
-import { homeFaq } from "@/content/faq-home";
+import type { Content } from "@/i18n/content";
 
 /** Answers are stored as plain text with blank lines between paragraphs (content/types.ts). */
 const answer = (text: string) =>
@@ -12,14 +12,15 @@ const answer = (text: string) =>
     </p>
   ));
 
-const items = homeFaq.items.map((faq) => ({ id: faq.id, question: faq.q, answer: answer(faq.a) }));
-
 /**
  * Five questions lifted from the Homes page so the wording has one source. The JSON-LD
  * mirrors exactly what is rendered, which is Google's condition for FAQ markup even
  * though it no longer earns a rich result.
  */
-export function HomeFaqBand() {
+export function HomeFaqBand({ content }: { content: Content }) {
+  const homeFaq = content.faq;
+  const items = homeFaq.items.map((faq) => ({ id: faq.id, question: faq.q, answer: answer(faq.a) }));
+
   return (
     <Section surface="white" aria-labelledby="faq-heading">
       <Reveal>

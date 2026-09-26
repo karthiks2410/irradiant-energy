@@ -1,7 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { ROUTES, dismissConsent, watchForErrors } from "./helpers";
+import { KN_ROUTES, ROUTES, dismissConsent, watchForErrors } from "./helpers";
 
-for (const route of ROUTES) {
+// Both trees get the same checks. The Kannada tree still renders English copy at this stage, so
+// what these prove there is the routing, the chrome and the Kannada typography — the three things
+// the copy will land on top of.
+for (const route of [...ROUTES, ...KN_ROUTES]) {
   test(`${route} renders cleanly`, async ({ page }) => {
     const errors = watchForErrors(page);
     const response = await page.goto(route, { waitUntil: "networkidle" });

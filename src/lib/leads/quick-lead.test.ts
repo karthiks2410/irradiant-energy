@@ -90,8 +90,9 @@ describe("emails for a popup lead", () => {
     reference: "IE-7K3QX2",
     estimate: estimate.representative,
     submittedAt: new Date(NOW),
+    locale: "en" as const,
     source: "quick quote popup" as const,
-    billRange: { label: labelFor("home", "home-3")!, representativeBillInr: estimate.representativeBillInr },
+    billRange: { label: labelFor("home", "home-3")!, representativeBillInr: estimate.representativeBillInr, openEnded: false },
   };
 
   it("tells sales there is no email and shows the range, not a made-up bill", () => {
@@ -115,7 +116,7 @@ describe("emails for a popup lead", () => {
     const alert = renderLeadAlert({
       ...context,
       estimate: quickEstimate("home", top).representative,
-      billRange: { label: labelFor("home", "home-5")!, representativeBillInr: 8_000 },
+      billRange: { label: labelFor("home", "home-5")!, representativeBillInr: 8_000, openEnded: true },
     });
     expect(alert.text).toContain("treat these figures as a minimum");
   });
