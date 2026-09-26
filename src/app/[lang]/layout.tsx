@@ -17,6 +17,7 @@ import { getContent } from "@/i18n/content";
 import { fill } from "@/i18n/format";
 import { getLocale } from "@/i18n/server";
 import { allowIndexing, siteUrl } from "@/lib/env";
+import { shareImage } from "@/lib/seo";
 import "../globals.css";
 
 /**
@@ -79,7 +80,10 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: site.name,
     // Indexing is switched on only when the real domain is configured (lib/env.ts).
     robots: allowIndexing ? { index: true, follow: true } : { index: false, follow: false },
-    openGraph: { siteName: site.name, locale: OG_LOCALE[locale], type: "website" },
+    // Every page replaces these with its own card (lib/seo.ts pageMetadata); the default is for
+    // a route that sets no metadata of its own, such as the in-locale 404.
+    openGraph: { siteName: site.name, locale: OG_LOCALE[locale], type: "website", images: [shareImage(null, locale)] },
+    twitter: { card: "summary_large_image", images: [shareImage(null, locale)] },
   };
 }
 

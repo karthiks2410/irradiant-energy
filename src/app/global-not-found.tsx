@@ -4,6 +4,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { LogoLockup } from "@/components/brand/Logo";
+import { shareImage } from "@/lib/seo";
 import "./globals.css";
 
 /**
@@ -25,10 +26,16 @@ import "./globals.css";
  */
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
+// A shared broken link still shows the brand's card rather than a bare URL. The [lang] layout's
+// default never reaches this page: it is rendered outside that layout.
+const shareCardImage = shareImage(null, "en");
+
 export const metadata: Metadata = {
   title: "Page not found | Irradiant Energy",
   description: "The page you are looking for does not exist.",
   robots: { index: false, follow: false },
+  openGraph: { type: "website", siteName: "Irradiant Energy", images: [shareCardImage] },
+  twitter: { card: "summary_large_image", images: [shareCardImage] },
 };
 
 export default function GlobalNotFound() {

@@ -3,7 +3,7 @@ import { HREFLANG, type Locale } from "@/i18n/config";
 import { getContent } from "@/i18n/content";
 import { localizePath } from "@/i18n/paths";
 import { getLocale } from "@/i18n/server";
-import { absoluteUrl, socialImage } from "@/lib/seo";
+import { absoluteUrl, shareImage } from "@/lib/seo";
 
 /**
  * Structured data (report §13.4; docs/discovery/16-seo-deep-dive.md §4.3). Every value comes from
@@ -78,7 +78,7 @@ function siteGraph(locale: Locale): JsonLd {
         name: site.name,
         parentOrganization: { "@id": organizationId },
         url: homeUrl,
-        image: absoluteUrl(socialImage.openGraphPath),
+        image: shareImage("home", locale).url,
         // Owner-stated (2026-09-20): the business installs throughout Karnataka, not only in the
         // city it is registered in. `address` below still gives the Anekal base.
         areaServed: { "@type": "State", name: "Karnataka" },

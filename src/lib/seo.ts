@@ -4,8 +4,9 @@ import { HREFLANG, OG_LOCALE, type Locale } from "@/i18n/config";
 import { getContent } from "@/i18n/content";
 import { fill } from "@/i18n/format";
 import { localizePath } from "@/i18n/paths";
-import { publishedLocales, routeForPath } from "@/i18n/registry";
+import { publishedLocales, routeForPath, type RouteKey } from "@/i18n/registry";
 import { siteUrl } from "@/lib/env";
+import { SHARE_IMAGE_SIZE, SHARE_IMAGE_TYPE, shareCard, shareImagePath, sharePageFor } from "@/lib/share-images";
 
 /**
  * Per-page metadata helper (report §13.1 C1/H5; docs/architecture.md §8.1).
@@ -30,12 +31,14 @@ import { siteUrl } from "@/lib/env";
  *   segments, so the home page (same segment as the layout) gets the suffix from here instead.
  * - The canonical is ALWAYS the page's own path, made absolute through the layout's metadataBase.
  *   Never set alternates.canonical in a layout: the old site pointed 32 URLs at the home page.
- * - og:url matches the canonical; siteName, locale (en_IN) and type are always present. Next merges
- *   metadata shallowly, so a page that sets any openGraph field replaces the layout's whole object;
- *   this helper therefore emits complete openGraph and twitter objects every time.
- * - The social image defaults to the site-wide generated routes (app/opengraph-image.tsx and
- *   app/twitter-image.tsx). Pass `image` for a page-specific one; a colocated opengraph-image file
- *   is NOT picked up automatically once a page sets openGraph, so reference its route explicitly.
+ * - og:url matches the canonical; siteName, locale (en_IN / kn_IN), the other published locale as
+ *   og:locale:alternate, and type are always present. Next merges metadata shallowly, so a page
+ *   that sets any openGraph field replaces the layout's whole object; this helper therefore emits
+ *   complete openGraph and twitter objects every time.
+ * - The link-preview image is the page's own card in the page's own language
+ *   (src/lib/share-images.ts): a static JPEG under /share/<locale>/, absolute on siteUrl, with its
+ *   size, type and alt text. Pages without a card of their own (the legal notices) use the home
+ *   card. There is nothing to pass: the card is found from `path`.
  * - robots is inherited from the root layout (index only when allowIndexing). Pass noindex for
  *   pages that must never be indexed, such as a form confirmation; they also get no canonical.
  */
@@ -49,26 +52,8 @@ export interface PageMetadataInput {
   path: `/${string}`;
   /** The locale this page is being rendered in. Server pages read it with getLocale(). */
   locale: Locale;
-  /** Page-specific social image. Absolute URL or a site path such as "/about/opengraph-image". */
-  image?: { url: string; alt: string; width?: number; height?: number };
   noindex?: boolean;
 }
-
-/**
- * Route and dimensions of the site-wide social images; the image routes read these too.
- *
- * The artwork is the wordmark and the brand line, which stay Latin in both locales (brand PDF
- * p.30/p.40), so there is one card and a Kannada page references this same route. `alt` here is
- * the fallback for the two image routes, which sit outside the `[lang]` tree and have no locale
- * to read; `pageMetadata` writes the reader's own language into the card's alt text instead.
- */
-export const socialImage = {
-  openGraphPath: "/opengraph-image",
-  twitterPath: "/twitter-image",
-  width: 1200,
-  height: 630,
-  alt: `${site.name} — ${site.tagline}`,
-} as const;
 
 /** Absolute URL for a site path. "/" resolves to the bare origin, matching Next's canonical output. */
 export function absoluteUrl(path: string): string {
@@ -76,7 +61,27 @@ export function absoluteUrl(path: string): string {
   return path === "/" ? url.origin : url.href;
 }
 
-export function pageMetadata({ title, description, path, locale, image, noindex = false }: PageMetadataInput): Metadata {
+/**
+ * The link-preview image for a route, in the reader's language: the same object serves og:image
+ * and twitter:image, since both point at the one static file.
+ *
+ * The alt text says what the card says — the brand, then the page's headline — in the page's own
+ * language. `socialImageAlt` is the two-hole "{siteName} — {tagline}" frame; its second hole
+ * carries the card's headline.
+ */
+export function shareImage(key: RouteKey | null | undefined, locale: Locale) {
+  const page = sharePageFor(key);
+  const content = getContent(locale);
+  return {
+    url: absoluteUrl(shareImagePath(page, locale)),
+    width: SHARE_IMAGE_SIZE.width,
+    height: SHARE_IMAGE_SIZE.height,
+    type: SHARE_IMAGE_TYPE,
+    alt: fill(content.ui.meta.socialImageAlt, { siteName: site.name, tagline: shareCard(page, content).title }),
+  };
+}
+
+export function pageMetadata({ title, description, path, locale, noindex = false }: PageMetadataInput): Metadata {
   const canonical = localizePath(path, locale);
   // hreflang is published only for a pair that actually resolves in both locales; a link to a
   // 404 is worse than no link. The registry is the single source of that truth.
@@ -86,15 +91,7 @@ export function pageMetadata({ title, description, path, locale, image, noindex 
     ...alternateLocales.map((l) => [HREFLANG[l], localizePath(path, l)]),
     ["x-default", localizePath(path, "en")],
   ]);
-  const { ui, site: localizedSite } = getContent(locale);
-  const ogImage = image ?? {
-    url: socialImage.openGraphPath,
-    // The card is the same picture in both locales; the sentence that describes it is not.
-    alt: fill(ui.meta.socialImageAlt, { siteName: site.name, tagline: localizedSite.tagline }),
-    width: socialImage.width,
-    height: socialImage.height,
-  };
-  const twitterImage = image ?? { ...ogImage, url: socialImage.twitterPath };
+  const image = shareImage(entry?.key, locale);
 
   return {
     // `title.template` from the root layout applies to CHILD segments only, so app/page.tsx —
@@ -107,14 +104,15 @@ export function pageMetadata({ title, description, path, locale, image, noindex 
       type: "website",
       siteName: site.name,
       locale: OG_LOCALE[locale],
+      alternateLocale: alternateLocales.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
       url: canonical,
       description,
-      images: [ogImage],
+      images: [image],
     },
     twitter: {
       card: "summary_large_image",
       description,
-      images: [twitterImage],
+      images: [image],
     },
   };
 }
