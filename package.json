@@ -12,6 +12,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "fetch:logos": "node --experimental-strip-types scripts/fetch-brand-logos.ts",
+    "icons": "node --experimental-strip-types scripts/generate-icons.ts",
     "build:kn": "node --experimental-strip-types scripts/build-kn-content.ts",
     "check:kn": "node --experimental-strip-types scripts/build-kn-content.ts --check",
     "check:client-content": "node --experimental-strip-types scripts/check-client-content.ts"
