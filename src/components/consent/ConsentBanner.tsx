@@ -10,9 +10,9 @@ import type { Ui } from "@/content/ui";
  * The first-visit consent prompt.
  *
  * Copy rules this component exists to keep (docs/discovery/18 §9.5, 17 §2.6):
- * - It describes what is true **today** — nothing is loaded — and what would happen on an accept.
- *   It must never claim that measurement is running. If a provider is ever added, this copy already
- *   covers it and does not need to be softened.
+ * - It describes what is true in every build: nothing optional loads before an answer, and an
+ *   accept allows Google Analytics to count visits ("may": a build without a measurement ID loads
+ *   nothing either way). It must never claim that measurement is running.
  * - Refusing costs the visitor nothing, and the banner says so, because it is true.
  * - Accept and Reject are the same control in two hues (components/consent/styles.ts).
  *
@@ -86,7 +86,8 @@ export function ConsentBanner({ copy, onAccept, onReject, onManage }: ConsentBan
             than removed, because the dialog still needs a name.
 
             What stays visible is the purpose, which is the part that makes the choice informed:
-            what we load today, what an accept would allow, and that a refusal costs nothing.
+            that nothing optional loads unasked, what an accept would allow, and that a refusal
+            costs nothing.
             The detail behind it is one tap away in Manage preferences and in the cookie notice. */}
         <h2 id="consent-banner-title" className="sr-only">
           {copy.title}

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Inter } from "next/font/google";
 import { preload } from "react-dom";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { ConsentManager } from "@/components/consent";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { WhatsAppBubble } from "@/components/ui/WhatsAppBubble";
@@ -16,6 +17,7 @@ import { HTML_LANG, OG_LOCALE } from "@/i18n/config";
 import { getContent } from "@/i18n/content";
 import { fill } from "@/i18n/format";
 import { getLocale } from "@/i18n/server";
+import { gaMeasurementId, googleSiteVerification } from "@/lib/analytics";
 import { allowIndexing, siteUrl } from "@/lib/env";
 import { shareImage } from "@/lib/seo";
 import "../globals.css";
@@ -84,6 +86,9 @@ export async function generateMetadata(): Promise<Metadata> {
     // a route that sets no metadata of its own, such as the in-locale 404.
     openGraph: { siteName: site.name, locale: OG_LOCALE[locale], type: "website", images: [shareImage(null, locale)] },
     twitter: { card: "summary_large_image", images: [shareImage(null, locale)] },
+    // Search Console's HTML-tag method: <meta name="google-site-verification">, only when the
+    // token is set (lib/analytics.ts). Pages never set `verification`, so every page carries it.
+    ...(googleSiteVerification ? { verification: { google: googleSiteVerification } } : {}),
   };
 }
 
@@ -135,6 +140,9 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
           />
           <ScrollReveal />
           <ConsentManager />
+          {/* Only in a build with a measurement ID, and even then it loads nothing until the
+              visitor allows analytics (components/analytics/GoogleAnalytics.tsx). */}
+          {gaMeasurementId && <GoogleAnalytics measurementId={gaMeasurementId} />}
           <SmoothScroll />
           <JsonLd />
         </UiProvider>

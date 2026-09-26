@@ -7,7 +7,7 @@ export const showPlaceholders = !isProduction;
 
 /**
  * Canonical site origin. Set NEXT_PUBLIC_SITE_URL once the domain is live
- * (https://irradiantenergy.in); falls back to the Vercel deployment URL, then localhost.
+ * (https://www.irradiantenergy.in, Production only); falls back to the Vercel deployment URL, then localhost.
  */
 export const siteUrl = (() => {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;

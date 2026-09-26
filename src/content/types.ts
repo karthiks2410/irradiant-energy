@@ -262,6 +262,18 @@ export type LegalPage = LegalPageBase &
   );
 
 /**
+ * A paragraph or a list item that follows whether this build can load Google Analytics
+ * (`analyticsEnabled`, src/lib/analytics.ts): `withAnalytics` in a build with a measurement ID,
+ * `withoutAnalytics` in one without. With no `withoutAnalytics`, nothing renders in its place, so a
+ * notice never names a processor the deployment does not use. Both forms are whole sentences, and
+ * both are translated.
+ */
+export interface AnalyticsVariant {
+  readonly withAnalytics: string;
+  readonly withoutAnalytics?: string;
+}
+
+/**
  * One block of a legal notice's body, as <LegalBody> (src/components/pages/LegalBody.tsx)
  * renders it.
  *
@@ -279,8 +291,10 @@ export type LegalPage = LegalPageBase &
 export type LegalBlock =
   /** A paragraph. */
   | string
-  /** A bulleted list, one sentence fragment per item. */
-  | { readonly items: readonly string[] }
+  /** A bulleted list, one sentence fragment per item; an item can follow the analytics build. */
+  | { readonly items: readonly (string | AnalyticsVariant)[] }
+  /** A paragraph that follows the analytics build (see AnalyticsVariant). */
+  | AnalyticsVariant
   /** A paragraph set in bold from end to end. */
   | { readonly emphasis: string }
   /** A paragraph opened by a placeholder tag, for a line that rests on something still unconfirmed. */

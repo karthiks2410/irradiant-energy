@@ -18,10 +18,11 @@ import { CONSENT_COOKIE_DAYS, CONSENT_COOKIE_NAME, REJECT_ALL, type ConsentChoic
  * Fully controlled: the draft answer lives in ConsentManager, so opening the dialog always shows
  * what is stored and closing it without saving changes nothing.
  *
- * What each category says has to match what the site actually does. The Analytics copy is written
- * for the state the site is in today (nothing installed) and stays true the moment a provider is
- * switched on behind <ConsentGate>. If a second optional category is ever added, add it here, to
- * ConsentChoice, and bump CONSENT_VERSION so everyone is asked again.
+ * What each category says has to match what the site actually does. The Analytics copy names
+ * Google Analytics and says "may", so it is true both in a build without a measurement ID (nothing
+ * loads) and in one with it (src/lib/gtag.ts describes the configuration it promises). If a second
+ * optional category is ever added, add it here, to ConsentChoice, and bump CONSENT_VERSION so
+ * everyone is asked again.
  */
 
 type ConsentSettingsProps = {

@@ -3,7 +3,8 @@ import { Link } from "@/components/i18n/LocaleLink";
 import { PlaceholderTag } from "@/components/pages/PlaceholderTag";
 import { fillTags, type TagRenderers } from "@/components/quote/template";
 import { site } from "@/content/site";
-import type { LegalBlock, LegalSection } from "@/content/types";
+import type { AnalyticsVariant, LegalBlock, LegalSection } from "@/content/types";
+import { analyticsEnabled } from "@/lib/analytics";
 
 /**
  * A legal notice's body: its sections as `<h2>`, `<p>` and `<ul>`, in the page's language.
@@ -16,6 +17,8 @@ import type { LegalBlock, LegalSection } from "@/content/types";
  * Sentences are templates (see LegalBlock in src/content/types.ts). `fillTags` turns a `{hole}`
  * into its fact and a `<tag>…</tag>` into its element, wherever the sentence puts them — the
  * email address and the phone number stay links, and Kannada word order is the translator's.
+ * A paragraph or list item written as an AnalyticsVariant renders the side that matches this
+ * build's `analyticsEnabled`, or nothing when that side is absent.
  *
  * A Server Component: it reads site.ts, which a client component may not import.
  */
@@ -38,7 +41,18 @@ const TAGS: TagRenderers = {
   strong: (children) => <strong>{children}</strong>,
   privacyLink: (children) => <Link href="/privacy">{children}</Link>,
   cookieLink: (children) => <Link href="/cookies">{children}</Link>,
+  /** "The details are below": the Google Analytics section further down /cookies. */
+  gaLink: (children) => <a href="#google-analytics">{children}</a>,
 };
+
+/**
+ * The form of a sentence this build renders: the sentence itself, or the side of an
+ * AnalyticsVariant that matches `analyticsEnabled` — null when that side is absent.
+ */
+function forThisBuild(entry: string | AnalyticsVariant): string | null {
+  if (typeof entry === "string") return entry;
+  return analyticsEnabled ? entry.withAnalytics : (entry.withoutAnalytics ?? null);
+}
 
 function Block({ block, values }: { block: LegalBlock; values: Values }) {
   const rich = (text: string) => fillTags(text, { values, tags: TAGS });
@@ -48,11 +62,17 @@ function Block({ block, values }: { block: LegalBlock; values: Values }) {
   if ("items" in block) {
     return (
       <ul>
-        {block.items.map((item, index) => (
-          <li key={index}>{rich(item)}</li>
-        ))}
+        {block.items.map((item, index) => {
+          const text = forThisBuild(item);
+          return text === null ? null : <li key={index}>{rich(text)}</li>;
+        })}
       </ul>
     );
+  }
+
+  if ("withAnalytics" in block) {
+    const text = forThisBuild(block);
+    return text === null ? null : <p>{rich(text)}</p>;
   }
 
   if ("emphasis" in block) {

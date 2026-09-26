@@ -7,8 +7,9 @@
  * - The old site's banner offered Google Analytics and Google Ads categories while no Google tag
  *   existed anywhere, and Vercel Analytics ran whatever the visitor chose (18 §9.6). A banner that
  *   describes tracking you do not do, or ignores a refusal, is worse than no banner. So this module
- *   models exactly one optional category — `analytics` — and nothing reads it except a gate that
- *   decides whether to render a provider that is **not installed yet**.
+ *   models exactly one optional category — `analytics` — and the one thing that reads it is
+ *   components/analytics/GoogleAnalytics.tsx, which loads Google Analytics 4 only on a yes (and
+ *   only in a build that has a measurement ID, src/lib/analytics.ts).
  * - `necessary` is not a choice, so it is not stored. It is always on and the UI says so.
  * - The record carries a `version`. Bumping CONSENT_VERSION invalidates every stored answer and
  *   re-asks, which is what has to happen when the categories or their purposes change. It is not a
@@ -22,8 +23,13 @@
  * client island, or in a test. The React binding lives in components/consent/useConsent.ts.
  */
 
-/** Bump when the categories, their purposes or the providers behind them change. */
-export const CONSENT_VERSION = 1;
+/**
+ * Bump when the categories, their purposes or the providers behind them change.
+ *
+ * 2 (2026-09-26): the question now names Google Analytics as the provider. Answers to version 1,
+ * which asked about unnamed measurement, are asked again rather than carried over.
+ */
+export const CONSENT_VERSION = 2;
 
 /** First-party, readable by the server if a gate is ever moved there. */
 export const CONSENT_COOKIE_NAME = "ie_consent";
@@ -37,9 +43,8 @@ export const CONSENT_SETTINGS_EVENT = "irradiant:consent-settings";
 /** The categories the visitor decides. `necessary` is deliberately absent: it is not optional. */
 export interface ConsentChoice {
   /**
-   * Visit measurement. **Nothing is installed today** — no script of any kind is loaded — so this
-   * currently gates an empty set. It exists so that the day a provider is added, it cannot ship
-   * without a prior opt-in (18 §9.5.9).
+   * Visit measurement with Google Analytics 4. Nothing loads until this is true, and nothing loads
+   * at all in a build without a measurement ID (18 §9.5.9).
    */
   analytics: boolean;
 }
