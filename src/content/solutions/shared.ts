@@ -76,7 +76,7 @@ export const solutionsShared = {
     meta: {
       title: "Solar solutions across Karnataka",
       description:
-        "Rooftop solar for homes, housing societies and businesses across Karnataka. Choose your audience to see how the work runs and which system fits.",
+        "Rooftop solar for homes, apartments and businesses in Bengaluru and across Karnataka. See how the work runs and which system fits you.",
       source: "16 §H3 · F-40",
       status: "proposed",
     },

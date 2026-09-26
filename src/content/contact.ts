@@ -17,7 +17,7 @@ import type { SectionCopy, Sourced } from "@/content/types";
 const meta = {
   title: "Contact us",
   description:
-    "Call, WhatsApp or email Irradiant Energy about rooftop solar for your home, housing society or business — or ask us to call you back.",
+    "Call, WhatsApp or email Irradiant Energy in Anekal, Bengaluru about rooftop solar anywhere in Karnataka, or ask us to call you back.",
   source: "proposed · the channels are site.ts facts",
   status: "proposed",
 } as const satisfies Sourced & { title: string; description: string };
