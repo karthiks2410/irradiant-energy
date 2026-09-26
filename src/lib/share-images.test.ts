@@ -58,7 +58,10 @@ describe("share card files", () => {
   it("has no stray files that no page points at", () => {
     const expected = new Set<string>(LOCALES.flatMap((locale) => SHARE_PAGES.map((page) => shareImagePath(page, locale))));
     const found = LOCALES.flatMap((locale) =>
-      readdirSync(publicFile(`/share/${locale}`)).map((name) => `/share/${locale}/${name}`),
+      readdirSync(publicFile(`/share/${locale}`))
+        // Dotfiles are the OS's (Finder writes .DS_Store when the folder is opened), not ours.
+        .filter((name) => !name.startsWith("."))
+        .map((name) => `/share/${locale}/${name}`),
     );
     expect(found.filter((path) => !expected.has(path))).toEqual([]);
   });
