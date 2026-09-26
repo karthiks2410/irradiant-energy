@@ -6,8 +6,17 @@ export const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV === "production";
 export const showPlaceholders = !isProduction;
 
 /**
- * Canonical site origin. Set NEXT_PUBLIC_SITE_URL once the domain is live
- * (https://www.irradiantenergy.in, Production only); falls back to the Vercel deployment URL, then localhost.
+ * The one public origin. The bare domain (https://irradiantenergy.in) and the project's
+ * *.vercel.app alias both redirect here, and a canonical URL must never name a host that
+ * redirects. next.config.ts sends the Vercel alias here, and a Production build fails unless
+ * NEXT_PUBLIC_SITE_URL is exactly this value (src/lib/env.server.ts).
+ */
+export const CANONICAL_ORIGIN = "https://www.irradiantenergy.in";
+
+/**
+ * Canonical site origin: NEXT_PUBLIC_SITE_URL, set in Production only, to CANONICAL_ORIGIN
+ * (https://www.irradiantenergy.in). Elsewhere it falls back to the Vercel deployment URL, then
+ * localhost.
  */
 export const siteUrl = (() => {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
@@ -18,5 +27,11 @@ export const siteUrl = (() => {
   return vercel ? `https://${vercel}` : "http://localhost:3000";
 })();
 
-/** Indexing stays off until the real domain is configured (docs/discovery 11 §5.2). */
+/**
+ * Indexing is on only in Production with the real domain configured (docs/discovery 11 §5.2), so
+ * previews and local builds stay out of search. On its own this failed silently: Production once
+ * served robots.txt `Disallow: /` and noindex for weeks because NEXT_PUBLIC_SITE_URL was never
+ * set. A Production build now stops when it is missing or wrong (`assertProductionBuildEnv` in
+ * src/lib/env.server.ts, called from next.config.ts).
+ */
 export const allowIndexing = isProduction && Boolean(process.env.NEXT_PUBLIC_SITE_URL);
