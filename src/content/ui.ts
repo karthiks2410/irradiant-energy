@@ -154,7 +154,11 @@ export const ui = {
     banner: {
       /** Visually hidden: the dialog still needs a name. */
       title: "We value your privacy",
-      body: "<lead>This site loads no analytics and sets no tracking cookies.</lead> Accept and we may count page visits — no name, no profile, no tracking across other sites. Refuse and nothing loads. <cookieLink>Cookie notice</cookieLink>.",
+      /**
+       * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-26): names Google Analytics, and is
+       * true with or without a measurement ID ("may"; nothing loads before an answer either way).
+       */
+      body: "<lead>Nothing that measures your visit loads unless you allow it.</lead> Accept and we may count page visits with Google Analytics — no name, no advertising, no tracking across other sites. Refuse and nothing loads. <cookieLink>Cookie notice</cookieLink>.",
       accept: "Accept",
       /** The whole accessible name, not a suffix: Kannada does not append to a verb. */
       acceptAria: "Accept analytics",
@@ -174,7 +178,12 @@ export const ui = {
       analytics: {
         heading: "Analytics",
         label: "Allow analytics",
-        hint: "Not loaded today: no measurement script runs on this site. If we switch one on, it would count page visits — which page, the broad region the visit came from, the kind of device — with no name, no profile and no tracking across other websites. It will not load while this is off, and turning it off later stops it again.",
+        /**
+         * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-26). Every fact here is a setting in
+         * src/lib/gtag.ts (cookie lifetime, signals and ad personalisation off, deletion on
+         * withdrawal); change them together.
+         */
+        hint: "If you allow it, we may use Google Analytics to count page visits — which pages, for how long, how the visit arrived, the approximate city or region, and the kind of device and browser. It keeps a random ID in two first-party cookies, _ga and _ga_…, which expire 180 days after your last visit. No name, no advertising features, no tracking across other websites. Nothing loads while this is off, and turning it off later stops it and deletes those cookies.",
       },
       save: "Save preferences",
       rejectAll: "Reject all",
@@ -195,7 +204,8 @@ export const ui = {
     panel: {
       loading: "Reading your saved choice…",
       unanswered: "You have not answered yet, so nothing optional is loaded.",
-      allowed: "Analytics: allowed. Nothing is measured today; if measurement is switched on, this answer lets it run.",
+      /** PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-26). */
+      allowed: "Analytics: allowed. Google Analytics may count your visits to these pages; turning this off stops it and deletes its cookies.",
       refused: "Analytics: refused. Nothing is loaded, and nothing will load while this answer stands.",
       answeredAt: "Answered {date}",
       open: "Open cookie settings",

@@ -12,6 +12,24 @@ import { ROUTES } from "./src/i18n/registry";
 
 type Redirect = Awaited<ReturnType<NonNullable<NextConfig["redirects"]>>>[number];
 
+/**
+ * One public address. The production deployment also answers on the project's bare Vercel alias,
+ * which would otherwise be a full duplicate of the site for search engines and for anyone who
+ * shares that link. It moves permanently to the canonical origin, same path and query (Next
+ * passes the query through). The `has` value is a regex anchored at both ends by Next and matched
+ * against the Host header without its port, so only this exact host redirects: preview aliases
+ * (irradiant-energy-git-….vercel.app, per-deployment URLs), the custom domain and localhost are
+ * untouched. It is listed first so the host changes before any path redirect below runs; the
+ * canonical host then applies those itself ("/" → "/en", the legacy map).
+ */
+const CANONICAL_ORIGIN = "https://www.irradiantenergy.in";
+const canonicalHostRedirect: Redirect = {
+  source: "/:path*",
+  has: [{ type: "host", value: "irradiant-energy\\.vercel\\.app" }],
+  destination: `${CANONICAL_ORIGIN}/:path*`,
+  permanent: true,
+};
+
 // Baseline security headers (docs/discovery/15-security-risk-audit.md). A hash-based CSP is
 // added once the page inventory is stable, so it can stay compatible with static rendering.
 const securityHeaders = [
@@ -105,7 +123,7 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    return legacyRedirects;
+    return [canonicalHostRedirect, ...legacyRedirects];
   },
 };
 

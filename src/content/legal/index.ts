@@ -61,7 +61,7 @@ export const legalPages: readonly LegalPage[] = [
     href: "/cookies",
     status: "draft-for-counsel",
     basis:
-      "Required if any non-essential tracker is used (17 §2.6, §6.5); sized to the trackers actually deployed. A banner is shown by owner instruction (review 2), and since 2026-09-20 it holds the page until answered — a cookie wall, also by owner instruction, which counsel should review against 17 §2.6; even though nothing non-essential loads today, so the copy has to describe the question we ask — permission in advance — and never imply measurement is running (18 §9.5.7).",
+      "Required if any non-essential tracker is used (17 §2.6, §6.5); sized to the trackers actually deployed. A banner is shown by owner instruction (review 2), and since 2026-09-20 it holds the page until answered — a cookie wall, also by owner instruction, which counsel should review against 17 §2.6. Since 2026-09-26 the one optional tracker is Google Analytics 4, loaded only after an accept and only in a build with a measurement ID (src/lib/analytics.ts), so the copy names it and never implies it is running for someone who has not allowed it (18 §9.5.7).",
     outline: [
       "What cookies and similar technologies we use",
       "Strictly necessary items (the consent preference cookie: name, contents, lifetime)",

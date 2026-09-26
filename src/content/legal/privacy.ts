@@ -11,6 +11,13 @@
 // the blocks that use them fall back to a placeholder while either is null.
 // The page is noindex until counsel approves it (./index.ts).
 //
+// Google Analytics appears here only in a build that can load it (`analyticsEnabled`,
+// src/lib/analytics.ts), so the notice never names a processor the deployment does not use: those
+// passages are AnalyticsVariants (src/content/types.ts), and <LegalBody> renders the side that
+// matches the build. The detail lives on /cookies; each passage points there.
+// PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-26): every AnalyticsVariant below, and the
+// rewritten "What we do not ask for" sentence.
+//
 // Every sentence is one row in docs/kannada/translations/units.json, matched by its exact text:
 // reword one here and the Kannada build stops until the row is updated.
 
@@ -60,7 +67,14 @@ export const privacyNotice = {
           ],
         },
         "<strong>When you browse</strong>, our hosting provider records technical details of each request — the internet address your device is using, the browser and device type, the page requested and the time. We use these to keep the site running and to look into problems and abuse.",
-        "<strong>What we do not ask for:</strong> an account or login, identity documents, bank or card details, or your date of birth. We do not use advertising or analytics cookies — see our <cookieLink>cookie notice</cookieLink>.",
+        // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL
+        {
+          withAnalytics:
+            "<strong>If you allow analytics</strong>, Google Analytics also records how you use the site — the pages you view and for how long, how you arrived, your approximate city or region and the kind of device and browser — under a random identifier kept in a cookie. It does not receive your name, phone number, email address or anything you type into a form. The details are in our <cookieLink>cookie notice</cookieLink>.",
+        },
+        // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: was "We do not use advertising or analytics
+        // cookies", which stops being true once analytics can be allowed.
+        "<strong>What we do not ask for:</strong> an account or login, identity documents, bank or card details, or your date of birth. We do not use advertising cookies, and analytics cookies are set only if you allow them — see our <cookieLink>cookie notice</cookieLink>.",
       ],
     },
     {
@@ -73,6 +87,8 @@ export const privacyNotice = {
             "to arrange and carry out a site visit, if you want one;",
             "to keep a record of the consent you gave and of any request you make about your information;",
             "to keep this website secure and working;",
+            // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL
+            { withAnalytics: "if you allow analytics, to see which pages are useful and how people find the site;" },
             "to meet our legal, tax and accounting obligations.",
           ],
         },
@@ -96,11 +112,23 @@ export const privacyNotice = {
             "<strong>Resend</strong> — delivers the enquiry to our team and the acknowledgement to you.",
             "<strong>Our own email and phone accounts</strong> — where our team reads and answers your enquiry.",
             "<strong>WhatsApp</strong> — only if you choose to message us there. Your chat is also handled by WhatsApp under its own terms.",
+            // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL
+            {
+              withAnalytics:
+                "<strong>Google</strong> — only if you allow analytics. Google runs Google Analytics for us and receives the visit records described in our <cookieLink>cookie notice</cookieLink>, with advertising features switched off.",
+            },
           ],
         },
         "We may also share details with an installer or engineer working on your project, and with an adviser or an authority where the law requires it.",
         { emphasis: "We do not sell your information, and we do not share it for anyone else’s marketing." },
-        "<strong>Where it is stored.</strong> Our hosting and email providers run their systems outside India, including in the United States, so your details may be stored and handled outside India. We ask these providers to keep your details secure and to use them only on our instructions.",
+        // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: the analytics clause in `withAnalytics`;
+        // `withoutAnalytics` is the approved sentence unchanged.
+        {
+          withAnalytics:
+            "<strong>Where it is stored.</strong> Our hosting and email providers, and Google if you allow analytics, run their systems outside India, including in the United States, so your details may be stored and handled outside India. We ask these providers to keep your details secure and to use them only on our instructions.",
+          withoutAnalytics:
+            "<strong>Where it is stored.</strong> Our hosting and email providers run their systems outside India, including in the United States, so your details may be stored and handled outside India. We ask these providers to keep your details secure and to use them only on our instructions.",
+        },
       ],
     },
     {
@@ -113,6 +141,11 @@ export const privacyNotice = {
             "<strong>Customer records</strong> — kept for as long as the contract, the warranties and tax and accounting rules require.",
             "<strong>Consent records</strong> — kept while the consent is in place and for a period afterwards, so we can show what you agreed to and when.",
             "<strong>Technical logs</strong> — kept for a limited period for security and troubleshooting.",
+            // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: two months is the GA4 default the owner keeps.
+            {
+              withAnalytics:
+                "<strong>Analytics records</strong> — if you allow analytics, individual visit records are deleted from Google Analytics after two months; only totals stay in our reports.",
+            },
           ],
         },
       ],
