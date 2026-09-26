@@ -42,7 +42,8 @@ import { ChoiceChips } from "@/components/ui/fields/ChoiceChips";
 import { BILL_BUCKETS, bucketLabel } from "@/lib/leads/quick";
 import { checkEmail, checkName, checkPhone, checkPincode } from "@/lib/leads/rules";
 import type { QuickLeadField } from "@/lib/leads/schema";
-import { initialQuickEmailState, initialQuickQuoteState } from "@/lib/leads/state";
+import { initialQuickEmailState, initialQuickQuoteState, type QuickEmailState, type QuickQuoteState } from "@/lib/leads/state";
+import { saveQuickQuoteResume, takeQuickQuoteResume, type QuickQuoteResume } from "./stale-resume";
 import { SEGMENTS, type Segment } from "@/lib/solar/constants";
 
 export type QuickQuoteIntent = "quote" | "site-visit";
@@ -114,31 +115,52 @@ export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
   // A finished enquiry starts fresh next time; a half-filled one is kept if the dialog was closed.
   const [session, setSession] = useState(0);
   const finished = useRef(false);
+  /** Set when this page load is the reload after a deploy caught a submit (stale-resume.ts). */
+  const [resume, setResume] = useState<QuickQuoteResume | null>(null);
+  const pendingResume = useRef<QuickQuoteResume | null>(null);
 
   const close = useCallback(() => dialogRef.current?.close(), []);
+
+  const show = useCallback(() => {
+    document.documentElement.setAttribute("data-scroll-locked", "");
+    dialogRef.current?.showModal();
+  }, []);
 
   useEffect(() => {
     const onOpen = (event: Event) => {
       const dialog = dialogRef.current;
       if (!dialog || dialog.open) return;
-      if (finished.current) {
+      // A recovered enquiry is used once, by this opening; the next one is a normal one.
+      const recovered = pendingResume.current;
+      pendingResume.current = null;
+      if (finished.current || recovered || resume) {
         setSession((n) => n + 1);
         finished.current = false;
       }
-      setIntent((event as CustomEvent<QuickQuoteIntent>).detail ?? "quote");
-      setSegment(segmentFromPath(window.location.pathname));
-      setStartedAt(Date.now());
-      document.documentElement.setAttribute("data-scroll-locked", "");
-      dialog.showModal();
+      setResume(recovered);
+      setIntent(recovered?.intent ?? (event as CustomEvent<QuickQuoteIntent>).detail ?? "quote");
+      setSegment(recovered?.segment ?? segmentFromPath(window.location.pathname));
+      setStartedAt(recovered?.startedAt ?? Date.now());
+      show();
     };
     window.addEventListener(OPEN_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_EVENT, onOpen);
-  }, []);
+  }, [show, resume]);
 
   // Leaving the page closes it, like the mobile menu.
   useEffect(() => {
     close();
   }, [pathname, close]);
+
+  // After the recovery reload: reopen, through the normal opening path, with what was typed.
+  // Declared after the effect above on purpose: effects run in order, and that one closes the
+  // dialog on mount, so running first it would shut the popup this one has just reopened.
+  useEffect(() => {
+    const saved = takeQuickQuoteResume(window.location.pathname);
+    if (!saved) return;
+    pendingResume.current = saved;
+    openQuickQuote(saved.intent);
+  }, []);
 
   const copy = intentCopy(c, intent);
 
@@ -172,6 +194,7 @@ export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
       <CopyContext.Provider value={c}>
       <QuickQuoteBody
         key={session}
+        resume={resume}
         intent={intent}
         segment={segment}
         onSegmentChange={setSegment}
@@ -186,12 +209,14 @@ export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
 }
 
 function QuickQuoteBody({
+  resume,
   intent,
   segment,
   onSegmentChange,
   startedAt,
   onFinished,
 }: {
+  resume: QuickQuoteResume | null;
   intent: QuickQuoteIntent;
   segment: Segment;
   onSegmentChange: (segment: Segment) => void;
@@ -200,10 +225,34 @@ function QuickQuoteBody({
 }) {
   const c = useCopy();
   const locale = useLocale();
-  const [state, formAction] = useActionState(submitQuickQuote, initialQuickQuoteState);
-  const [bucket, setBucket] = useState("");
-  const [name, setName] = useState("");
-  const [pincode, setPincode] = useState("");
+  const [state, formAction] = useActionState(
+    async (previous: QuickQuoteState, data: FormData): Promise<QuickQuoteState> => {
+      try {
+        return await submitQuickQuote(previous, data);
+      } catch {
+        // The action could not be reached: almost always a deploy since this page loaded
+        // (stale-resume.ts). Keep what was typed, reload onto the new build, reopen filled in.
+        const text = (key: string) => String(data.get(key) ?? "");
+        const saved = saveQuickQuoteResume({
+          path: window.location.pathname,
+          intent,
+          segment,
+          name: text("name"),
+          phone: text("phone"),
+          pincode: text("pincode"),
+          billBucket: text("billBucket"),
+          startedAt,
+        });
+        if (saved) window.location.reload();
+        // Offline, or storage refused: say so plainly and offer WhatsApp and the phone instead.
+        return { ok: false, errorCode: saved ? "stale" : "send" };
+      }
+    },
+    initialQuickQuoteState,
+  );
+  const [bucket, setBucket] = useState(resume?.billBucket ?? "");
+  const [name, setName] = useState(resume?.name ?? "");
+  const [pincode, setPincode] = useState(resume?.pincode ?? "");
   const [errors, setErrors] = useState<Partial<Record<QuickLeadField, LeadFieldErrorCode>>>({});
   const errorSummaryRef = useRef<HTMLParagraphElement>(null);
 
@@ -278,6 +327,11 @@ function QuickQuoteBody({
 
   return (
     <form action={formAction} onSubmit={onSubmit} noValidate className="grid gap-4 px-5 pt-4 pb-5">
+      {resume && state.ok === null && (
+        <p role="status" className="rounded-md bg-soft-green p-4 text-small text-carbon">
+          {c.resumed}
+        </p>
+      )}
       {state.ok === false && (
         <p ref={errorSummaryRef} tabIndex={-1} role="alert" className="rounded-md bg-error-tint p-4 text-small text-carbon">
           {c.formErrors[state.errorCode]}{" "}
@@ -319,6 +373,7 @@ function QuickQuoteBody({
         inputMode="tel"
         autoComplete="tel-national"
         required
+        defaultValue={resume?.phone}
         onChange={(event) => recheck("phone", event.target.value)}
         error={errors.phone && message(c, errors.phone)}
       />
@@ -417,7 +472,18 @@ function QuickQuoteResult({
 }) {
   const c = useCopy();
   const locale = useLocale();
-  const [emailState, emailAction] = useActionState(emailQuickQuote, initialQuickEmailState);
+  const [emailState, emailAction] = useActionState(
+    async (previous: QuickEmailState, data: FormData): Promise<QuickEmailState> => {
+      try {
+        return await emailQuickQuote(previous, data);
+      } catch {
+        // Unreachable action (a deploy since this page loaded, or offline). The estimate stays on
+        // screen; the message asks for a refresh, and WhatsApp and the phone remain right here.
+        return { ok: false, errorCode: navigator.onLine === false ? "send" : "stale" };
+      }
+    },
+    initialQuickEmailState,
+  );
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<LeadFieldErrorCode | undefined>();
   const headingRef = useRef<HTMLHeadingElement>(null);

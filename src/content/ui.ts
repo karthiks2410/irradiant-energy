@@ -261,6 +261,11 @@ export const ui = {
       submit: "Book my visit",
     },
     close: "Close",
+    /**
+     * Shown when the popup reopens itself after a deploy caught it mid-submit (stale-resume.ts).
+     * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (system message, 2026-09-26).
+     */
+    resumed: "The website was just updated. Your details are still here: tick the consent box and send again.",
     /** Not `name`: that key is English-owned site-wide (people's names), so the generator would skip this label. */
     nameLabel: "Name",
     phone: "WhatsApp number",
