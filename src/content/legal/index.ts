@@ -1,8 +1,12 @@
 /**
- * Legal pages: slugs, titles and the section outline counsel drafts against. No legal
- * copy lives here (D-007; docs/discovery/17-privacy-legal-compliance.md §3.4, §6.1).
- * Facts the notices need (legal entity, GSTIN, grievance officer) come from site.ts once
- * the owner supplies them.
+ * Legal pages: slugs, publishing status and the section outline counsel drafts against.
+ *
+ * The notices' own copy — title, summary, every heading and paragraph — lives beside this file
+ * in privacy.ts, terms.ts and cookies.ts, with the frame every notice shares in shell.ts, and
+ * reaches the pages through getContent() so the Kannada overlay applies (D-007;
+ * docs/discovery/17-privacy-legal-compliance.md §3.4, §6.1). What stays here is not copy: it is
+ * the same in every language and nobody reads it on the page. Facts the notices need (legal
+ * entity, GSTIN, grievance officer) come from site.ts once the owner supplies them.
  */
 
 import type { LegalPage } from "@/content/types";
@@ -17,7 +21,6 @@ export const legalPages: readonly LegalPage[] = [
   {
     slug: "privacy",
     href: "/privacy",
-    title: "Privacy notice",
     status: "draft-for-counsel",
     basis: "SPDI Rules 2011 r.4 (now); DPDP Act 2023 and Rules (17 §3.4). Linked from every form and the footer.",
     outline: [
@@ -40,7 +43,6 @@ export const legalPages: readonly LegalPage[] = [
   {
     slug: "terms",
     href: "/terms",
-    title: "Terms of use",
     status: "draft-for-counsel",
     basis: "Contract hygiene (17 §6.1): website use, estimates are indicative and not offers, IP, liability limits, governing law.",
     outline: [
@@ -57,7 +59,6 @@ export const legalPages: readonly LegalPage[] = [
   {
     slug: "cookies",
     href: "/cookies",
-    title: "Cookies and analytics",
     status: "draft-for-counsel",
     basis:
       "Required if any non-essential tracker is used (17 §2.6, §6.5); sized to the trackers actually deployed. A banner is shown by owner instruction (review 2), and since 2026-09-20 it holds the page until answered — a cookie wall, also by owner instruction, which counsel should review against 17 §2.6; even though nothing non-essential loads today, so the copy has to describe the question we ask — permission in advance — and never imply measurement is running (18 §9.5.7).",

@@ -225,6 +225,39 @@ const MODULES: readonly ModuleSpec[] = [
     kn: "ui",
     why: "Chrome, control names and accessible names.",
   },
+  {
+    file: "legal-shell.ts",
+    from: "@/content/legal/shell",
+    en: "legalShell",
+    kn: "legalShell",
+    why: "The frame the three legal notices share: eyebrow, version line and the closing contact block.",
+  },
+  // The three notices. `pending` is the note on a placeholder tag, which renders only outside
+  // production (PlaceholderTag): build scaffolding for counsel that no reader of the live site sees.
+  {
+    file: "legal-privacy.ts",
+    from: "@/content/legal/privacy",
+    en: "privacyNotice",
+    kn: "privacyNotice",
+    fixed: ["pending"],
+    why: "/privacy. The entity, the address, the email, the phone and the grievance officer are site.ts facts filled in at render.",
+  },
+  {
+    file: "legal-terms.ts",
+    from: "@/content/legal/terms",
+    en: "termsOfUse",
+    kn: "termsOfUse",
+    fixed: ["pending"],
+    why: "/terms. The brand and the registered entity are site.ts facts filled in at render.",
+  },
+  {
+    file: "legal-cookies.ts",
+    from: "@/content/legal/cookies",
+    en: "cookieNotice",
+    kn: "cookieNotice",
+    fixed: ["pending"],
+    why: "/cookies. The consent cookie's name and lifetime are lib/consent.ts facts filled in at render.",
+  },
 ];
 
 /**
