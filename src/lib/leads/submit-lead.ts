@@ -51,8 +51,8 @@ function localeOf(formData: FormData): Locale {
 }
 
 // Sender and lead inbox fall back to the addresses in decisions.md D-009; they are not secrets.
-// In Production they are never missing: next.config.ts imports lib/env.server.ts, which fails
-// the build when any of RESEND_API_KEY / EMAIL_FROM / LEAD_EMAIL is absent.
+// A missing mail variable no longer fails the build (lib/env.server.ts): the quote page reads
+// `mailConfigured` and disables its form instead.
 const EMAIL_FROM = process.env.EMAIL_FROM || "do-not-reply@irradiantenergy.in";
 const LEAD_EMAIL = process.env.LEAD_EMAIL || "leads@irradiantenergy.in";
 
