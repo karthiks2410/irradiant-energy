@@ -211,7 +211,7 @@ test.describe("the estimate counts to its new value", () => {
 
   test("the figure travels rather than cutting, and lands on the real number", async ({ page }) => {
     test.slow();
-    const { shown, frames } = await driveTheBill(page);
+    const { before, steps, shown, frames } = await driveTheBill(page);
 
     // It lands on the real number. Recording carries on until then, so the frames below hold the
     // whole journey.
@@ -220,9 +220,15 @@ test.describe("the estimate counts to its new value", () => {
       .toBe(true);
     const journey = await frames();
 
-    // More than a couple of distinct readings means it counted rather than jumped.
-    const distinct = new Set(journey.map((f) => f.moving));
-    expect(distinct.size, "the figure cut straight to its new value").toBeGreaterThan(3);
+    // Counting means showing figures that are NOT a settled value. Each of the 15 steps settles on
+    // its own estimate, so counting distinct readings would pass for a ticker that cuts straight
+    // from one settled figure to the next (the independent check proved it). What only a counting
+    // figure shows is readings in between: values no step and no target ever settled on.
+    const settled = new Set(
+      [before.figure, before.target, ...steps, ...journey.map((f) => f.target)].filter(Boolean),
+    );
+    const inBetween = [...new Set(journey.map((f) => f.moving))].filter((m) => m && !settled.has(m));
+    expect(inBetween.length, "the figure cut straight to its new value").toBeGreaterThan(2);
 
     // A money figure must never show more than the real one on the way.
     const asNumber = (s: string) => Number(s.replace(/[^0-9.]/g, ""));
