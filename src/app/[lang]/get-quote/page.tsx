@@ -14,13 +14,13 @@ import { Accent, Card, Eyebrow, Section, SectionHeading } from "@/components/ui"
 import { getContent } from "@/i18n/content";
 import { site, whatsappLink } from "@/content/site";
 import { langParams } from "@/i18n/registry";
-import { getLocale } from "@/i18n/server";
+import { requirePublishedLocale } from "@/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 
 export const generateStaticParams = () => langParams("get-quote");
 
 export async function generateMetadata() {
-  const locale = await getLocale();
+  const locale = await requirePublishedLocale("get-quote");
   const { meta } = getContent(locale).quote;
   return pageMetadata({
     title: meta.title,
@@ -64,7 +64,7 @@ export default async function GetQuotePage({
   // immune to a wrong clock on the visitor's device (the action compares against server time).
   const startedAt = await servedAt();
 
-  const locale = await getLocale();
+  const locale = await requirePublishedLocale("get-quote");
   const content = getContent(locale);
   const quote = content.quote;
   const calculator = content.ui.calculator;

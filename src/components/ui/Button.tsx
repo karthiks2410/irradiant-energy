@@ -68,7 +68,9 @@ export function ButtonLink({ variant = "primary", arrow = true, className = "", 
   const v = variants[variant];
   return (
     <Link {...props} className={`${base} ${v.root} ${arrow ? "py-1.5 pr-1.5 pl-5" : "px-5 py-2.5"} ${className}`}>
-      <span className="whitespace-nowrap">{children}</span>
+      {/* An arrow pill must not wrap (its arrow would drop to a second line); an arrowless button
+          may, so a long Kannada label wraps inside a 320px screen instead of pushing past it. */}
+      <span className={arrow ? "whitespace-nowrap" : "text-center"}>{children}</span>
       {arrow && <Arrow className={v.node} />}
     </Link>
   );

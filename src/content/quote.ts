@@ -354,7 +354,7 @@ export const quotePage = {
       "You are receiving this because you submitted the estimate form on {site} on {datetime} and agreed to be contacted about this enquiry. It is not a marketing email.",
     /** The popup's email is one the visitor asked for after seeing their figures. */
     footerPopup:
-      "You are receiving this because you asked us to email your estimate on {site} on {datetime}. It is not a marketing email.",
+      "You are receiving this because you asked us to email your estimate on {site} on {datetime} and agreed to be contacted about this enquiry. It is not a marketing email.",
     /** Timestamps are en-IN in both locales (§6.7); only the zone suffix is copy. */
     datetime: "{datetime} IST",
     source: "brand PDF p.70 · 17 §6.3 (consent record) · report §11 (disclaimer)",

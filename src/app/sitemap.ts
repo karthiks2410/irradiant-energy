@@ -23,9 +23,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       const locales = publishedLocales(route.key);
       // Every entry in a published pair carries the same alternates map, which is what tells a
       // crawler the two URLs are the same page in two languages.
-      const languages = Object.fromEntries(
-        locales.map((locale) => [HREFLANG[locale], absoluteUrl(localizePath(route.path, locale))]),
-      );
+      // x-default matches the page head (src/lib/seo.ts), so the two hreflang sources agree.
+      const languages = {
+        ...Object.fromEntries(
+          locales.map((locale) => [HREFLANG[locale], absoluteUrl(localizePath(route.path, locale))]),
+        ),
+        "x-default": absoluteUrl(localizePath(route.path, "en")),
+      };
       return locales.map((locale) => ({
         url: absoluteUrl(localizePath(route.path, locale)),
         lastModified,

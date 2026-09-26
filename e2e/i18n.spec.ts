@@ -48,7 +48,7 @@ test.describe("URLs", () => {
   });
 
   test("a locale that does not exist is a 404, and so is an unknown segment", async ({ page }) => {
-    for (const path of ["/fr", "/fr/about", "/en/solutions/solar/nope"]) {
+    for (const path of ["/fr", "/fr/about", "/fr/get-quote", "/en/solutions/solar/nope"]) {
       const response = await page.goto(path);
       expect(response?.status(), `${path} status`).toBe(404);
     }

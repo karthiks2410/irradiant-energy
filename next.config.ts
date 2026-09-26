@@ -61,11 +61,15 @@ const legacyRedirects: Redirect[] = [
    * the app to emit unprefixed hrefs — an unprefixed link inside the Kannada tree would bounce
    * the reader into English. Every internal link goes through <Link> in
    * src/components/i18n/LocaleLink.tsx, which cannot forget the prefix.
+   *
+   * Permanent (308): the move to /en is not going to be undone, and these are the URLs the old
+   * site ranked for, so search engines should transfer them outright. Only "/" stays temporary,
+   * for the reason given above.
    */
   ...ROUTES.filter((route) => route.path !== "/").map((route) => ({
     source: route.path,
     destination: `/${DEFAULT_LOCALE}${route.path}`,
-    permanent: false,
+    permanent: true,
   })),
 ];
 

@@ -11,10 +11,27 @@
  * Importing this module from a Client Component is a build error, which is the guard we want.
  */
 
+import { notFound } from "next/navigation";
 import { lang } from "next/root-params";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "./config";
+import { isPublished, type RouteKey } from "./registry";
 
 export async function getLocale(): Promise<Locale> {
   const value = await lang();
   return isLocale(value) ? value : DEFAULT_LOCALE;
+}
+
+/**
+ * The locale for a page that renders per request, or a 404.
+ *
+ * `dynamicParams = false` on the [lang] layout turns every unlisted locale into a 404 for the
+ * prerendered pages, but it does not stop a page that renders on demand: /get-quote reads
+ * `searchParams`, and before this guard /fr/get-quote rendered the English calculator with a 200
+ * (found in the go-live check, 2026-09-25). Dynamic pages call this instead of `getLocale()`, so
+ * the registry stays the one publishing gate for them too.
+ */
+export async function requirePublishedLocale(key: RouteKey): Promise<Locale> {
+  const value = await lang();
+  if (!isLocale(value) || !isPublished(key, value)) notFound();
+  return value;
 }
