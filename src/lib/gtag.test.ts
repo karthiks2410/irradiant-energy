@@ -20,7 +20,10 @@ interface FakeScript {
 let jar: Map<string, string>;
 let cookieWrites: string[];
 let scripts: FakeScript[];
-let win: Record<string, unknown> & { dataLayer?: IArguments[]; location: { href: string; origin: string; search: string; hostname: string } };
+let win: Record<string, unknown> & {
+  dataLayer?: IArguments[];
+  location: { href: string; origin: string; pathname: string; search: string; hostname: string };
+};
 
 function stubBrowser(href = "https://www.irradiantenergy.in/en/get-quote?name=Asha&phone=9876543210&utm_source=whatsapp#top") {
   jar = new Map([
@@ -49,7 +52,7 @@ function stubBrowser(href = "https://www.irradiantenergy.in/en/get-quote?name=As
   };
   win = {
     document,
-    location: { href: url.href, origin: url.origin, search: url.search, hostname: url.hostname },
+    location: { href: url.href, origin: url.origin, pathname: url.pathname, search: url.search, hostname: url.hostname },
   };
   vi.stubGlobal("window", win);
   vi.stubGlobal("document", document);
@@ -115,11 +118,20 @@ describe("after consent", () => {
     expect(scripts[0]).toMatchObject({ id: gtag.GTAG_SCRIPT_ID, async: true, src: `${gtag.GTAG_SRC}?id=G-TEST123` });
     expect(win["ga-disable-G-TEST123"]).toBe(false);
 
-    const [consentDefault, , config] = calls();
+    const [consentDefault, , set, config] = calls();
     expect(consentDefault).toEqual([
       "consent",
       "default",
       { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied", analytics_storage: "granted" },
+    ]);
+    // The starting address goes in `set`: a `config` parameter would outrank every later `set`
+    // and pin every event of the visit to the landing page.
+    expect(set).toEqual([
+      "set",
+      {
+        page_location: "https://www.irradiantenergy.in/en/get-quote?utm_source=whatsapp",
+        page_referrer: "https://www.google.com/",
+      },
     ]);
     expect(config).toEqual([
       "config",
@@ -129,8 +141,6 @@ describe("after consent", () => {
         allow_google_signals: false,
         allow_ad_personalization_signals: false,
         cookie_expires: 180 * 24 * 60 * 60,
-        page_location: "https://www.irradiantenergy.in/en/get-quote?utm_source=whatsapp",
-        page_referrer: "https://www.google.com/",
       },
     ]);
     // Configured once: the second call only re-grants storage.
@@ -155,6 +165,8 @@ describe("after consent", () => {
           page_location: "https://www.irradiantenergy.in/en/get-quote?utm_source=whatsapp",
           page_referrer: "https://www.google.com/",
           page_title: "Get a solar estimate | Irradiant Energy",
+          content_group: "English",
+          page_type: "calculator",
         },
       ],
       [
@@ -164,6 +176,8 @@ describe("after consent", () => {
           page_location: "https://www.irradiantenergy.in/en/about",
           page_referrer: "https://www.irradiantenergy.in/en/get-quote?utm_source=whatsapp",
           page_title: "Get a solar estimate | Irradiant Energy",
+          content_group: "English",
+          page_type: "about",
         },
       ],
     ]);
@@ -200,5 +214,107 @@ describe("withdrawal", () => {
     expect(calls().filter((c) => c[0] === "config")).toHaveLength(1);
     expect(calls().at(-1)).toEqual(["consent", "update", { analytics_storage: "granted" }]);
     expect(gtag.trackPageView("/en")).toBe(true);
+  });
+});
+
+describe("page grouping", () => {
+  it("sets the content group and page type for the page view and everything after it", async () => {
+    const gtag = await load();
+    gtag.enableAnalytics("G-TEST123");
+    win.location.search = "";
+    gtag.trackPageView("/kn/solutions/solar/home");
+
+    const set = calls().filter((c) => c[0] === "set").at(-1);
+    expect(set?.[1]).toMatchObject({ content_group: "Kannada", page_type: "segment" });
+    const view = calls().filter((c) => c[0] === "event" && c[1] === "page_view").at(-1);
+    expect(view?.[2]).toMatchObject({ content_group: "Kannada", page_type: "segment" });
+  });
+});
+
+describe("track", () => {
+  const lead = { form: "popup", property_type: "home", bill_band: "home-3", site_language: "en" } as const;
+  /** What `track` adds to every event: the page it happened on (the stub is /en/get-quote). */
+  const page = {
+    page_type: "calculator",
+    content_group: "English",
+    page_location: "https://www.irradiantenergy.in/en/get-quote?utm_source=whatsapp",
+  };
+
+  it("sends nothing before consent", async () => {
+    const gtag = await load();
+    expect(gtag.track("generate_lead", lead)).toBe(false);
+    expect(win.dataLayer).toBeUndefined();
+  });
+
+  it("sends an allowed event with its allowed parameters once analytics is on", async () => {
+    const gtag = await load();
+    gtag.enableAnalytics("G-TEST123");
+    expect(gtag.track("generate_lead", lead)).toBe(true);
+    expect(gtag.track("click_whatsapp", { location: "bubble", site_language: "kn" })).toBe(true);
+    const events = calls().filter((c) => c[0] === "event");
+    expect(events).toEqual([
+      ["event", "generate_lead", { ...lead, ...page }],
+      ["event", "click_whatsapp", { location: "bubble", site_language: "kn", ...page }],
+    ]);
+  });
+
+  it("reports the page it happened on after a client-side navigation, not the landing page", async () => {
+    const gtag = await load();
+    gtag.enableAnalytics("G-TEST123");
+    gtag.trackPageView("/en/get-quote");
+    // Client-side navigation to the contact page: the address changes, no reload.
+    Object.assign(win.location, { href: "https://www.irradiantenergy.in/en/contact", pathname: "/en/contact", search: "" });
+    gtag.trackPageView("/en/contact");
+    gtag.track("click_call", { location: "contact", site_language: "en" });
+    const [, , params] = calls().filter((c) => c[0] === "event" && c[1] === "click_call").at(-1)!;
+    expect(params).toMatchObject({ page_location: "https://www.irradiantenergy.in/en/contact", page_type: "contact" });
+    // Nothing configured the landing page as a fixed default.
+    expect(calls().filter((c) => c[0] === "config").every((c) => !JSON.stringify(c).includes("page_location"))).toBe(true);
+  });
+
+  it("strips anything personal a caller hands in by mistake", async () => {
+    const gtag = await load();
+    gtag.enableAnalytics("G-TEST123");
+    const hostile = {
+      ...lead,
+      bill_band: "3500",
+      property_type: "560001",
+      name: "Asha Rao",
+      phone: "+919876543210",
+      email: "asha@example.com",
+      pincode: "560001",
+    };
+    gtag.track("generate_lead", hostile as unknown as typeof lead);
+    const [, , params] = calls().filter((c) => c[0] === "event").at(-1)!;
+    expect(params).toEqual({ form: "popup", site_language: "en", ...page });
+    expect(JSON.stringify(calls())).not.toMatch(/Asha|9876543210|asha@example\.com|560001|3500/);
+  });
+
+  it("stops after withdrawal and starts again after a re-grant", async () => {
+    const gtag = await load();
+    gtag.enableAnalytics("G-TEST123");
+    gtag.disableAnalytics("G-TEST123");
+    expect(gtag.track("email_estimate", { site_language: "en" })).toBe(false);
+    gtag.enableAnalytics("G-TEST123");
+    expect(gtag.track("email_estimate", { site_language: "en" })).toBe(true);
+    expect(calls().filter((c) => c[0] === "event" && c[1] === "email_estimate")).toHaveLength(1);
+  });
+
+  it("refuses an event name that is not ours", async () => {
+    const gtag = await load();
+    gtag.enableAnalytics("G-TEST123");
+    expect(gtag.track("purchase" as "email_estimate", { site_language: "en" })).toBe(false);
+    expect(calls().filter((c) => c[0] === "event")).toEqual([]);
+  });
+});
+
+describe("the reserved `language` field", () => {
+  it("is never sent: gtag.js would write it over the browser language instead of reporting it", async () => {
+    const gtag = await load();
+    gtag.enableAnalytics("G-TEST123");
+    gtag.track("email_estimate", { site_language: "kn", language: "kn" } as unknown as { site_language: "kn" });
+    const [, , params] = calls().filter((c) => c[0] === "event").at(-1)!;
+    expect(params).not.toHaveProperty("language");
+    expect(params).toMatchObject({ site_language: "kn" });
   });
 });

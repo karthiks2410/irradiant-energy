@@ -16,6 +16,11 @@
  *
  * sessionStorage, not localStorage: it stays in this tab, and the record is removed the moment it
  * is read, so a name and phone number never outlive the reload that needed them.
+ *
+ * The lead source (src/lib/leads/first-touch.ts) is not saved here, because the reload keeps it:
+ * `location.reload()` keeps the address, so the campaign tags in it are still there at the second
+ * submit, and a first touch remembered with consent is in its own sessionStorage entry. The intent
+ * (quote or site visit) is saved, and the reopened form posts it again.
  */
 
 import { SEGMENTS, type Segment } from "@/lib/solar/constants";

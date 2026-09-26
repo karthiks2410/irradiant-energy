@@ -23,6 +23,7 @@
  */
 
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { useCalculatorUse } from "@/components/analytics/useCalculatorUse";
 import { buildEstimate, billBounds, type Estimate } from "@/lib/solar/calc";
 import type { Segment } from "@/lib/solar/constants";
 
@@ -71,10 +72,15 @@ export function EstimateProvider({
   const [pincodeTouched, setPincodeTouched] = useState(false);
   const [sanctionedLoad, setSanctionedLoad] = useState("");
 
+  // Analytics: every setter below is a visitor's change, so the first one counts as using the
+  // calculator (once per page view, consent only; the bill is reported as a range id).
+  const markUsed = useCalculatorUse(segment, monthlyBill);
+
   /** Bill ranges differ per segment, so the bill restarts at the new segment's typical value. */
   const setSegment = (next: Segment) => {
     setSegmentState(next);
     setMonthlyBill(billBounds(next).default);
+    markUsed();
   };
 
   const pincodeComplete = PINCODE_RE.test(pincode);
@@ -97,15 +103,24 @@ export function EstimateProvider({
     segment,
     setSegment,
     monthlyBill,
-    setMonthlyBill,
+    setMonthlyBill: (next) => {
+      setMonthlyBill(next);
+      markUsed();
+    },
     pincode,
-    setPincode,
+    setPincode: (next) => {
+      setPincode(next);
+      markUsed();
+    },
     touchPincode: () => setPincodeTouched(true),
     // Six typed digits that still do not parse (a leading zero) are a mistake straight away;
     // anything shorter waits until the visitor has left the field.
     pincodeError: !pincodeComplete && (pincodeTouched || pincode.length === 6) ? pincodeError : undefined,
     sanctionedLoad,
-    setSanctionedLoad,
+    setSanctionedLoad: (next) => {
+      setSanctionedLoad(next);
+      markUsed();
+    },
     estimate,
   };
 

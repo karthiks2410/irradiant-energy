@@ -14,6 +14,9 @@
  *   item rather than copy, and half of what it carries — flags, engine version — is not prose
  *   at all. It gains one row saying which language the enquiry came in, so whoever calls back
  *   knows what to expect (docs/kannada/research/architecture.md §6.12).
+ * - Only the alert says **how they found us** (campaign tags, landing page, referring site, the
+ *   page the enquiry was sent from; src/lib/leads/source.ts). The customer's email never does:
+ *   it is about their roof, not about our marketing.
  *
  * Numbers and dates stay en-IN in both: lakh/crore grouping is how a reader in Karnataka reads
  * a rupee figure, and `kn-IN` would group in thousands (§6.7).
@@ -28,6 +31,7 @@ import type { Estimate } from "@/lib/solar/calc";
 import { SEGMENT_LABELS } from "@/lib/solar/constants";
 import { formatInr } from "@/lib/solar/format";
 import type { Lead } from "./schema";
+import { summariseLeadSource, type LeadSource } from "./source";
 
 const logoUrl = `${siteUrl}/images/email/ie-logo-white.png`;
 
@@ -59,6 +63,45 @@ export interface LeadEmailContext {
    * whose figures are a floor rather than a middle.
    */
   billRange?: { label: string; representativeBillInr: number; openEnded: boolean };
+  /** Popup only: whether the visitor opened it to ask for a quote or for a free site visit. */
+  request?: "quote" | "site-visit";
+  /**
+   * How the visitor found us, already validated (src/lib/leads/source.ts). Internal alert and lead
+   * register only: `renderCustomerQuotation` never reads it.
+   */
+  leadSource?: LeadSource;
+}
+
+/** Which form an enquiry came through, in the lead register's and the analytics event's terms. */
+export type LeadFormKind = "calculator" | "popup" | "site_visit";
+
+export function leadFormKind(ctx: Pick<LeadEmailContext, "source" | "request">): LeadFormKind {
+  if (ctx.source !== "quick quote popup") return "calculator";
+  return ctx.request === "site-visit" ? "site_visit" : "popup";
+}
+
+/** The alert's name for each form (English, internal). */
+const FORM_NAME: Record<LeadFormKind, string> = {
+  calculator: "Estimate form on the calculator page",
+  popup: "Quote popup",
+  site_visit: "Site-visit popup (asked for a free site visit)",
+};
+
+/**
+ * The alert's "How they found us" rows. An empty source reads "direct or unknown": a visit
+ * without analytics consent carries no landing page or referrer, only the page it was sent from
+ * and any campaign tag in that page's address.
+ */
+function sourceRows(source: LeadSource = {}): ReadonlyArray<readonly [string, string]> {
+  const { source: from, medium, campaign } = summariseLeadSource(source);
+  const detail = [source.utm_content, source.utm_term].filter(Boolean).join(" / ");
+  return [
+    ["Source / medium / campaign", [from, medium, campaign].filter(Boolean).join(" / ")],
+    ...(detail ? ([["Ad content / term", detail]] as const) : []),
+    ["Landing page", source.landing ?? "not recorded"],
+    ["Referrer", source.referrer ?? "none recorded"],
+    ["Sent from page", source.page ?? "not recorded"],
+  ];
 }
 
 /** The internal alert's bill line (English). */
@@ -223,11 +266,14 @@ export function renderLeadAlert(ctx: LeadEmailContext): EmailContent {
     ["Consent to contact", `Given ${formatDate(submittedAt)} on the ${source}`],
   ];
   const enquiry: ReadonlyArray<readonly [string, string]> = [
+    ["Form", FORM_NAME[leadFormKind(ctx)]],
     ["Property", segment],
     ["PIN code", lead.pincode ?? "not given"],
     ["Monthly bill", billValue(ctx)],
     ["Message", lead.message ?? "—"],
   ];
+
+  const found = sourceRows(ctx.leadSource);
 
   const subject = `New solar enquiry ${reference} · ${segment}${estimate ? ` · ${estimate.systemKwp} kWp est.` : ""}`;
 
@@ -239,6 +285,8 @@ export function renderLeadAlert(ctx: LeadEmailContext): EmailContent {
 ${rows(contact)}
 <h2 style="margin:8px 0 0;font-size:16px;color:${COLOR.teal};">Enquiry</h2>
 ${rows(enquiry)}
+<h2 style="margin:8px 0 0;font-size:16px;color:${COLOR.teal};">How they found us</h2>
+${rows(found)}
 ${
   estimate
     ? `<h2 style="margin:8px 0 0;font-size:16px;color:${COLOR.teal};">Estimate (recomputed on the server)</h2>${note ? `<p style="margin:4px 0 0;color:${COLOR.grey};font-size:14px;">${escapeHtml(note)}</p>` : ""}${rows(estimateRows(estimate))}`
@@ -256,6 +304,9 @@ ${customerWhatsapp ? button("WhatsApp the customer", customerWhatsapp) : button(
     "",
     "ENQUIRY",
     textRows(enquiry),
+    "",
+    "HOW THEY FOUND US",
+    textRows(found),
     ...(estimate ? ["", "ESTIMATE (recomputed on the server)", ...(note ? [note] : []), textRows(estimateRows(estimate))] : []),
     "",
     customerWhatsapp ? `WhatsApp the customer: ${customerWhatsapp}` : `Call the customer: ${lead.phone}`,

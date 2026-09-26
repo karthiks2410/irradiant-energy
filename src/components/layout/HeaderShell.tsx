@@ -27,6 +27,8 @@ export function HeaderShell({ children }: { children: ReactNode }) {
   return (
     <header
       data-surface="dark"
+      // Calls and WhatsApp taps in the bar and in the mobile sheet count as "header" (analytics).
+      data-track-location="header"
       // min-h, not h (layout-risks.md B1): at 1024–1279 the Kannada right-hand cluster measured
       // 26px above and 26px below a fixed 72px band, i.e. the CTA was clipped by the header
       // itself. --header-h still drives scroll-padding-top and <main>'s top padding, so the bar

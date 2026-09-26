@@ -6,7 +6,7 @@ import { EstimateProvider } from "@/components/quote/EstimateProvider";
 import { EstimateResults } from "@/components/quote/EstimateResults";
 import { fillTags } from "@/components/quote/template";
 import { LeadForm } from "@/components/quote/LeadForm";
-import { mailConfigured } from "@/lib/env.server";
+import { leadFormCanSend } from "@/lib/env.server";
 import { Reveal } from "@/components/motion/Reveal";
 import { MobileSummaryBar } from "@/components/quote/MobileSummaryBar";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
@@ -158,7 +158,7 @@ export default async function GetQuotePage({
           <div className="mt-10">
             <LeadForm
               startedAt={startedAt}
-              canSend={mailConfigured}
+              canSend={leadFormCanSend()}
               contact={{ phone: site.contact.phonePrimary.value, whatsappHref: whatsappLink() }}
               copy={quote.form}
               optionalMarker={content.ui.fields.optionalMarker}

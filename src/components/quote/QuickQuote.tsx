@@ -19,6 +19,12 @@
  *   from the page (the businesses page opens on "Business") and can be changed.
  * - Figures are ranges, because the bill is a range (src/lib/leads/quick.ts).
  * - Email is asked for only after the figures are on screen, as one optional field.
+ * - Analytics (only with consent, src/lib/gtag.ts `track`): open_quote with the intent and which
+ *   button opened it, generate_lead when an enquiry goes through and email_estimate when the
+ *   breakdown is emailed — the property type, the bill RANGE id and the page language, never a
+ *   name, number, PIN or address. The lead source rides along with each enquiry for the sales
+ *   alert only (src/lib/leads/first-touch.ts), and the intent travels as a hidden field so the
+ *   alert and the lead register can tell a site-visit request from a quote.
  *
  * Consent is one unticked box that names both channels the visitor's number will be used on, for
  * this enquiry only (DPDP: free, specific, informed, unambiguous, an affirmative act). Closing the
@@ -45,14 +51,23 @@ import type { QuickLeadField } from "@/lib/leads/schema";
 import { initialQuickEmailState, initialQuickQuoteState, type QuickEmailState, type QuickQuoteState } from "@/lib/leads/state";
 import { saveQuickQuoteResume, takeQuickQuoteResume, type QuickQuoteResume } from "./stale-resume";
 import { SEGMENTS, type Segment } from "@/lib/solar/constants";
+import { intentParam, languageOf, type QuotePlacement } from "@/lib/events";
+import { track } from "@/lib/gtag";
+import { withLeadSource } from "@/lib/leads/first-touch";
 
 export type QuickQuoteIntent = "quote" | "site-visit";
 
 const OPEN_EVENT = "irradiant:quick-quote";
 
-/** Opens the popup from anywhere on the page. */
-export function openQuickQuote(intent: QuickQuoteIntent = "quote") {
-  window.dispatchEvent(new CustomEvent<QuickQuoteIntent>(OPEN_EVENT, { detail: intent }));
+interface OpenDetail {
+  intent: QuickQuoteIntent;
+  /** Which button asked, for analytics; null for the reopening after a recovery reload. */
+  placement: QuotePlacement | null;
+}
+
+/** Opens the popup from anywhere on the page. `placement` says which button asked (analytics). */
+export function openQuickQuote(intent: QuickQuoteIntent = "quote", placement: QuotePlacement | null = "other") {
+  window.dispatchEvent(new CustomEvent<OpenDetail>(OPEN_EVENT, { detail: { intent, placement } }));
 }
 
 /**
@@ -89,17 +104,20 @@ function segmentFromPath(pathname: string): Segment {
 
 export function QuickQuoteButton({
   intent = "quote",
+  placement = "other",
   variant = "primary",
   className,
   children,
 }: {
   intent?: QuickQuoteIntent;
+  /** Where the button sits, reported with open_quote: header, hero, segment, closing, menu, other. */
+  placement?: QuotePlacement;
   variant?: "primary" | "light" | "outline" | "outline-light";
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <Button variant={variant} arrow className={className} aria-haspopup="dialog" onClick={() => openQuickQuote(intent)}>
+    <Button variant={variant} arrow className={className} aria-haspopup="dialog" onClick={() => openQuickQuote(intent, placement)}>
       {children}
     </Button>
   );
@@ -137,11 +155,21 @@ export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
         setSession((n) => n + 1);
         finished.current = false;
       }
+      const detail = (event as CustomEvent<OpenDetail | undefined>).detail;
+      const nextIntent = recovered?.intent ?? detail?.intent ?? "quote";
       setResume(recovered);
-      setIntent(recovered?.intent ?? (event as CustomEvent<QuickQuoteIntent>).detail ?? "quote");
+      setIntent(nextIntent);
       setSegment(recovered?.segment ?? segmentFromPath(window.location.pathname));
       setStartedAt(recovered?.startedAt ?? Date.now());
       show();
+      // A visitor's own opening only: the reopening after a recovery reload was counted before it.
+      if (!recovered && detail?.placement) {
+        track("open_quote", {
+          intent: intentParam(nextIntent),
+          button: detail.placement,
+          site_language: languageOf(window.location.pathname),
+        });
+      }
     };
     window.addEventListener(OPEN_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_EVENT, onOpen);
@@ -159,7 +187,7 @@ export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
     const saved = takeQuickQuoteResume(window.location.pathname);
     if (!saved) return;
     pendingResume.current = saved;
-    openQuickQuote(saved.intent);
+    openQuickQuote(saved.intent, null);
   }, []);
 
   const copy = intentCopy(c, intent);
@@ -169,6 +197,7 @@ export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
       ref={dialogRef}
       onClose={() => document.documentElement.removeAttribute("data-scroll-locked")}
       aria-labelledby="quick-quote-title"
+      data-track-location="popup"
       data-lenis-prevent
       className="sheet m-auto max-h-[calc(100dvh-2rem)] w-[min(38rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-lg bg-white p-0 text-carbon shadow-overlay max-sm:mb-0 max-sm:max-h-[calc(100dvh-0.5rem)] max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none"
     >
@@ -228,7 +257,7 @@ function QuickQuoteBody({
   const [state, formAction] = useActionState(
     async (previous: QuickQuoteState, data: FormData): Promise<QuickQuoteState> => {
       try {
-        return await submitQuickQuote(previous, data);
+        return await submitQuickQuote(previous, withLeadSource(data));
       } catch {
         // The action could not be reached: almost always a deploy since this page loaded
         // (stale-resume.ts). Keep what was typed, reload onto the new build, reopen filled in.
@@ -264,11 +293,24 @@ function QuickQuoteBody({
     if (state.ok === false && state.fieldErrors) setErrors(state.fieldErrors);
   }
 
-  // Side effects only: tell the dialog this enquiry is done, and move focus to a failure message.
+  // Side effects only: tell the dialog this enquiry is done, count it once (a remount or Strict
+  // Mode can run this twice for the same result), and move focus to a failure message.
+  const counted = useRef<string | null>(null);
   useEffect(() => {
-    if (state.ok === true) onFinished();
+    if (state.ok === true) {
+      onFinished();
+      if (counted.current !== state.reference) {
+        counted.current = state.reference;
+        track("generate_lead", {
+          form: intent === "site-visit" ? "site_visit" : "popup",
+          property_type: segment,
+          bill_band: bucket || "unknown",
+          site_language: locale,
+        });
+      }
+    }
     if (state.ok === false) errorSummaryRef.current?.focus();
-  }, [state, onFinished]);
+  }, [state, onFinished, intent, segment, bucket, locale]);
 
   // The bill ranges belong to the property type, so changing one clears the other.
   const buckets = BILL_BUCKETS[segment];
@@ -345,6 +387,8 @@ function QuickQuoteBody({
 
       <input type="hidden" name="startedAt" value={String(startedAt)} />
       <input type="hidden" name="locale" value={locale} />
+      {/* Quote or site visit, for the sales alert and the lead register. */}
+      <input type="hidden" name="intent" value={intent} />
       <div aria-hidden="true" className="absolute -left-[9999px] size-px overflow-hidden">
         <label htmlFor="qq-website">Website</label>
         <input id="qq-website" name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
@@ -498,6 +542,14 @@ function QuickQuoteResult({
     if (emailState.ok === false && emailState.fieldError) setEmailError(emailState.fieldError);
   }
 
+  // Counted once: the breakdown can be emailed only once per enquiry.
+  const emailCounted = useRef(false);
+  useEffect(() => {
+    if (emailState.ok !== true || emailCounted.current) return;
+    emailCounted.current = true;
+    track("email_estimate", { site_language: locale });
+  }, [emailState, locale]);
+
   const tiles: [string, string][] = [
     [c.systemSize, summary.systemSize],
     [c.monthlySavings, summary.monthlySavings],
@@ -505,7 +557,7 @@ function QuickQuoteResult({
   ];
 
   return (
-    <div className="grid gap-4 px-5 pt-4 pb-5">
+    <div data-track-location="result" className="grid gap-4 px-5 pt-4 pb-5">
       <div>
         <h3 ref={headingRef} tabIndex={-1} className="font-display text-ui font-bold text-carbon outline-none">
           {c.resultTitle}

@@ -25,6 +25,7 @@ export function WhatsAppBubble({ label }: { label: string }) {
       href={whatsappLink()}
       target="_blank"
       rel="noopener noreferrer"
+      data-track-location="bubble"
       className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--bottom-rail-h,0px))] z-40 grid size-14 place-items-center rounded-full bg-[#25D366] text-white shadow-overlay transition-[transform,background-color] duration-200 ease-controlled hover:bg-[#1DA851] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-safe:hover:scale-105 sm:right-6 sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom)+var(--bottom-rail-h,0px))]"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7 fill-current">

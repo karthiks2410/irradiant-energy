@@ -93,6 +93,10 @@ export const cookieNotice = {
         "<strong>What we switch off.</strong> Google signals and ad personalisation are turned off, so these records are not linked to a Google account and are not used for advertising. We do not send your name, phone number, email address or anything you type into a form, and page addresses are sent without any extra details they may carry, apart from campaign tags such as <strong>utm_source</strong>. According to Google, Google Analytics 4 does not log or store IP addresses.",
         "<strong>Who handles it, and for how long.</strong> Google processes these records for us under its Google Analytics terms, and may do so outside India, including in the United States. Individual visit records are kept for two months — the shortest period Google Analytics offers — and then deleted; totals, such as how many visits a page had, stay in our reports.",
         "<strong>Turning it off.</strong> Refuse, or withdraw later in cookie settings, and the script stops recording anything new and we delete the <strong>_ga</strong> cookies from your browser.",
+        // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-26, lead tracking): the first-touch
+        // note in sessionStorage (src/lib/leads/first-touch.ts), kept only with analytics consent
+        // and removed on withdrawal (components/analytics/LeadSourceCapture.tsx).
+        "<strong>How you found us.</strong> While analytics is allowed, this site also keeps a note in your browser, for this tab only, of the first page you opened and the campaign tag or website that brought you here. It leaves your browser only with an enquiry you choose to send, and we delete it if you turn analytics off.",
       ],
     },
     {

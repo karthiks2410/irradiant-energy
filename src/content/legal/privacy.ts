@@ -17,6 +17,9 @@
 // matches the build. The detail lives on /cookies; each passage points there.
 // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-26): every AnalyticsVariant below, and the
 // rewritten "What we do not ask for" sentence.
+// PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-26, lead tracking): the "With your enquiry we
+// also record…" paragraph (src/lib/leads/source.ts, first-touch.ts) and the Google Workspace item
+// (the lead register, src/lib/leads/sheet.ts).
 //
 // Every sentence is one row in docs/kannada/translations/units.json, matched by its exact text:
 // reword one here and the Kannada build stops until the row is updated.
@@ -66,6 +69,15 @@ export const privacyNotice = {
             "a record that you gave your consent, with the date and time.",
           ],
         },
+        // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: what the enquiry carries besides the form
+        // (src/lib/leads/source.ts). The landing page and the referring site are kept only with
+        // analytics consent, so they appear only in a build that can ask for it.
+        {
+          withAnalytics:
+            "With your enquiry we also record the page you sent it from and, if the link that brought you to this site carried one, its campaign tag (the “utm_” part of the web address). If you allow analytics, we also record the first page you opened on that visit and the website that sent you to us.",
+          withoutAnalytics:
+            "With your enquiry we also record the page you sent it from and, if the link that brought you to this site carried one, its campaign tag (the “utm_” part of the web address).",
+        },
         "<strong>When you browse</strong>, our hosting provider records technical details of each request — the internet address your device is using, the browser and device type, the page requested and the time. We use these to keep the site running and to look into problems and abuse.",
         // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL
         {
@@ -111,6 +123,8 @@ export const privacyNotice = {
             "<strong>Vercel</strong> — hosts this website, runs the form, and keeps the technical request logs.",
             "<strong>Resend</strong> — delivers the enquiry to our team and the acknowledgement to you.",
             "<strong>Our own email and phone accounts</strong> — where our team reads and answers your enquiry.",
+            // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: the lead register (src/lib/leads/sheet.ts).
+            "<strong>Google Workspace</strong> — we keep a register of enquiries in a spreadsheet in our Google Workspace account, so that each one is followed up. Google stores it for us and uses it only on our instructions; we keep it for the periods under “How long we keep it”.",
             "<strong>WhatsApp</strong> — only if you choose to message us there. Your chat is also handled by WhatsApp under its own terms.",
             // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL
             {

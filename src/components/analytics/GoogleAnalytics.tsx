@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useConsentRecord, useIsHydrated } from "@/components/consent/useConsent";
+import { installClickTracking } from "@/lib/click-tracking";
 import { disableAnalytics, enableAnalytics, trackPageView } from "@/lib/gtag";
 
 /**
@@ -21,6 +22,10 @@ import { disableAnalytics, enableAnalytics, trackPageView } from "@/lib/gtag";
  * - anything else, once hydrated (refused, withdrawn, unanswered, or an answer to an older
  *   CONSENT_VERSION) → the kill switch and the `_ga` cookies deleted. That is a no-op for a visitor
  *   who never allowed it, and it removes cookies left by an answer that has since lapsed.
+ *
+ * While analytics is allowed it also listens for clicks on call, WhatsApp, email and social links
+ * and on the language switch (src/lib/click-tracking.ts). The site's other events are sent where
+ * they happen, through `track` (src/lib/gtag.ts), which is a no-op whenever this is off.
  */
 export function GoogleAnalytics({ measurementId }: { measurementId: string }) {
   const record = useConsentRecord();
@@ -41,6 +46,8 @@ export function GoogleAnalytics({ measurementId }: { measurementId: string }) {
   useEffect(() => {
     if (granted) trackPageView(pathname);
   }, [granted, pathname]);
+
+  useEffect(() => (granted ? installClickTracking() : undefined), [granted]);
 
   return null;
 }
