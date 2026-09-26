@@ -261,7 +261,8 @@ export const ui = {
       submit: "Book my visit",
     },
     close: "Close",
-    name: "Name",
+    /** Not `name`: that key is English-owned site-wide (people's names), so the generator would skip this label. */
+    nameLabel: "Name",
     phone: "WhatsApp number",
     pincode: "PIN code",
     segment: "Property",
