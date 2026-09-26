@@ -29,7 +29,7 @@ export const commercialSegment = {
     title: "Rooftop solar for businesses in Karnataka",
     // "accelerated depreciation benefits" trimmed (N-12); see held.
     description:
-      "Solar for Karnataka businesses of every shape and size — shops, offices, factories and warehouses. Predictable energy costs and a single team handling design, install, and after-sales.",
+      "Rooftop solar for shops, offices, factories and warehouses in Bengaluru and across Karnataka. One team for design, installation and after-sales.",
     source: "P-SC-1 · 03 §6.1 · place qualifier proposed (F-40 · 16 §H3)",
     status: "proposed",
   },

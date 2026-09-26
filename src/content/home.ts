@@ -559,9 +559,15 @@ const held: readonly HeldItem[] = [
  */
 const meta = {
   title: "Rooftop solar across Karnataka",
+  /**
+   * The home page's own search description. It used to borrow site.description, which is also
+   * the footer's visible line; this one names Bengaluru alongside Karnataka for search (owner-
+   * approved wording, 2026-09-26) without changing the footer.
+   */
+  description: "Rooftop solar for homes, apartments and businesses in Bengaluru and across Karnataka — designed, installed and supported, with a free site visit.",
   source: "P-HM-1 · seo.ts budget",
   status: "proposed",
-} as const satisfies Sourced & { title: string };
+} as const satisfies Sourced & { title: string; description: string };
 
 export const homePage = {
   meta,

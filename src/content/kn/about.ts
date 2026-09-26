@@ -14,7 +14,7 @@ import type { Translation } from "@/i18n/translation";
 export const aboutPage = {
   meta: {
     title: "ನಮ್ಮ ಬಗ್ಗೆ",
-    description: "Irradiant Energy ಕೆಲಸ ಮಾಡುವ ರೀತಿ — ತಿಳಿಯುವುದು, ವಿನ್ಯಾಸ ಮಾಡುವುದು, ಅಳವಡಿಸುವುದು, ಬೆಂಬಲ ನೀಡುವುದು — ಜೊತೆಗೆ ನಮ್ಮ ಧ್ಯೇಯ, ಮೌಲ್ಯಗಳು ಮತ್ತು ತಂಡದ ಪರಿಚಯ.",
+    description: "ಬೆಂಗಳೂರು ಮೂಲದ Irradiant Energy ಸಂಸ್ಥೆ ಚಾವಣಿ ಮೇಲಿನ ಸೋಲಾರ್ ಕೆಲಸ ಮಾಡುವ ರೀತಿ (ತಿಳಿಯುವುದು, ವಿನ್ಯಾಸ ಮಾಡುವುದು, ಅಳವಡಿಸುವುದು, ಬೆಂಬಲ ನೀಡುವುದು) ಮತ್ತು ಅದರ ತಂಡದ ಪರಿಚಯ.",
   },
   breadcrumb: "ನಮ್ಮ ಬಗ್ಗೆ",
   stands: {

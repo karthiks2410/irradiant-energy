@@ -18,7 +18,7 @@ const brandText = (text: string, page: string): TextItem => ({ text, source: `br
 const meta = {
   title: "About us",
   description:
-    "How Irradiant Energy works — understand, design, deliver, support — plus the mission, values and people behind the company.",
+    "How Irradiant Energy, a rooftop solar company based in Bengaluru, works (understand, design, deliver, support) and the people behind it.",
   source: "proposed · the four verbs are the How-we-work steps (brand PDF p.6)",
   status: "proposed",
 } as const;

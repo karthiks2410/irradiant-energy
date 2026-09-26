@@ -26,7 +26,7 @@ export const housingSocietySegment = {
   meta: {
     title: "Rooftop solar for housing societies in Karnataka",
     description:
-      "Solar for apartments, gated communities, and RWA-managed buildings across Karnataka. Lower society maintenance, predictable energy costs, and a single point of contact end-to-end.",
+      "Rooftop solar for apartments and gated communities in Bengaluru and across Karnataka. Lower common-area bills and one point of contact, end to end.",
     source: "P-SS-1 · 03 §5.1 · place qualifier proposed (F-40 · 16 §H3)",
     status: "proposed",
   },

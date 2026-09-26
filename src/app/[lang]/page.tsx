@@ -25,7 +25,7 @@ export async function generateMetadata() {
   const content = getContent(locale);
   return pageMetadata({
     title: content.home.meta.title,
-    description: content.site.description,
+    description: content.home.meta.description,
     path: "/",
     locale,
   });

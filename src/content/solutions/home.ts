@@ -27,7 +27,7 @@ export const homeSegment = {
     title: "Rooftop solar for homes in Karnataka",
     // "and lifetime after-sales" trimmed (N-44); see held.
     description:
-      "Rooftop solar designed for your home in Karnataka. Free site visit, transparent quote, end-to-end installation. See which on-grid, off-grid, or hybrid system fits you.",
+      "Rooftop solar for your home in Bengaluru and across Karnataka. Free site visit, transparent quote and end-to-end installation: on-grid, off-grid or hybrid.",
     source: "P-SH-1 · 03 §4.1 · place qualifier proposed (F-40 · 16 §H3)",
     status: "proposed",
   },

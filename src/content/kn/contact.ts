@@ -14,7 +14,7 @@ import type { Translation } from "@/i18n/translation";
 export const contactPage = {
   meta: {
     title: "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ",
-    description: "ನಿಮ್ಮ ಮನೆ, ಅಪಾರ್ಟ್\u200cಮೆಂಟ್ ಅಥವಾ ವ್ಯಾಪಾರಕ್ಕೆ ಚಾವಣಿ ಮೇಲೆ ಸೋಲಾರ್ — Irradiant Energy ತಂಡಕ್ಕೆ ಕರೆ, WhatsApp ಅಥವಾ ಇಮೇಲ್ ಮಾಡಿ. ಇಲ್ಲವೇ ನಾವೇ ಕರೆ ಮಾಡುವಂತೆ ಕೇಳಿ.",
+    description: "ಕರ್ನಾಟಕದಲ್ಲಿ ಎಲ್ಲೇ ಇರಲಿ, ಚಾವಣಿ ಮೇಲಿನ ಸೋಲಾರ್ ಬಗ್ಗೆ ಬೆಂಗಳೂರಿನ ಆನೇಕಲ್\u200cನಲ್ಲಿರುವ Irradiant Energy ತಂಡಕ್ಕೆ ಕರೆ, WhatsApp ಅಥವಾ ಇಮೇಲ್ ಮಾಡಿ; ಇಲ್ಲವೇ ನಾವೇ ಕರೆ ಮಾಡುವಂತೆ ಕೇಳಿ.",
   },
   breadcrumb: "ಸಂಪರ್ಕಿಸಿ",
   hero: {
