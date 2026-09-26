@@ -96,8 +96,10 @@ export function pageMetadata({ title, description, path, locale, noindex = false
   return {
     // `title.template` from the root layout applies to CHILD segments only, so app/page.tsx —
     // which shares the root segment — would otherwise ship a title with no brand in it. Home
-    // spells the suffix out; every other route inherits the template.
-    title: path === "/" ? { absolute: `${title} | ${site.name}` } : title,
+    // leads with the brand: a browser tab shows only the first word or two, and on the home page
+    // that should read "Irradiant Energy", not "Rooftop s…" (owner, 2026-09-26). Every other
+    // route inherits the template, page name first, so several open tabs stay distinguishable.
+    title: path === "/" ? { absolute: `${site.name} | ${title}` } : title,
     description,
     ...(noindex ? { robots: { index: false, follow: true } } : { alternates: { canonical, languages } }),
     openGraph: {
