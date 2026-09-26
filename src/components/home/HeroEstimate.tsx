@@ -12,7 +12,9 @@ import { useHomeEstimate } from "./HomeEstimateProvider";
  * has no estimator at all. Ours needs no name, no email, no phone and no verification — and it
  * was sitting four screens down where nothing above the fold hinted it existed.
  *
- * One field, because the bill is the only input that moves a figure. The PIN code used to be
+ * One field: the bill. The figures also need the sanctioned load (redesign #14), which is on the
+ * same bill but is a number most visitors have to look up, so it is asked for in the calculator,
+ * and "See my estimate" puts the cursor straight into it. The PIN code used to be
  * asked for here too, until measuring showed it changes nothing the visitor sees: at the same
  * bill, a Bengaluru PIN, a Mysuru PIN, a Delhi PIN and no PIN all return the same system size,
  * generation, saving and payback. It narrows the tariff caveat, which is worth offering in the
@@ -36,11 +38,12 @@ export function HeroEstimate({
   submitLabel: string;
   note: string;
 }) {
-  const { bill, setBill } = useHomeEstimate();
+  const { bill, setBill, requestLoad } = useHomeEstimate();
   const billId = useId();
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    requestLoad();
     // A plain hash jump rather than scrollIntoView, so Lenis applies the header offset the same
     // way it does for every other in-page link (ui-kit README § Motion islands).
     window.location.hash = "calculator";

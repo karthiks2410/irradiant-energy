@@ -29,6 +29,9 @@ interface HomeEstimateValue {
    * band's sanctioned load and home count). The setters above call it themselves.
    */
   markUsed: () => void;
+  /** Bumped by the hero's "See my estimate": the calculator moves focus to the sanctioned load. */
+  loadRequest: number;
+  requestLoad: () => void;
 }
 
 const HomeEstimateContext = createContext<HomeEstimateValue | null>(null);
@@ -43,6 +46,7 @@ export function HomeEstimateProvider({ children }: { children: ReactNode }) {
   const [segment, setSegmentState] = useState<Segment>("home");
   const [bill, setBill] = useState(() => String(billBounds("home").default));
   const [location, setLocation] = useState("");
+  const [loadRequest, setLoadRequest] = useState(0);
   // The first change to any input counts as using the calculator: once per page view, consent
   // only, with the bill reported as a range id (components/analytics/useCalculatorUse.ts).
   const billNumber = Number(bill);
@@ -68,8 +72,10 @@ export function HomeEstimateProvider({ children }: { children: ReactNode }) {
         markUsed();
       },
       markUsed,
+      loadRequest,
+      requestLoad: () => setLoadRequest((n) => n + 1),
     }),
-    [segment, bill, location, markUsed],
+    [segment, bill, location, markUsed, loadRequest],
   );
 
   return <HomeEstimateContext.Provider value={value}>{children}</HomeEstimateContext.Provider>;

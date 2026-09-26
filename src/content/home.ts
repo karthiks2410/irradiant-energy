@@ -394,7 +394,8 @@ const calculator = {
   // PM Surya Ghar subsidy where it applies, it recalculates live, and every assumption is listed
   // with its source.
   bullets: [
-    "Only your monthly bill is needed",
+    // Corrected 2026-09-26 (owner-approved): the redesign (#14) made the sanctioned load required too.
+    "Just your monthly bill and sanctioned load, both on your electricity bill",
     "Karnataka tariffs and the PM Surya Ghar subsidy, where it applies",
     "Figures update as you type",
     "Every assumption listed with its source",
