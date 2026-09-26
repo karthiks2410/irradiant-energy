@@ -300,7 +300,7 @@ function QuickQuoteBody({
       <TextField
         id="qq-name"
         name="name"
-        label={c.name}
+        label={c.nameLabel}
         autoComplete="name"
         required
         value={name}

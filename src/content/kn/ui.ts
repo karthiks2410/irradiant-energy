@@ -176,6 +176,7 @@ export const ui = {
       submit: "ಭೇಟಿ ಬುಕ್ ಮಾಡಿ",
     },
     close: "ಮುಚ್ಚಿ",
+    nameLabel: "ಹೆಸರು",
     phone: "WhatsApp ಸಂಖ್ಯೆ",
     pincode: "ಪಿನ್ ಕೋಡ್",
     segment: "ಕಟ್ಟಡದ ಬಗೆ",
