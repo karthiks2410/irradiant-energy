@@ -29,6 +29,18 @@ export async function languageSwitch(page: Page) {
   await page.locator("[data-menu-toggle]:visible").first().click();
   const inSheet = page.getByRole("dialog").locator("[data-language-switch]:visible");
   await expect(inSheet, "the language switch is not reachable at this width").toHaveCount(1);
+
+  // The sheet slides in (`.sheet-down` in globals.css). Let it arrive before anything in it is
+  // measured or tapped: part-way there its offset is fractional, and the 44px switch measured
+  // 43.999999px about one run in three.
+  await inSheet.first().evaluate((el) =>
+    Promise.all(
+      (el.closest("dialog") ?? el)
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
+        .map((animation) => animation.finished),
+    ),
+  );
   return inSheet.first();
 }
 

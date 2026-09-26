@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { dismissConsent, languageSwitch, watchForErrors } from "./helpers";
 
 /**
@@ -16,6 +16,21 @@ function watchFonts(page: Page) {
 }
 
 const isKannadaFont = (name: string) => /kannada/i.test(name);
+
+/**
+ * Tap the switch and wait for the page it leads to.
+ *
+ * The switch slides its thumb across before it changes the page (SLIDE_MS in LanguageSwitch.tsx),
+ * and the network is idle for that whole slide. So waiting for "networkidle" straight after the tap
+ * returns at once, with the old page still showing: wait for the new URL first, and only then for
+ * the new page to settle. Settling matters to the next tap: leaving while the page's own link
+ * prefetches are in flight makes WebKit log each cancelled one as an error.
+ */
+async function flip(page: Page, link: Locator, pathname: string) {
+  await link.click();
+  await page.waitForURL((url) => url.pathname === pathname);
+  await page.waitForLoadState("networkidle");
+}
 
 test.describe("URLs", () => {
   test("the bare origin sends you to English", async ({ page }) => {
@@ -105,14 +120,11 @@ test.describe("the EN / ಕನ್ನಡ switch", () => {
     await page.goto("/en/solutions/solar/housing-society", { waitUntil: "networkidle" });
     await dismissConsent(page);
 
-    await (await languageSwitch(page)).getByRole("link").click();
-    await page.waitForLoadState("networkidle");
-    expect(new URL(page.url()).pathname).toBe("/kn/solutions/solar/housing-society");
+    await flip(page, (await languageSwitch(page)).getByRole("link"), "/kn/solutions/solar/housing-society");
     await expect(page.locator("html")).toHaveAttribute("lang", "kn");
 
-    await (await languageSwitch(page)).getByRole("link").click();
-    await page.waitForLoadState("networkidle");
-    expect(new URL(page.url()).pathname).toBe("/en/solutions/solar/housing-society");
+    await flip(page, (await languageSwitch(page)).getByRole("link"), "/en/solutions/solar/housing-society");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
     expect(errors, "switching language logged an error").toEqual([]);
   });
 
@@ -124,9 +136,8 @@ test.describe("the EN / ಕನ್ನಡ switch", () => {
     // The href itself carries the hash, so it survives a middle-click or JavaScript being off.
     await expect(link).toHaveAttribute("href", "/kn/contact#grievance");
 
-    await link.click();
-    await page.waitForLoadState("networkidle");
-    expect(page.url()).toContain("/kn/contact#grievance");
+    await flip(page, link, "/kn/contact");
+    expect(new URL(page.url()).hash).toBe("#grievance");
   });
 
   test("it carries the segment and drops personal data from the query", async ({ page }) => {
@@ -140,10 +151,8 @@ test.describe("the EN / ಕನ್ನಡ switch", () => {
     const link = (await languageSwitch(page)).getByRole("link");
     await expect(link).toHaveAttribute("href", "/kn/get-quote?segment=commercial");
 
-    await link.click();
-    await page.waitForLoadState("networkidle");
+    await flip(page, link, "/kn/get-quote");
     const url = new URL(page.url());
-    expect(url.pathname).toBe("/kn/get-quote");
     expect(url.searchParams.get("segment")).toBe("commercial");
     for (const key of ["name", "phone", "email"]) {
       expect(url.searchParams.has(key), `${key} was carried across the language change`).toBe(false);

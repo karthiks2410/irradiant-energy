@@ -1,14 +1,18 @@
 import type { NextConfig } from "next";
 
-// Build gate. Importing this validates the server environment and throws when a Production
-// build is missing RESEND_API_KEY / EMAIL_FROM / LEAD_EMAIL. There is no lead store yet
-// (architecture.md OD-4), so the sales alert is the only record of an enquiry: a Production
-// deployment without mail credentials would drop every lead one at a time. Failing here means
-// the bad build never goes live and the previous deployment keeps serving. Outside Production
-// it is a no-op, so local work and Preview still build without credentials.
-import "./src/lib/env.server";
 import { DEFAULT_LOCALE } from "./src/i18n/config";
 import { ROUTES } from "./src/i18n/registry";
+import { CANONICAL_ORIGIN } from "./src/lib/env";
+import { assertProductionBuildEnv } from "./src/lib/env.server";
+
+// Build gate. A Vercel Production build stops here, with a message naming the fix, unless
+// NEXT_PUBLIC_SITE_URL is exactly CANONICAL_ORIGIN: without it the site builds fine and quietly
+// ships robots.txt "Disallow: /" and noindex on every page, which is how Production once stayed
+// out of search for weeks. Failing here means the bad build never goes live and the previous
+// deployment keeps serving. Outside Production it is a no-op, so local work, CI and Preview build
+// without it. (Missing mail credentials no longer stop the build: owner decision 2026-09-20, see
+// src/lib/env.server.ts.)
+assertProductionBuildEnv();
 
 type Redirect = Awaited<ReturnType<NonNullable<NextConfig["redirects"]>>>[number];
 
@@ -22,7 +26,6 @@ type Redirect = Awaited<ReturnType<NonNullable<NextConfig["redirects"]>>>[number
  * untouched. It is listed first so the host changes before any path redirect below runs; the
  * canonical host then applies those itself ("/" → "/en", the legacy map).
  */
-const CANONICAL_ORIGIN = "https://www.irradiantenergy.in";
 const canonicalHostRedirect: Redirect = {
   source: "/:path*",
   has: [{ type: "host", value: "irradiant-energy\\.vercel\\.app" }],

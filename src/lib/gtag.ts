@@ -134,13 +134,19 @@ export function enableAnalytics(measurementId: string): void {
     analytics_storage: "granted",
   });
   gtag("js", new Date());
+  // The starting address goes in `set`, NOT in `config`: a parameter given to `config` outranks
+  // every later `set`, so it would stick to every event for the rest of the visit, and a click on
+  // /en/contact reached by client-side navigation would report the landing page (found in the
+  // independent check, 2026-09-26). trackPageView moves it on with `set` at each navigation.
+  gtag("set", {
+    page_location: sanitizeUrl(w.location.href),
+    page_referrer: w.document.referrer ? sanitizeUrl(w.document.referrer) : "",
+  });
   gtag("config", measurementId, {
     send_page_view: false,
     allow_google_signals: false,
     allow_ad_personalization_signals: false,
     cookie_expires: COOKIE_LIFETIME_SECONDS,
-    page_location: sanitizeUrl(w.location.href),
-    page_referrer: w.document.referrer ? sanitizeUrl(w.document.referrer) : "",
   });
   configuredId = measurementId;
   injectScript(w, measurementId);
@@ -185,7 +191,10 @@ export function track<N extends EventName>(name: N, params: EventParams[N]): boo
   if (!w?.gtag || !active || !configuredId) return false;
   const clean = scrubParams(name, params as unknown as Record<string, unknown>);
   if (!clean) return false;
-  w.gtag("event", name, { ...clean, ...trackContext(w.location.pathname) });
+  // The page is sent with the event itself as well: event parameters outrank everything, so the
+  // event reports where it happened even if a `set` was missed.
+  const here = sanitizeUrl(w.location.href);
+  w.gtag("event", name, { ...clean, ...trackContext(w.location.pathname), ...(here ? { page_location: here } : {}) });
   return true;
 }
 

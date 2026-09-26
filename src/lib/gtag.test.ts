@@ -118,11 +118,20 @@ describe("after consent", () => {
     expect(scripts[0]).toMatchObject({ id: gtag.GTAG_SCRIPT_ID, async: true, src: `${gtag.GTAG_SRC}?id=G-TEST123` });
     expect(win["ga-disable-G-TEST123"]).toBe(false);
 
-    const [consentDefault, , config] = calls();
+    const [consentDefault, , set, config] = calls();
     expect(consentDefault).toEqual([
       "consent",
       "default",
       { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied", analytics_storage: "granted" },
+    ]);
+    // The starting address goes in `set`: a `config` parameter would outrank every later `set`
+    // and pin every event of the visit to the landing page.
+    expect(set).toEqual([
+      "set",
+      {
+        page_location: "https://www.irradiantenergy.in/en/get-quote?utm_source=whatsapp",
+        page_referrer: "https://www.google.com/",
+      },
     ]);
     expect(config).toEqual([
       "config",
@@ -132,8 +141,6 @@ describe("after consent", () => {
         allow_google_signals: false,
         allow_ad_personalization_signals: false,
         cookie_expires: 180 * 24 * 60 * 60,
-        page_location: "https://www.irradiantenergy.in/en/get-quote?utm_source=whatsapp",
-        page_referrer: "https://www.google.com/",
       },
     ]);
     // Configured once: the second call only re-grants storage.
@@ -227,7 +234,11 @@ describe("page grouping", () => {
 describe("track", () => {
   const lead = { form: "popup", property_type: "home", bill_band: "home-3", site_language: "en" } as const;
   /** What `track` adds to every event: the page it happened on (the stub is /en/get-quote). */
-  const page = { page_type: "calculator", content_group: "English" };
+  const page = {
+    page_type: "calculator",
+    content_group: "English",
+    page_location: "https://www.irradiantenergy.in/en/get-quote?utm_source=whatsapp",
+  };
 
   it("sends nothing before consent", async () => {
     const gtag = await load();
@@ -245,6 +256,20 @@ describe("track", () => {
       ["event", "generate_lead", { ...lead, ...page }],
       ["event", "click_whatsapp", { location: "bubble", site_language: "kn", ...page }],
     ]);
+  });
+
+  it("reports the page it happened on after a client-side navigation, not the landing page", async () => {
+    const gtag = await load();
+    gtag.enableAnalytics("G-TEST123");
+    gtag.trackPageView("/en/get-quote");
+    // Client-side navigation to the contact page: the address changes, no reload.
+    Object.assign(win.location, { href: "https://www.irradiantenergy.in/en/contact", pathname: "/en/contact", search: "" });
+    gtag.trackPageView("/en/contact");
+    gtag.track("click_call", { location: "contact", site_language: "en" });
+    const [, , params] = calls().filter((c) => c[0] === "event" && c[1] === "click_call").at(-1)!;
+    expect(params).toMatchObject({ page_location: "https://www.irradiantenergy.in/en/contact", page_type: "contact" });
+    // Nothing configured the landing page as a fixed default.
+    expect(calls().filter((c) => c[0] === "config").every((c) => !JSON.stringify(c).includes("page_location"))).toBe(true);
   });
 
   it("strips anything personal a caller hands in by mistake", async () => {
