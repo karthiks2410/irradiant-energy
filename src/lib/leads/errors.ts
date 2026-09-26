@@ -37,7 +37,9 @@ export const LEAD_FIELD_ERROR_CODES = [
 export type LeadFieldErrorCode = (typeof LEAD_FIELD_ERROR_CODES)[number];
 
 /** A refusal against the whole submission, shown in the alert region above the form. */
-export const LEAD_FORM_ERROR_CODES = ["send", "rateLimited", "tooFast", "invalid"] as const;
+// "stale": the page was opened before a deploy and its Server Action no longer exists (the forms
+// catch that in the browser; see src/components/quote/stale-resume.ts).
+export const LEAD_FORM_ERROR_CODES = ["send", "rateLimited", "tooFast", "invalid", "stale"] as const;
 
 export type LeadFormErrorCode = (typeof LEAD_FORM_ERROR_CODES)[number];
 

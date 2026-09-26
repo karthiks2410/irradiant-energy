@@ -90,3 +90,26 @@ export type QuickEmailState =
   | { ok: false; errorCode: LeadFormErrorCode; fieldError?: LeadFieldErrorCode };
 
 export const initialQuickEmailState: QuickEmailState = { ok: null };
+
+/**
+ * The submitted values, echoed back so a refused form keeps what was typed. Lives here, not in
+ * the "use server" module, because the browser needs it too: a form that could not reach its
+ * Server Action at all (a deploy landed while it was open) still has to keep the visitor's input.
+ */
+export function echoLeadValues(formData: FormData): LeadFormValues {
+  const text = (key: string) => {
+    const v = formData.get(key);
+    return typeof v === "string" ? v : "";
+  };
+  return {
+    name: text("name"),
+    phone: text("phone"),
+    email: text("email"),
+    segment: text("segment"),
+    pincode: text("pincode"),
+    monthlyBill: text("monthlyBill"),
+    message: text("message"),
+    whatsappOptIn: formData.get("whatsappOptIn") !== null,
+    consent: formData.get("consent") !== null,
+  };
+}

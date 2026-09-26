@@ -25,7 +25,7 @@ import type { QuotePage } from "@/content/quote";
 import type { Locale } from "@/i18n/config";
 import { fill } from "@/i18n/format";
 import { LEAD_ERROR_PARAMS, isLeadFieldErrorCode } from "@/lib/leads/errors";
-import { initialLeadState, type LeadFieldErrors } from "@/lib/leads/state";
+import { echoLeadValues, initialLeadState, type LeadActionState, type LeadFieldErrors } from "@/lib/leads/state";
 import { fieldLimits } from "./copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "./FieldRow";
 import { fillTags } from "./template";
@@ -97,7 +97,18 @@ export function LeadForm({
   locale: Locale;
 }) {
   const { segment, monthlyBill, estimate, sanctionedLoad } = useEstimate();
-  const [state, formAction] = useActionState(submitLead, initialLeadState);
+  const [state, formAction] = useActionState(
+    async (previous: LeadActionState, data: FormData): Promise<LeadActionState> => {
+      try {
+        return await submitLead(previous, data);
+      } catch {
+        // The action could not be reached: a deploy since this page loaded, or offline. Keep what
+        // was typed and say how to finish (see src/components/quote/stale-resume.ts).
+        return { ok: false, errorCode: navigator.onLine === false ? "send" : "stale", values: echoLeadValues(data) };
+      }
+    },
+    initialLeadState,
+  );
   const noticeRef = useRef<HTMLDivElement>(null);
 
   // Move focus to whichever message replaced or joined the form, so it is not missed.

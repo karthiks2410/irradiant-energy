@@ -28,7 +28,7 @@ import { checkLeadRateLimit } from "@/lib/leads/rate-limit";
 import { findBucket, labelFor, quickEstimate, summarise } from "@/lib/leads/quick";
 import type { LeadFieldErrorCode } from "@/lib/leads/errors";
 import { parseLeadForm, parseQuickLead, quickEmailSchema } from "@/lib/leads/schema";
-import type { LeadActionState, LeadFormValues, QuickEmailState, QuickQuoteState } from "@/lib/leads/state";
+import { echoLeadValues, type LeadActionState, type QuickEmailState, type QuickQuoteState } from "@/lib/leads/state";
 import { buildEstimate, type Estimate } from "@/lib/solar/calc";
 
 // The action-state contract (LeadActionState, initialLeadState) is exported from
@@ -69,12 +69,12 @@ export async function submitLead(_prev: LeadActionState, formData: FormData): Pr
       errorName: err instanceof Error ? err.name : "unknown",
       errorStatus: null,
     });
-    return { ok: false, errorCode: "send", values: echoValues(formData) };
+    return { ok: false, errorCode: "send", values: echoLeadValues(formData) };
   }
 }
 
 async function handleLead(formData: FormData): Promise<LeadActionState> {
-  const values = echoValues(formData);
+  const values = echoLeadValues(formData);
   const locale = localeOf(formData);
   const parsed = parseLeadForm(formData);
   const reference = newReference();
@@ -248,23 +248,6 @@ async function clientIp(): Promise<string> {
   return forwarded || h.get("x-real-ip") || "unknown";
 }
 
-function echoValues(formData: FormData): LeadFormValues {
-  const text = (key: string) => {
-    const v = formData.get(key);
-    return typeof v === "string" ? v : "";
-  };
-  return {
-    name: text("name"),
-    phone: text("phone"),
-    email: text("email"),
-    segment: text("segment"),
-    pincode: text("pincode"),
-    monthlyBill: text("monthlyBill"),
-    message: text("message"),
-    whatsappOptIn: formData.get("whatsappOptIn") !== null,
-    consent: formData.get("consent") !== null,
-  };
-}
 
 /* ---------------------------------------------------------------------------
    Quick quote popup

@@ -302,6 +302,8 @@ export const quotePage = {
       rateLimited: "We've received several requests from your connection — please WhatsApp or call us instead.",
       tooFast: "That was quick. Please check your details and submit again.",
       invalid: "Please check the highlighted fields.",
+      // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (system message, 2026-09-26).
+      stale: "The website was updated while this page was open. Refresh the page and send your details again.",
     },
   },
 
