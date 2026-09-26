@@ -47,3 +47,21 @@ export const leadEmailEnv: LeadEmailEnv | null = result.success ? result.data : 
 
 /** Whether the quote form can actually deliver. Read by the page to enable or disable it. */
 export const mailConfigured = result.success;
+
+/**
+ * Local dry run for the lead forms: `LEAD_DRY_RUN=1` in .env.local makes both forms behave as if
+ * the emails had gone — the visitor sees the success state, the lead register (LEAD_SHEET_URL, if
+ * set) receives the row — while no email is sent, even with a Resend key present. It exists so the
+ * whole path can be exercised on a laptop against a local mock of the register.
+ *
+ * Ignored whenever NODE_ENV is "production", which is `next start` and every Vercel build, so a
+ * deployed site can never be switched into it. Read at call time, not at import.
+ */
+export function leadDryRun(): boolean {
+  return process.env.NODE_ENV !== "production" && process.env.LEAD_DRY_RUN === "1";
+}
+
+/** Whether the calculator form's submit button is enabled: mail is configured, or a local dry run. */
+export function leadFormCanSend(): boolean {
+  return mailConfigured || leadDryRun();
+}

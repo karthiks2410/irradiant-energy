@@ -51,7 +51,7 @@ export function ClosingCtaBand({
           {primary.label}
         </ButtonLink>
         {siteVisit && (
-          <QuickQuoteButton intent="site-visit" variant="outline-light">
+          <QuickQuoteButton intent="site-visit" placement="closing" variant="outline-light">
             {content.ui.quickQuote.siteVisitCta}
           </QuickQuoteButton>
         )}

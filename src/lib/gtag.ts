@@ -21,12 +21,22 @@
  *   legacy links still carry a name or a phone number in the query (see next.config.ts), and none
  *   of that may leave the site.
  *
+ * - Each page view carries `content_group` ("English" | "Kannada", GA4's built-in Content group) and
+ *   `page_type` (home, solutions, segment, calculator, about, contact, legal, other).
+ * - Events go through `track`, which sends nothing unless this page has analytics switched on, and
+ *   only the parameters src/lib/events.ts allows: labels we chose, never anything a visitor typed.
+ *   It attaches the page's `content_group` and `page_type` to each event itself: GA4 does not
+ *   carry custom values from gtag('set') into later events (seen in local testing).
+ * - gtag.js batches events for a few seconds and flushes the batch on `pagehide`, so an event sent
+ *   just before a full page load (the language switch) still leaves with that page.
+ *
  * Withdrawal: gtag.js cannot be unloaded, so `disableAnalytics` sets Google's documented kill switch
  * (`window['ga-disable-<ID>'] = true`), which stops every further hit, denies analytics storage,
  * and deletes the `_ga` cookies.
  */
 
 import { CONSENT_COOKIE_DAYS } from "@/lib/consent";
+import { contentGroupOf, pageTypeOf, scrubParams, trackContext, type EventName, type EventParams } from "@/lib/events";
 
 export const GTAG_SCRIPT_ID = "ga-gtag";
 export const GTAG_SRC = "https://www.googletagmanager.com/gtag/js";
@@ -148,11 +158,34 @@ export function trackPageView(pathname: string): boolean {
   if (!location || location === lastPageLocation) return false;
   const referrer = lastPageLocation ?? (w.document.referrer ? sanitizeUrl(w.document.referrer) : "");
   lastPageLocation = location;
-  const page = { page_location: location, page_referrer: referrer, page_title: w.document.title };
-  // `set` first, so engagement events that follow report this page too, not the address gtag.js
-  // read when it loaded.
+  const page = {
+    page_location: location,
+    page_referrer: referrer,
+    page_title: w.document.title,
+    content_group: contentGroupOf(pathname),
+    page_type: pageTypeOf(pathname),
+  };
+  // `set` first, so engagement events and our own events that follow report this page (and its
+  // group) too, not the address gtag.js read when it loaded.
   w.gtag("set", page);
   w.gtag("event", "page_view", page);
+  return true;
+}
+
+/**
+ * Send one of this site's events (src/lib/events.ts). Returns whether it was sent.
+ *
+ * A no-op unless analytics is switched on in this page, i.e. the visitor allowed it and it was not
+ * withdrawn since: before an answer, after a refusal, in a build without a measurement ID and on
+ * the server it does nothing at all. The parameters are cut down to the event's allow-list first,
+ * so a caller that hands in the wrong thing sends less, never more.
+ */
+export function track<N extends EventName>(name: N, params: EventParams[N]): boolean {
+  const w = gaWindow();
+  if (!w?.gtag || !active || !configuredId) return false;
+  const clean = scrubParams(name, params as unknown as Record<string, unknown>);
+  if (!clean) return false;
+  w.gtag("event", name, { ...clean, ...trackContext(w.location.pathname) });
   return true;
 }
 

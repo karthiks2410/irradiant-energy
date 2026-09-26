@@ -191,7 +191,7 @@ export function MobileMenu({ copy }: { copy: MobileMenuCopy }) {
               onClick={() => {
                 // One modal at a time: close the sheet, then open the quote popup.
                 dialogRef.current?.close();
-                openQuickQuote();
+                openQuickQuote("quote", "menu");
               }}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 font-semibold text-teal-900"
             >

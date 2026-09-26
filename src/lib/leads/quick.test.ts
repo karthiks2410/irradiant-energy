@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BILL_BOUNDS, SEGMENTS } from "@/lib/solar/constants";
-import { BILL_BUCKETS, bucketLabel, findBucket, formatRange, labelFor, quickEstimate, representativeBill, summarise } from "./quick";
+import { BILL_BUCKETS, billBandFor, bucketLabel, findBucket, formatRange, labelFor, quickEstimate, representativeBill, summarise } from "./quick";
 
 describe("bill buckets", () => {
   it.each(SEGMENTS)("%s buckets are contiguous, ascending and inside the engine's limits", (segment) => {
@@ -71,5 +71,23 @@ describe("quick estimate", () => {
 
   it("labels the first bucket as 'Under'", () => {
     expect(bucketLabel({ id: "x", min: 500, max: 1_500 }, true)).toBe("Under ₹1,500");
+  });
+});
+
+describe("billBandFor", () => {
+  it("reports a typed bill as its bucket id, never the amount", () => {
+    expect(billBandFor("home", 3_000)).toBe("home-3");
+    expect(billBandFor("home", 2_500)).toBe("home-3");
+    expect(billBandFor("home", 2_499)).toBe("home-2");
+    expect(billBandFor("home", 100)).toBe("home-1");
+    expect(billBandFor("home", 50_000)).toBe("home-5");
+    expect(billBandFor("housing-society", 45_000)).toBe("society-3");
+    expect(billBandFor("commercial", 20_00_000)).toBe("business-5");
+  });
+
+  it("says unknown when there is no usable bill", () => {
+    for (const bill of [null, undefined, 0, -5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(billBandFor("home", bill)).toBe("unknown");
+    }
   });
 });

@@ -89,6 +89,17 @@ export function bucketLabel(bucket: BillBucket, first: boolean, words: RangeWord
   return `${formatInr(bucket.min)}–${formatInr(bucket.max, { bare: true })}`;
 }
 
+/**
+ * The bucket a typed bill falls in, for analytics: the calculator reports its bill as this id, never
+ * as the amount. A bill below the first bucket counts as the first, one above the last as the last;
+ * no usable bill (empty, zero, not a number) is "unknown".
+ */
+export function billBandFor(segment: Segment, bill: number | null | undefined): string {
+  if (typeof bill !== "number" || !Number.isFinite(bill) || bill <= 0) return "unknown";
+  const list = BILL_BUCKETS[segment];
+  return (list.find((bucket) => bucket.max === null || bill < bucket.max) ?? list[list.length - 1]).id;
+}
+
 export function labelFor(segment: Segment, id: string, words: RangeWords = ENGLISH_RANGE_WORDS): string | undefined {
   const list = BILL_BUCKETS[segment];
   const index = list.findIndex((bucket) => bucket.id === id);

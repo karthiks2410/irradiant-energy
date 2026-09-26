@@ -14,6 +14,12 @@
  * wording is looked up here, from copy this component was handed
  * (docs/kannada/research/architecture.md §6.12). The locale itself rides along as a hidden
  * field, because a Server Action cannot read `next/root-params`.
+ *
+ * Just before posting, the action wrapper adds the lead source — the page it was sent from and how
+ * the visitor found the site — as the hidden `leadSource` field (src/lib/leads/first-touch.ts); it
+ * goes to the sales alert only. A successful enquiry is counted in analytics as generate_lead with
+ * the property type and the bill's RANGE id, never the amount (src/lib/gtag.ts `track`, consent
+ * only).
  */
 
 import { Link } from "@/components/i18n/LocaleLink";
@@ -30,6 +36,9 @@ import { fieldLimits } from "./copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "./FieldRow";
 import { fillTags } from "./template";
 import { useEstimate } from "./EstimateProvider";
+import { track } from "@/lib/gtag";
+import { withLeadSource } from "@/lib/leads/first-touch";
+import { billBandFor } from "@/lib/leads/quick";
 
 const linkClass = "font-medium text-green-700 underline underline-offset-2 hover:no-underline";
 
@@ -100,7 +109,7 @@ export function LeadForm({
   const [state, formAction] = useActionState(
     async (previous: LeadActionState, data: FormData): Promise<LeadActionState> => {
       try {
-        return await submitLead(previous, data);
+        return await submitLead(previous, withLeadSource(data));
       } catch {
         // The action could not be reached: a deploy since this page loaded, or offline. Keep what
         // was typed and say how to finish (see src/components/quote/stale-resume.ts).
@@ -116,12 +125,26 @@ export function LeadForm({
     if (state.ok !== null) noticeRef.current?.focus();
   }, [state]);
 
+  // Count a sent enquiry once; a remount or Strict Mode can run this twice for the same result.
+  const counted = useRef<string | null>(null);
+  useEffect(() => {
+    if (state.ok !== true || counted.current === state.reference) return;
+    counted.current = state.reference;
+    track("generate_lead", {
+      form: "calculator",
+      property_type: segment,
+      bill_band: billBandFor(segment, monthlyBill),
+      site_language: locale,
+    });
+  }, [state, segment, monthlyBill, locale]);
+
   if (state.ok === true) {
     return (
       <div
         ref={noticeRef}
         tabIndex={-1}
         role="status"
+        data-track-location="result"
         className="rounded-md border border-green-700 bg-success-tint p-6 sm:p-8"
       >
         <h3 className="font-display text-h3 font-bold text-carbon">{copy.successHeading}</h3>
@@ -153,6 +176,7 @@ export function LeadForm({
           ref={noticeRef}
           tabIndex={-1}
           role="alert"
+          data-track-location="result"
           className="rounded-md border border-error bg-error-tint p-4 sm:p-5"
         >
           {/* `devMessage` is the local "set RESEND_API_KEY" hint, which stays English: it is an

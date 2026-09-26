@@ -34,6 +34,9 @@ Copy `.env.example` to `.env.local`. Only the names are documented here; values 
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | public | Search Console HTML-tag token; emits `<meta name="google-site-verification">` when set |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | public | Google Analytics 4 ID (`G-…`). Production only, and only after the visitor accepts analytics |
 | `NEXT_PUBLIC_GA_ALLOW_NON_PRODUCTION` | public | `1` lets GA load in a local build for testing. Never set in Vercel |
+| `LEAD_SHEET_URL` | server | Lead register: the Google Apps Script web-app URL (`integrations/google-sheet/README.md`). Optional; without it (or the token) enquiries are only emailed |
+| `LEAD_SHEET_TOKEN` | server, secret | Shared token for the lead register; the same value as the script's `TOKEN` property. Production only |
+| `LEAD_DRY_RUN` | server, local | `1` makes both lead forms succeed without sending any email (the register still gets its row). Ignored under `next start` and on Vercel |
 
 ## Google Search Console and Analytics
 
@@ -49,8 +52,28 @@ Everything is off until the values above are set, and each change needs a redepl
   the consent-gated loader: no request goes to Google before the visitor accepts analytics, and
   withdrawing stops it and deletes the `_ga` cookies. In the GA4 web stream, turn **off** Enhanced
   measurement → Page views → "Page changes based on browser history events": the site sends each
-  App Router page view itself, so leaving it on counts them twice. Keep data retention at 2 months
-  (the default); `/cookies` says so.
+  App Router page view itself, so leaving it on counts them twice. Also turn **off** "Outbound
+  clicks" and "Form interactions": the site counts those clicks and submissions itself with
+  allow-listed labels, while Google's versions would send the full link address — the WhatsApp
+  link shown after an enquiry carries its reference in the prefilled message. Keep data retention
+  at 2 months (the default); `/cookies` says so.
+- **Events.** `track()` in `src/lib/gtag.ts` is the only way an event is sent, and it does nothing
+  without consent. The events and their allowed parameter values are listed in `src/lib/events.ts`
+  (generate_lead, email_estimate, click_call, click_whatsapp, click_email, open_quote,
+  use_calculator, switch_language, click_social); every parameter is a closed list of labels, so a
+  name, phone number, email address, PIN code or exact bill cannot reach Google. Page views and
+  every event carry `content_group` (English / Kannada) and `page_type`; events carry the page's
+  language as `site_language` (GA4 reserves `language` and would overwrite the browser-language
+  field with it). Contact-link clicks are counted by one
+  delegated listener (`src/lib/click-tracking.ts`); mark a link's area with
+  `data-track-location="header|footer|bubble|contact|popup|result|page"`.
+- **Lead source and lead register.** Each enquiry carries how the visitor found the site
+  (`src/lib/leads/source.ts`, `first-touch.ts`): landing page, campaign tags and referring site with
+  analytics consent, otherwise only the page it was sent from and the campaign tags in its address.
+  It appears in the internal alert ("How they found us") and the lead register only — never in the
+  customer's email, never in Google Analytics. The register is a Google Sheet written by an Apps
+  Script (`integrations/google-sheet/`), fed after the alert email with a 4-second timeout that can
+  never fail or slow an enquiry.
 - **Canonical host.** `irradiant-energy.vercel.app` redirects permanently to
   `https://www.irradiantenergy.in` (`next.config.ts`); preview URLs are not affected.
 

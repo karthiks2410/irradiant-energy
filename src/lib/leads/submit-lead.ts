@@ -4,9 +4,15 @@
  * Lead submission for the estimate form, driven by `useActionState`.
  *
  * Order: validate → rate-limit → sales alert (must succeed) → customer acknowledgement
- * (failure tolerated) → success. No lead store exists yet (architecture.md OD-4), so the
- * sales alert is the record; if it cannot be sent the visitor is told to call or WhatsApp.
- * Nothing personal is logged: at most a salted hash of the email domain.
+ * (failure tolerated) → success. The sales alert is the record; if it cannot be sent the visitor
+ * is told to call or WhatsApp. Once it has gone, the lead is also copied to the lead register, a
+ * Google Sheet (src/lib/leads/sheet.ts) — after the response, with a short timeout, and never in a
+ * way that can fail or slow the enquiry. Nothing personal is logged: at most a salted hash of the
+ * email domain.
+ *
+ * Each form also posts its lead source (src/lib/leads/source.ts): how the visitor found us, for the
+ * alert's "How they found us" block and the register. It is validated here like any other field
+ * and never reaches the customer's email.
  */
 
 import { randomBytes } from "node:crypto";
@@ -22,12 +28,16 @@ import {
   renderLeadAlert,
   renderQuickEmailNote,
   type EmailLead,
+  type LeadEmailContext,
 } from "@/lib/leads/emails";
+import { leadDryRun } from "@/lib/env.server";
 import { hashEmailDomain, logLeadEvent } from "@/lib/leads/log";
 import { checkLeadRateLimit } from "@/lib/leads/rate-limit";
 import { findBucket, labelFor, quickEstimate, summarise } from "@/lib/leads/quick";
 import type { LeadFieldErrorCode } from "@/lib/leads/errors";
 import { parseLeadForm, parseQuickLead, quickEmailSchema } from "@/lib/leads/schema";
+import { recordInSheet, sheetRowFor } from "@/lib/leads/sheet";
+import { LEAD_SOURCE_FIELD, parseLeadSource } from "@/lib/leads/source";
 import { echoLeadValues, type LeadActionState, type QuickEmailState, type QuickQuoteState } from "@/lib/leads/state";
 import { buildEstimate, type Estimate } from "@/lib/solar/calc";
 
@@ -48,6 +58,21 @@ import { buildEstimate, type Estimate } from "@/lib/solar/calc";
 function localeOf(formData: FormData): Locale {
   const value = formData.get("locale");
   return typeof value === "string" && isLocale(value) ? value : DEFAULT_LOCALE;
+}
+
+/** Quote or site visit: which popup button the visitor used. Anything else reads as a quote. */
+function requestOf(formData: FormData): "quote" | "site-visit" {
+  return formData.get("intent") === "site-visit" ? "site-visit" : "quote";
+}
+
+/**
+ * Copy an enquiry to the lead register once the response has gone (src/lib/leads/sheet.ts). It is
+ * scheduled, not awaited, so the visitor never waits for Google; each attempt gives up after a few
+ * seconds, one retry follows a failure, and nothing in it throws, so a slow or broken register
+ * cannot change the answer they got.
+ */
+function recordInRegister(context: LeadEmailContext): void {
+  after(() => recordInSheet({ action: "append", row: sheetRowFor(context) }).then(() => undefined));
 }
 
 // Sender and lead inbox fall back to the addresses in decisions.md D-009; they are not secrets.
@@ -77,6 +102,7 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
   const values = echoLeadValues(formData);
   const locale = localeOf(formData);
   const parsed = parseLeadForm(formData);
+  const leadSource = parseLeadSource(formData.get(LEAD_SOURCE_FIELD));
   const reference = newReference();
 
   if (parsed.kind === "spam") {
@@ -106,7 +132,8 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
   // developer hint is keyed on NODE_ENV, not VERCEL_ENV, so a Preview visitor — Preview is a
   // production build — never sees an internal instruction.
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  const dryRun = leadDryRun();
+  if (!apiKey && !dryRun) {
     logLeadEvent("error", "lead_email_unconfigured", { reference });
     return {
       ok: false,
@@ -131,7 +158,16 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
           roofAreaSqft: lead.roofAreaSqft,
           sanctionedLoadKw: lead.sanctionedLoadKw,
         });
-  const context = { lead, reference, estimate, submittedAt: new Date(), locale };
+  const context: LeadEmailContext = { lead, reference, estimate, submittedAt: new Date(), locale, leadSource };
+
+  // Local dry run (LEAD_DRY_RUN=1, never in production): no email, but the register still gets
+  // the row, so the whole path can be tested against a local mock.
+  if (dryRun || !apiKey) {
+    logLeadEvent("info", "lead_dry_run", { reference });
+    recordInRegister(context);
+    return { ok: true, reference, whatsappHref: customerWhatsappHref(reference, locale) };
+  }
+
   const resend = new Resend(apiKey);
   const logFields = {
     reference,
@@ -158,6 +194,7 @@ async function handleLead(formData: FormData): Promise<LeadActionState> {
     return { ok: false, errorCode: "send", whatsappHref: customerWhatsappHref(reference, locale), reference, values };
   }
   logLeadEvent("info", "lead_alert_sent", logFields);
+  recordInRegister(context);
 
   // The visitor does not need to wait for their acknowledgement; a failure only gets logged.
   after(async () => {
@@ -273,6 +310,8 @@ export async function submitQuickQuote(_prev: QuickQuoteState, formData: FormDat
 async function handleQuickQuote(formData: FormData): Promise<QuickQuoteState> {
   const locale = localeOf(formData);
   const parsed = parseQuickLead(formData);
+  const leadSource = parseLeadSource(formData.get(LEAD_SOURCE_FIELD));
+  const request = requestOf(formData);
   const reference = newReference();
 
   if (parsed.kind === "spam") {
@@ -299,24 +338,6 @@ async function handleQuickQuote(formData: FormData): Promise<QuickQuoteState> {
   const estimate = quickEstimate(quick.segment, bucket, quick.pincode);
   const words = getContent(locale).ui.quickQuote.ranges;
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    // Local development without mail keys: show the result and send nothing, so the whole popup
-    // can be clicked through on a laptop. NODE_ENV is "production" under `next start` and on every
-    // Vercel build, so a deployed site never takes this branch.
-    if (process.env.NODE_ENV !== "production") {
-      logLeadEvent("info", "lead_dry_run", { reference });
-      return {
-        ok: true,
-        reference,
-        whatsappHref: customerWhatsappHref(reference, locale),
-        summary: summarise(quick.segment, quick.billBucket, estimate, words),
-      };
-    }
-    logLeadEvent("error", "lead_email_unconfigured", { reference });
-    return { ok: false, errorCode: "send", whatsappHref: customerWhatsappHref(reference, locale), reference };
-  }
-
   const lead: EmailLead = {
     name: quick.name,
     phone: quick.phone,
@@ -328,7 +349,7 @@ async function handleQuickQuote(formData: FormData): Promise<QuickQuoteState> {
     website: undefined,
     startedAt: quick.startedAt,
   };
-  const context = {
+  const context: LeadEmailContext = {
     lead,
     reference,
     estimate: estimate.representative,
@@ -341,7 +362,29 @@ async function handleQuickQuote(formData: FormData): Promise<QuickQuoteState> {
       representativeBillInr: estimate.representativeBillInr,
       openEnded: bucket.max === null,
     },
+    request,
+    leadSource,
   };
+
+  const apiKey = process.env.RESEND_API_KEY;
+  // Local development without mail keys, or LEAD_DRY_RUN=1: show the result and send nothing, so
+  // the whole popup can be clicked through on a laptop (the register still gets its row). NODE_ENV
+  // is "production" under `next start` and on every Vercel build, so a deployed site never takes
+  // this branch.
+  if (leadDryRun() || (!apiKey && process.env.NODE_ENV !== "production")) {
+    logLeadEvent("info", "lead_dry_run", { reference });
+    recordInRegister(context);
+    return {
+      ok: true,
+      reference,
+      whatsappHref: customerWhatsappHref(reference, locale),
+      summary: summarise(quick.segment, quick.billBucket, estimate, words),
+    };
+  }
+  if (!apiKey) {
+    logLeadEvent("error", "lead_email_unconfigured", { reference });
+    return { ok: false, errorCode: "send", whatsappHref: customerWhatsappHref(reference, locale), reference };
+  }
 
   const alert = renderLeadAlert(context);
   const alertResult = await send(new Resend(apiKey), {
@@ -358,6 +401,7 @@ async function handleQuickQuote(formData: FormData): Promise<QuickQuoteState> {
     return { ok: false, errorCode: "send", whatsappHref: customerWhatsappHref(reference, locale), reference };
   }
   logLeadEvent("info", "lead_alert_sent", logFields);
+  recordInRegister(context);
 
   return {
     ok: true,
@@ -395,11 +439,16 @@ export async function emailQuickQuote(_prev: QuickEmailState, formData: FormData
       logLeadEvent("warn", "lead_rate_limited", { reference: request.reference, retryAfterSeconds: decision.retryAfterSeconds });
       return { ok: false, errorCode: "rateLimited" };
     }
+    // The register's row for this reference gets its Email filled in, after the response.
+    const addEmailToRegister = () =>
+      after(() => recordInSheet({ action: "email", reference: request.reference, email: request.email }).then(() => undefined));
+
     const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
+    if (leadDryRun() || !apiKey) {
       // Same local dry run as submitQuickQuote: nothing is sent.
       if (process.env.NODE_ENV !== "production") {
         logLeadEvent("info", "lead_dry_run", { reference: request.reference });
+        addEmailToRegister();
         return { ok: true };
       }
       logLeadEvent("error", "lead_email_unconfigured", { reference: request.reference });
@@ -450,6 +499,7 @@ export async function emailQuickQuote(_prev: QuickEmailState, formData: FormData
       return { ok: false, errorCode: "send" };
     }
     logLeadEvent("info", "lead_ack_sent", logFields);
+    addEmailToRegister();
 
     // Sales already has the enquiry; this only adds the address. A failure here is logged, not shown.
     after(async () => {

@@ -100,3 +100,52 @@ describe("the internal sales alert", () => {
     expect(renderLeadAlert(context("kn")).text).toContain("Language: Kannada (ಕನ್ನಡ)");
   });
 });
+
+describe("how they found us", () => {
+  const leadSource = {
+    page: "/en/get-quote",
+    landing: "/en/solutions/solar/home",
+    referrer: "l.instagram.com",
+    utm_source: "instagram",
+    utm_medium: "social",
+    utm_campaign: "bio_link",
+    utm_content: "profile",
+  };
+
+  it("is in the sales alert, in both parts", () => {
+    const alert = renderLeadAlert({ ...context("kn"), leadSource });
+    expect(alert.html).toContain("How they found us");
+    expect(alert.text).toContain("HOW THEY FOUND US");
+    for (const part of [alert.text, alert.html]) {
+      expect(part).toContain("instagram / social / bio_link");
+      expect(part).toContain("/en/solutions/solar/home");
+      expect(part).toContain("l.instagram.com");
+      expect(part).toContain("/en/get-quote");
+    }
+    expect(alert.text).toContain("Ad content / term: profile");
+    expect(alert.text).toContain("Form: Estimate form on the calculator page");
+  });
+
+  it("says 'direct or unknown' when nothing is known", () => {
+    const alert = renderLeadAlert(context("en"));
+    expect(alert.text).toContain("Source / medium / campaign: direct or unknown");
+    expect(alert.text).toContain("Landing page: not recorded");
+    expect(alert.text).toContain("Referrer: none recorded");
+  });
+
+  it("names a site-visit request from the popup", () => {
+    const alert = renderLeadAlert({ ...context("en"), source: "quick quote popup", request: "site-visit" });
+    expect(alert.text).toContain("Form: Site-visit popup (asked for a free site visit)");
+  });
+
+  it("never reaches the customer's email", () => {
+    for (const locale of LOCALES) {
+      const email = renderCustomerQuotation({ ...context(locale), leadSource });
+      for (const part of [email.subject, email.html, email.text]) {
+        for (const value of ["instagram", "bio_link", "l.instagram.com", "/en/solutions/solar/home", "How they found us", "HOW THEY FOUND US"]) {
+          expect(part, `${locale}: ${value}`).not.toContain(value);
+        }
+      }
+    }
+  });
+});

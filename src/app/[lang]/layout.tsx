@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Inter } from "next/font/google";
 import { preload } from "react-dom";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { LeadSourceCapture } from "@/components/analytics/LeadSourceCapture";
 import { ConsentManager } from "@/components/consent";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { WhatsAppBubble } from "@/components/ui/WhatsAppBubble";
@@ -141,8 +142,10 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
           <ScrollReveal />
           <ConsentManager />
           {/* Only in a build with a measurement ID, and even then it loads nothing until the
-              visitor allows analytics (components/analytics/GoogleAnalytics.tsx). */}
+              visitor allows analytics (components/analytics/GoogleAnalytics.tsx). The lead-source
+              capture follows the same answer (src/lib/leads/first-touch.ts). */}
           {gaMeasurementId && <GoogleAnalytics measurementId={gaMeasurementId} />}
+          {gaMeasurementId && <LeadSourceCapture />}
           <SmoothScroll />
           <JsonLd />
         </UiProvider>

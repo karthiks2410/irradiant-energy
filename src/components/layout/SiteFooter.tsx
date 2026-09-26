@@ -61,7 +61,7 @@ export function SiteFooter({ content }: { content: Content }) {
   ];
 
   return (
-    <footer data-surface="dark" className="bg-teal-900 text-white">
+    <footer data-surface="dark" data-track-location="footer" className="bg-teal-900 text-white">
       <div className="container-page grid gap-12 py-16 lg:grid-cols-12 lg:gap-(--grid-gutter) lg:py-20">
         <div className="lg:col-span-4">
           <LogoLockup className="h-12 w-auto" />

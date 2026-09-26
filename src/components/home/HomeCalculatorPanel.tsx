@@ -113,7 +113,7 @@ export function HomeCalculatorPanel({
   const segmentOptions = SEGMENTS.map((value) => ({ value, label: ui.segments[value] }));
   // Segment, bill and PIN come from the page-level provider, so the hero's estimate entry and
   // this panel are working on the same numbers rather than two copies of them.
-  const { segment, setSegment, bill, setBill, location, setLocation } = useHomeEstimate();
+  const { segment, setSegment, bill, setBill, location, setLocation, markUsed } = useHomeEstimate();
   const [locationTouched, setLocationTouched] = useState(false);
   const [sanctionedLoad, setSanctionedLoad] = useState("");
   const [houses, setHouses] = useState("");
@@ -228,7 +228,10 @@ export function HomeCalculatorPanel({
             autoComplete="off"
             maxLength={4}
             value={sanctionedLoad}
-            onChange={(event) => setSanctionedLoad(digitsOnly(event.target.value, 4))}
+            onChange={(event) => {
+              setSanctionedLoad(digitsOnly(event.target.value, 4));
+              markUsed();
+            }}
           />
         </FieldRow>
 
@@ -245,7 +248,10 @@ export function HomeCalculatorPanel({
             autoComplete="off"
             maxLength={4}
             value={houses}
-            onChange={(event) => setHouses(digitsOnly(event.target.value, 4))}
+            onChange={(event) => {
+              setHouses(digitsOnly(event.target.value, 4));
+              markUsed();
+            }}
           />
         )}
       </div>

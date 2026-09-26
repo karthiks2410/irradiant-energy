@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { useCalculatorUse } from "@/components/analytics/useCalculatorUse";
 import { billBounds, type Segment } from "@/lib/solar/calc";
 
 /**
@@ -23,6 +24,11 @@ interface HomeEstimateValue {
   /** Raw text as typed; a PIN code is extracted from it, so "560001" and "Anekal 562106" both work. */
   location: string;
   setLocation: (location: string) => void;
+  /**
+   * Analytics: the visitor changed an input that lives outside this provider (the calculator
+   * band's sanctioned load and home count). The setters above call it themselves.
+   */
+  markUsed: () => void;
 }
 
 const HomeEstimateContext = createContext<HomeEstimateValue | null>(null);
@@ -37,6 +43,10 @@ export function HomeEstimateProvider({ children }: { children: ReactNode }) {
   const [segment, setSegmentState] = useState<Segment>("home");
   const [bill, setBill] = useState(() => String(billBounds("home").default));
   const [location, setLocation] = useState("");
+  // The first change to any input counts as using the calculator: once per page view, consent
+  // only, with the bill reported as a range id (components/analytics/useCalculatorUse.ts).
+  const billNumber = Number(bill);
+  const markUsed = useCalculatorUse(segment, Number.isFinite(billNumber) && billNumber > 0 ? billNumber : null);
 
   const value = useMemo<HomeEstimateValue>(
     () => ({
@@ -45,13 +55,21 @@ export function HomeEstimateProvider({ children }: { children: ReactNode }) {
       setSegment: (next) => {
         setSegmentState(next);
         setBill(String(billBounds(next).default));
+        markUsed();
       },
       bill,
-      setBill,
+      setBill: (next) => {
+        setBill(next);
+        markUsed();
+      },
       location,
-      setLocation,
+      setLocation: (next) => {
+        setLocation(next);
+        markUsed();
+      },
+      markUsed,
     }),
-    [segment, bill, location],
+    [segment, bill, location, markUsed],
   );
 
   return <HomeEstimateContext.Provider value={value}>{children}</HomeEstimateContext.Provider>;

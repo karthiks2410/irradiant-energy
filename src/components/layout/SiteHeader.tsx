@@ -72,7 +72,7 @@ export function SiteHeader({ content }: { content: Content }) {
               `hidden` passed through className loses the cascade and the CTA stays on
               screen at phone widths — pushing the menu button out of the viewport. */}
           <span className="hidden sm:inline-flex">
-            <QuickQuoteButton>{ui.quickQuote.cta}</QuickQuoteButton>
+            <QuickQuoteButton placement="header">{ui.quickQuote.cta}</QuickQuoteButton>
           </span>
           <MobileMenu
             copy={{
