@@ -53,6 +53,12 @@ Everything is off until the values above are set, and each change needs a redepl
   (the default); `/cookies` says so.
 - **Canonical host.** `irradiant-energy.vercel.app` redirects permanently to
   `https://www.irradiantenergy.in` (`next.config.ts`); preview URLs are not affected.
+- **Function region.** `vercel.json` runs all server code (the `/get-quote` page and the lead forms'
+  Server Actions, from whichever page they are sent) in Mumbai (`bom1`), close to visitors in
+  Karnataka, instead of Vercel's default Washington, D.C. (`iad1`). It overrides the region in
+  Project → Settings → Functions. Hobby allows one region. Next's `preferredRegion` route export is
+  deprecated in Next 16, so it is not used. Static pages are served from the CDN everywhere and are
+  not affected.
 
 `src/lib/env.ts` also reads Vercel's system variables (`NEXT_PUBLIC_VERCEL_ENV`, `NEXT_PUBLIC_VERCEL_URL`,
 `NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL`) to derive the origin, placeholder display and indexing;
