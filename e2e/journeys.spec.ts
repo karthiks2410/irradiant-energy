@@ -1,5 +1,26 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { dismissConsent, headerNav, scrollDown, watchForErrors } from "./helpers";
+
+/*
+ * The calculators since the redesign (#14): nothing is computed until the sanctioned load from the
+ * electricity bill is in. It caps the system size and there is no fallback without it, so until
+ * then every tile reads ₹0. The PIN code stays optional. A rupee figure of five or more characters
+ * ("₹3,063") is how these tests tell a real estimate from those placeholders.
+ */
+const REAL_FIGURE = /₹[\d,]{5,}/;
+
+/**
+ * Well above what the default bills need, so the size follows the bill rather than stopping at the
+ * load cap, and moving the bill moves every figure.
+ */
+const AMPLE_LOAD_KW = "10";
+
+/**
+ * The /get-quote panel the figures are printed in, and nothing else. The bill slider's own readout
+ * ("₹3,500") sits in the same <main>, so a check scoped to the page passes on what the visitor set
+ * rather than on anything the estimate produced.
+ */
+const quoteResults = (page: Page) => page.locator("main [data-surface='dark']").filter({ has: page.locator("h1") });
 
 test.describe("navigation", () => {
   test("every header link lands at the top of its page", async ({ page }) => {
@@ -56,20 +77,23 @@ test.describe("estimator", () => {
     await page.goto("/en/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
 
+    const results = quoteResults(page);
+    await page.getByLabel(/sanctioned load/i).fill(AMPLE_LOAD_KW);
+    await expect(results).toContainText(REAL_FIGURE);
+
     const slider = page.getByRole("slider").first();
     await expect(slider).toBeVisible();
 
-    const readOutput = () => page.locator("main").innerText();
-    const before = await readOutput();
+    // The results panel only, never <main>: the slider's own readout changes with every step, so
+    // reading the whole page would pass even if the estimate ignored the bill.
+    const before = await results.innerText();
 
     // Drive the slider from the keyboard: it is the accessible path and it does not
     // depend on where the thumb happens to sit.
     await slider.focus();
     for (let i = 0; i < 12; i++) await page.keyboard.press("ArrowRight");
-    await page.waitForTimeout(600);
 
-    const after = await readOutput();
-    expect(after, "estimate did not react to the bill").not.toBe(before);
+    await expect.poll(() => results.innerText(), { message: "estimate did not react to the bill" }).not.toBe(before);
     expect(errors).toEqual([]);
   });
 
@@ -92,9 +116,8 @@ test.describe("estimator", () => {
     if (await submit.isDisabled()) {
       await expect(page.getByText(/sending is switched off/i)).toBeVisible();
       // The calculator is a different component and must be unaffected by this.
-      await expect
-        .poll(async () => /₹[\d,]{5,}/.test(await page.locator("main").innerText()), { timeout: 8_000 })
-        .toBe(true);
+      await page.getByLabel(/sanctioned load/i).fill(AMPLE_LOAD_KW);
+      await expect(quoteResults(page)).toContainText(REAL_FIGURE, { timeout: 8_000 });
       return;
     }
 
@@ -117,52 +140,102 @@ test.describe("estimator", () => {
 });
 
 test.describe("the estimate counts to its new value", () => {
-  /** Drive the bill up and sample the figure the visitor actually sees, frame by frame. */
-  async function sampleWhileChanging(page: import("@playwright/test").Page) {
+  const SAVINGS = "Monthly savings";
+
+  type Reading = {
+    /** Whether an animation is driving the figure at all. */
+    counting: boolean;
+    /** The digits that count, hidden from assistive tech. */
+    moving: string;
+    /** The settled value printed beside them for screen readers. */
+    target: string;
+    /** Everything the tile prints after its label. */
+    figure: string;
+  };
+  type Recorder = { read: () => Reading; frames: Reading[] };
+
+  /**
+   * Puts a recorder on the page: `read()` reads the tile now, and `frames` gains a reading on every
+   * animation frame from this moment on. Recording in the page, rather than once per round trip from
+   * the test runner, is what keeps a busy machine from missing the very frames these tests are about:
+   * a round trip there can outlast the whole 0.9 s count. It runs in the page, so it stays
+   * self-contained; Playwright ships its source there.
+   */
+  function installRecorder(label: string) {
+    const read = () => {
+      const tile = [...document.querySelectorAll("main li")].find((l) => l.textContent?.includes(label));
+      const counter = tile?.querySelector("[aria-hidden='true']");
+      return {
+        counting: counter != null,
+        moving: counter?.textContent ?? "",
+        target: tile?.querySelector(".sr-only")?.textContent ?? "",
+        figure: (tile?.textContent ?? "").replace(label, ""),
+      };
+    };
+    const recorder = { read, frames: [] as ReturnType<typeof read>[] };
+    const tick = () => {
+      recorder.frames.push(read());
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    (window as unknown as { tileRecorder: typeof recorder }).tileRecorder = recorder;
+  }
+
+  /**
+   * Drive the bill up, recording the figure the visitor actually sees on every frame. `steps` is
+   * what the tile reads straight after each step, which under reduced motion is each step's
+   * settled figure.
+   */
+  async function driveTheBill(page: Page) {
     await page.goto("/en/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
-    // No PIN: the figures are there from the bill alone.
-    await expect(page.getByText(/annual savings/i).first()).toBeVisible();
+    // No PIN: the bill and the sanctioned load are all the figures need.
+    await page.getByLabel(/sanctioned load/i).fill(AMPLE_LOAD_KW);
+    await expect(page.locator("main li").filter({ hasText: SAVINGS })).toContainText(REAL_FIGURE);
 
-    const shown = () =>
-      page.evaluate(() => {
-        const tile = [...document.querySelectorAll("li")].find((l) => l.textContent?.includes("Annual savings"));
-        return {
-          moving: tile?.querySelector("[aria-hidden='true']")?.textContent ?? "",
-          target: tile?.querySelector(".sr-only")?.textContent ?? "",
-        };
-      });
+    await page.evaluate(installRecorder, SAVINGS);
+    // Written out in each call: these run in the page, where nothing from this file exists.
+    const shown = () => page.evaluate(() => (window as unknown as { tileRecorder: Recorder }).tileRecorder.read());
+    const frames = () => page.evaluate(() => (window as unknown as { tileRecorder: Recorder }).tileRecorder.frames);
+    const before = await shown();
 
     const slider = page.getByRole("slider").first();
     await slider.focus();
-    for (let i = 0; i < 15; i++) await page.keyboard.press("ArrowRight");
-
-    const frames = [];
-    for (let i = 0; i < 12; i++) {
-      frames.push(await shown());
-      await page.waitForTimeout(60);
+    const steps: string[] = [];
+    for (let i = 0; i < 15; i++) {
+      await page.keyboard.press("ArrowRight");
+      steps.push((await shown()).figure);
     }
-    return { frames, shown };
+    return { before, steps, shown, frames };
   }
 
   test("the figure travels rather than cutting, and lands on the real number", async ({ page }) => {
     test.slow();
-    const { frames, shown } = await sampleWhileChanging(page);
+    const { before, steps, shown, frames } = await driveTheBill(page);
 
-    // More than a couple of distinct readings means it counted rather than jumped.
-    const distinct = new Set(frames.map((f) => f.moving));
-    expect(distinct.size, "the figure cut straight to its new value").toBeGreaterThan(3);
+    // It lands on the real number. Recording carries on until then, so the frames below hold the
+    // whole journey.
+    await expect
+      .poll(async () => { const s = await shown(); return s.counting && s.moving === s.target; }, { timeout: 10_000 })
+      .toBe(true);
+    const journey = await frames();
+
+    // Counting means showing figures that are NOT a settled value. Each of the 15 steps settles on
+    // its own estimate, so counting distinct readings would pass for a ticker that cuts straight
+    // from one settled figure to the next (the independent check proved it). What only a counting
+    // figure shows is readings in between: values no step and no target ever settled on.
+    const settled = new Set(
+      [before.figure, before.target, ...steps, ...journey.map((f) => f.target)].filter(Boolean),
+    );
+    const inBetween = [...new Set(journey.map((f) => f.moving))].filter((m) => m && !settled.has(m));
+    expect(inBetween.length, "the figure cut straight to its new value").toBeGreaterThan(2);
 
     // A money figure must never show more than the real one on the way.
     const asNumber = (s: string) => Number(s.replace(/[^0-9.]/g, ""));
-    for (const f of frames) {
+    for (const f of journey) {
       if (!f.moving || !f.target) continue;
       expect(asNumber(f.moving), `overshot past ${f.target}`).toBeLessThanOrEqual(asNumber(f.target));
     }
-
-    await expect
-      .poll(async () => { const s = await shown(); return s.moving === s.target; }, { timeout: 5_000 })
-      .toBe(true);
   });
 
   test.describe("under reduced motion", () => {
@@ -170,18 +243,30 @@ test.describe("the estimate counts to its new value", () => {
 
     test("the figure is set outright", async ({ page }) => {
       test.slow();
-      const { frames } = await sampleWhileChanging(page);
-      // The estimate itself may legitimately change more than once while the slider is driven,
-      // so the property is not "one value" — it is that the figure on screen is never an
-      // in-between one. It always equals the settled value.
-      const inBetween = frames.filter((f) => f.moving && f.target && f.moving !== f.target);
-      expect(inBetween, "the figure animated despite a reduced-motion preference").toEqual([]);
+      const { before, steps, shown, frames } = await driveTheBill(page);
+      // Longer than a count would take (TICKER_DURATION, 0.9 s), so one would have shown by now.
+      await page.waitForTimeout(1_200);
+      const journey = await frames();
+
+      // Moving the bill has to have changed the figure, or none of this proves anything.
+      const final = (await shown()).figure;
+      expect(final, "moving the bill did not change the figure").not.toBe(before.figure);
+
+      // Nothing drives the figure: TickerNumber prints plain text under this preference, so there
+      // is no counting copy of it at any point.
+      expect(journey.filter((f) => f.counting), "the figure animated despite a reduced-motion preference").toEqual([]);
+
+      // Each step may legitimately change the estimate, so the figure may take several values. What
+      // it may never show is one in between: every frame holds a figure some step settled on.
+      const settled = new Set([before.figure, ...steps, final]);
+      const inBetween = [...new Set(journey.map((f) => f.figure))].filter((figure) => !settled.has(figure));
+      expect(inBetween, "an in-between figure was shown").toEqual([]);
     });
   });
 });
 
 test.describe("the hero starts the estimate", () => {
-  test("the hero form seeds the calculator and lands on real figures", async ({ page }) => {
+  test("the hero form seeds the calculator, which gives figures for that bill", async ({ page }) => {
     test.slow();
     await page.goto("/en", { waitUntil: "networkidle" });
     await dismissConsent(page);
@@ -194,38 +279,54 @@ test.describe("the hero starts the estimate", () => {
 
     await expect(page).toHaveURL(/#calculator/);
 
-    const tiles = page.locator("#calculator li");
-    await expect(tiles.first()).toBeVisible();
-    // The bill typed in the hero must be the bill the calculator used, so the figures are the
+    // The bill typed in the hero must be the bill the calculator uses, so the figures are the
     // visitor's own rather than the default.
-    await expect
-      .poll(async () => (await page.locator("#calculator").innerText()).includes("—"), { timeout: 8_000 })
-      .toBe(false);
-    const shown = await page.locator("#calculator").innerText();
-    expect(shown, "the calculator is still showing its empty state").toMatch(/₹[\d,]{5,}/);
-  });
+    const calculator = page.locator("#calculator");
+    const bill = calculator.getByLabel(/monthly electricity bill/i);
+    await expect(bill).toHaveValue("9000");
 
+    // The hero asks for the bill only; the sanctioned load is the one more thing the figures need.
+    await calculator.getByLabel(/sanctioned load/i).fill(AMPLE_LOAD_KW);
+    const savings = calculator.locator("li").filter({ hasText: "Monthly savings" });
+    await expect(savings, "the calculator is still showing its empty state").toContainText(REAL_FIGURE, {
+      timeout: 8_000,
+    });
+
+    // And they are that bill's figures: the default bill gives different ones. Read the settled
+    // value, not the digits that count towards it.
+    const settled = () => savings.evaluate((tile) => (tile.querySelector(".sr-only") ?? tile).textContent ?? "");
+    const forHeroBill = await settled();
+    await bill.fill("3500");
+    await expect.poll(settled, { message: "the figures ignored the bill the hero seeded" }).not.toBe(forHeroBill);
+  });
 });
 
 test.describe("the estimate does not wait for a PIN code", () => {
   // The PIN used to gate the figures on the grounds that it decided the tariffs. It does not:
   // every tariff and yield constant is statewide, so it only narrows the caveat. Both
-  // calculators must behave the same way about it.
+  // calculators must behave the same way about it. What they do wait for, since the redesign
+  // (#14), is the sanctioned load.
   for (const [where, path] of [
     ["the calculator page", "/en/get-quote"],
     ["the home page band", "/en#calculator"],
   ] as const) {
-    test(`${where} shows figures from the bill alone, and names the tariff it assumed`, async ({ page }) => {
+    test(`${where} shows figures from the bill and sanctioned load, and names the tariff it assumed`, async ({ page }) => {
       await page.goto(path, { waitUntil: "networkidle" });
       await dismissConsent(page);
 
-      const scope = page.locator(path.includes("#") ? "#calculator" : "main");
-      await expect
-        .poll(async () => /₹[\d,]{5,}/.test(await scope.innerText()), { timeout: 8_000 })
-        .toBe(true);
+      const home = path.includes("#");
+      const controls = page.locator(home ? "#calculator" : "main");
+      const results = home ? page.locator("#calculator") : quoteResults(page);
+
+      // Nothing is computed until the sanctioned load is in: the tiles hold their ₹0 placeholders.
+      await expect(results).not.toContainText(REAL_FIGURE);
+
+      await controls.getByLabel(/sanctioned load/i).fill("5");
+      await expect(results).toContainText(REAL_FIGURE, { timeout: 8_000 });
+      await expect(controls.getByLabel(/pin code/i)).toHaveValue("");
 
       // Untouched, it must say which tariffs it used rather than leaving that unsaid.
-      await expect(scope.getByText(/Karnataka \(BESCOM\) tariffs/i).first()).toBeVisible();
+      await expect(results.getByText(/Karnataka \(BESCOM\) tariffs/i).first()).toBeVisible();
     });
   }
 
@@ -233,13 +334,18 @@ test.describe("the estimate does not wait for a PIN code", () => {
     test.slow();
     await page.goto("/en/get-quote", { waitUntil: "networkidle" });
     await dismissConsent(page);
-    const main = page.locator("main");
+    const results = quoteResults(page);
+
+    await page.getByLabel(/sanctioned load/i).fill("5");
+    // Without a PIN the assumption is stated, so its disappearance below means something.
+    await expect(results.getByText(/Karnataka \(BESCOM\) tariffs/i).first()).toBeVisible();
 
     await page.getByLabel(/pin code/i).first().fill("562106");
-    await expect(main.getByText(/Karnataka \(BESCOM\) tariffs/i)).toHaveCount(0);
+    await expect(results.getByText(/Karnataka \(BESCOM\) tariffs/i)).toHaveCount(0);
+    await expect(results).toContainText(REAL_FIGURE);
 
     await page.getByLabel(/pin code/i).first().fill("570001");
-    await expect(main.getByText(/may be served by another supplier/i).first()).toBeVisible();
+    await expect(results.getByText(/may be served by another supplier/i).first()).toBeVisible();
   });
 });
 
