@@ -14,9 +14,10 @@
  * source and a status, and the panel shows them under the figures.
  *
  * Owner review round 2:
- * - point 8: the PIN code is required, and no figure is computed until one is present. The PIN
- *   decides which tariffs apply, so without it the engine would quietly price a Karnataka
- *   (BESCOM) estimate for a visitor anywhere in India.
+ * - point 8 (superseded): the PIN code was required, and no figure was computed until one was
+ *   present. The redesign (#14) computes without it on /get-quote, and on 2026-09-26 the owner
+ *   approved making it optional here too, so the two calculators agree. It is still checked when
+ *   typed: a malformed PIN shows the error; an empty one does not.
  * - point 9: the "Average tariff" input is gone. It overrode the slab table, which is the
  *   documented basis for every figure here; the estimate now always uses the BESCOM domestic
  *   slabs (home) or the flat default (society and business), both named under "Assumptions".
@@ -28,7 +29,7 @@
  * callout above three tiles. Every engine note carries a small warning mark.
  */
 
-import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { parseSegment } from "@/components/quote/copy";
 import { FieldRow, fieldCell, fieldCellNoHelper } from "@/components/quote/FieldRow";
 import { ChevronDownIcon, NoteMark, SelectField, StatTile, TextField } from "@/components/ui";
@@ -57,6 +58,8 @@ export type CalculatorUi = {
   subsidyNote: string;
   /** "~{sqft} sq ft of roof" under the recommended size. */
   roofNeeded: string;
+  /** Where the figures go, until a sanctioned load is entered. */
+  loadPrompt: string;
   yearsUnit: string;
   kwpUnit: string;
   kwhUnit: string;
@@ -113,7 +116,8 @@ export function HomeCalculatorPanel({
   const segmentOptions = SEGMENTS.map((value) => ({ value, label: ui.segments[value] }));
   // Segment, bill and PIN come from the page-level provider, so the hero's estimate entry and
   // this panel are working on the same numbers rather than two copies of them.
-  const { segment, setSegment, bill, setBill, location, setLocation, markUsed } = useHomeEstimate();
+  const { segment, setSegment, bill, setBill, location, setLocation, markUsed, loadRequest } = useHomeEstimate();
+  const loadInput = useRef<HTMLInputElement>(null);
   const [locationTouched, setLocationTouched] = useState(false);
   const [sanctionedLoad, setSanctionedLoad] = useState("");
   const [houses, setHouses] = useState("");
@@ -135,6 +139,15 @@ export function HomeCalculatorPanel({
     },
     [segment, pincode, bill, sanctionedLoad, houses],
   );
+
+  // The hero's "See my estimate" jumps here with the bill filled in. The figures also need the
+  // sanctioned load, so put the cursor where the next step is rather than leave the visitor at ₹0
+  // wondering (found by the e2e rework, 2026-09-26). preventScroll: the hash jump owns the scroll.
+  useEffect(() => {
+    if (loadRequest > 0 && positive(sanctionedLoad) === undefined) loadInput.current?.focus({ preventScroll: true });
+    // Only a new request should move focus, not typing in the field.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadRequest]);
 
   const changeSegment = (event: ChangeEvent<HTMLSelectElement>) => setSegment(parseSegment(event.target.value));
 
@@ -188,7 +201,8 @@ export function HomeCalculatorPanel({
             name="home-calc-location"
             label={fields.location.label}
             hint={fields.location.hint}
-            required
+            optional
+            optionalLabel={optionalMarker}
             type="text"
             inputMode="numeric"
             autoComplete="postal-code"
@@ -197,7 +211,7 @@ export function HomeCalculatorPanel({
             value={location}
             onChange={(event) => setLocation(digitsOnly(event.target.value, 6))}
             onBlur={() => setLocationTouched(true)}
-            error={locationTouched && pincode === undefined ? ui.pincodeError : undefined}
+            error={locationTouched && location !== "" && pincode === undefined ? ui.pincodeError : undefined}
           />
         </FieldRow>
 
@@ -219,6 +233,7 @@ export function HomeCalculatorPanel({
 
           <TextField
             className={fieldCell}
+            ref={loadInput}
             id="home-calc-load"
             name="home-calc-load"
             label={fields.load.label}
@@ -259,6 +274,12 @@ export function HomeCalculatorPanel({
       <h3 className="mt-7 font-label text-label text-grey-600 uppercase">{results.title}</h3>
 
       <div aria-live="polite" className="mt-3">
+        {estimate === null && (
+          <p className="mb-3 flex items-start gap-2 rounded-md border border-green-600/20 bg-soft-green p-4 text-small text-carbon">
+            <NoteMark />
+            <span>{ui.loadPrompt}</span>
+          </p>
+        )}
         {/* Promoted system size callout */}
         {estimate && (
           <div className="mb-3 rounded-md border border-green-600/20 bg-soft-green p-4">

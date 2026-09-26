@@ -239,6 +239,12 @@ export const ui = {
     subsidyNote: "After the estimated subsidy",
     /** Under the recommended system size (redesign #14). */
     roofNeeded: "~{sqft} sq ft of roof",
+    /**
+     * Shown where the figures go until a sanctioned load is entered: the estimate needs it (#14), and
+     * without a word the tiles read as a broken ₹0 (found by the e2e rework, 2026-09-26).
+     * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (owner approved the fix, 2026-09-26).
+     */
+    loadPrompt: "Enter your sanctioned load to see your figures. It is on your electricity bill.",
     yearsUnit: "years",
     kwpUnit: "kWp",
     kwhUnit: "kWh",
