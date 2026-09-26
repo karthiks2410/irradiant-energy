@@ -92,7 +92,7 @@ export const cookieNotice = {
         "<strong>Cookies.</strong> Google Analytics keeps a random identifier in two first-party cookies on this site, <strong>_ga</strong> and <strong>{gaCookie}</strong>, so it can tell a returning browser from a new one. They expire {days} days after your last visit.",
         "<strong>What we switch off.</strong> Google signals and ad personalisation are turned off, so these records are not linked to a Google account and are not used for advertising. We do not send your name, phone number, email address or anything you type into a form, and page addresses are sent without any extra details they may carry, apart from campaign tags such as <strong>utm_source</strong>. According to Google, Google Analytics 4 does not log or store IP addresses.",
         "<strong>Who handles it, and for how long.</strong> Google processes these records for us under its Google Analytics terms, and may do so outside India, including in the United States. Individual visit records are kept for two months — the shortest period Google Analytics offers — and then deleted; totals, such as how many visits a page had, stay in our reports.",
-        "<strong>Turning it off.</strong> Refuse, or withdraw later in cookie settings, and the script stops sending anything straight away and we delete the <strong>_ga</strong> cookies from your browser.",
+        "<strong>Turning it off.</strong> Refuse, or withdraw later in cookie settings, and the script stops recording anything new and we delete the <strong>_ga</strong> cookies from your browser.",
       ],
     },
     {
