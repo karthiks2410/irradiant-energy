@@ -38,9 +38,10 @@ export const ui = {
      */
     defaultTitle: "{siteName} | Rooftop solar for homes, housing societies and businesses",
     /**
-     * Alt text for the Open Graph and Twitter cards. The card artwork itself stays Latin — it is
-     * the wordmark and the brand line (brand PDF p.30/p.40) — but the text that describes it is
-     * read out in the reader's language.
+     * Alt text for the link-preview card (src/lib/share-images.ts). The card shows the wordmark
+     * and the page's own headline in the page's language, so the second hole carries that
+     * headline (lib/seo.ts `shareImage`). The frame is two holes and a dash — nothing in it to
+     * translate — which is why both locales share it.
      */
     socialImageAlt: "{siteName} — {tagline}",
   },

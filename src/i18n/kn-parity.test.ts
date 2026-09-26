@@ -44,7 +44,7 @@ const SAME_IN_BOTH: Readonly<Record<string, string>> = {
   "images.duskSkyline.alt": 'hero slide 1: decoration behind fixed copy, rendered with alt=""',
   "socialPending[0].label": "the network's own name",
   "ui.meta.socialImageAlt":
-    "both holes are Latin \u2014 the brand name and the brand line \u2014 so the reviewers' row (u248) repeats the English",
+    "two holes and a dash, nothing to translate \u2014 the brand name, then the share card's headline, which arrives already in the page's language \u2014 so the reviewers' row (u248) repeats the English",
   "ui.footer.gstin": "the statutory identifier: label and number both stay Latin, to match the certificate (glossary #77)",
   "quote.summary.kwp": "a figure and a unit symbol, nothing to translate; the reviewers' row (u136) repeats it",
   "quote.assumptions.tariffEntered.value":

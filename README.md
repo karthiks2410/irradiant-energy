@@ -18,6 +18,7 @@ Node 24 (`engines` in `package.json`) and npm.
 | `npm run lint` | ESLint |
 | `npm test` | Vitest unit tests (calculator, schemas) |
 | `npx next typegen && npx tsc --noEmit` | Type-check without a build; this is what CI runs |
+| `npm run build:share` | Re-render the link-preview images in `public/share/` (see below) |
 
 ## Environment variables
 
@@ -42,8 +43,13 @@ Copy `.env.example` to `.env.local`. Only the names are documented here; values 
 - `src/content/site.ts` — the single source of business facts (contacts, navigation). Unconfirmed
   facts show a yellow placeholder outside production and nothing in production.
 - `src/app/globals.css` — brand tokens (colours, type scale, layout utilities).
-- `src/components/` — `brand` (logo), `layout` (header, footer), `ui`, `seo` (JSON-LD, social image).
+- `src/components/` — `brand` (logo), `layout` (header, footer), `ui`, `seo` (JSON-LD).
 - `src/lib/seo.ts` — `pageMetadata()`, the per-page metadata helper every page uses.
+- `src/lib/share-images.ts` + `public/share/<locale>/<page>.jpg` — the link-preview image WhatsApp,
+  LinkedIn, X and Facebook show for each page, in each language. They are committed files rendered in
+  Chromium by `npm run build:share` (Satori, behind `next/og`, cannot shape Kannada). Re-run it after
+  changing a page headline, a project photo or the logo; `npm test` fails if a card is missing, not
+  1200×630 or over 300 KB.
 - `AGENTS.md` — this Next.js version differs from older documentation; read the bundled guides in
   `node_modules/next/dist/docs/` before changing framework code.
 

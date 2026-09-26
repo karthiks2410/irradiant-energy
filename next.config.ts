@@ -51,6 +51,11 @@ const legacyRedirects: Redirect[] = [
   { source: "/discover/:path*", destination: "/en", permanent: false },
   // The old estimate-result page; its token query passes through to the calculator.
   { source: "/get-quote/result", destination: "/en/get-quote", permanent: false },
+  // The site-wide generated social cards, replaced by one static card per page and locale
+  // (src/lib/share-images.ts). Previews already scraped point at these URLs, so they keep
+  // resolving to the home card rather than turning into a broken image.
+  { source: "/opengraph-image", destination: "/share/en/home.jpg", permanent: true },
+  { source: "/twitter-image", destination: "/share/en/home.jpg", permanent: true },
 
   /*
    * Unprefixed page URLs, which is what the old site published and what every link shared

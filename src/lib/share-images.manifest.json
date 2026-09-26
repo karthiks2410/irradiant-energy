@@ -1,0 +1,204 @@
+{
+  "en/home": {
+    "eyebrow": "Intelligent energy systems",
+    "title": "Powering smarter futures.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2095.webp",
+        "position": "center 55%"
+      }
+    ]
+  },
+  "en/solutions": {
+    "eyebrow": "Solutions",
+    "title": "Solar for your home, society or business in Karnataka.",
+    "accent": "in Karnataka.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2006.webp",
+        "position": "center 42%"
+      },
+      {
+        "src": "/images/projects/ie-2100.webp",
+        "position": "center 50%"
+      },
+      {
+        "src": "/images/projects/ie-2159.webp",
+        "position": "left 37%",
+        "zoom": 1.35
+      }
+    ]
+  },
+  "en/solutions-home": {
+    "eyebrow": "For homeowners",
+    "title": "Solar for your home in Karnataka — designed end-to-end.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2006.webp",
+        "position": "center 42%"
+      }
+    ]
+  },
+  "en/solutions-housing-society": {
+    "eyebrow": "For RWAs and society committees",
+    "title": "Cut your society's common-area electricity bill in Karnataka — together.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2100.webp",
+        "position": "center 50%"
+      }
+    ]
+  },
+  "en/solutions-commercial": {
+    "eyebrow": "For businesses",
+    "title": "Solar for your business in Karnataka — predictable energy costs, lower bills.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2159.webp",
+        "position": "left 37%",
+        "zoom": 1.35
+      }
+    ]
+  },
+  "en/get-quote": {
+    "eyebrow": "Solar calculator",
+    "title": "Estimate the right solar system for your site.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2140.webp",
+        "position": "center 32%"
+      }
+    ]
+  },
+  "en/about": {
+    "eyebrow": "Our mission",
+    "title": "Powering a Greener Tomorrow",
+    "accent": "Tomorrow",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2006.webp",
+        "position": "center 34%"
+      }
+    ]
+  },
+  "en/contact": {
+    "eyebrow": "Contact",
+    "title": "Talk to us about your roof.",
+    "accent": "your roof.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2100.webp",
+        "position": "center 44%"
+      }
+    ]
+  },
+  "kn/home": {
+    "eyebrow": "ಸ್ಮಾರ್ಟ್ ವಿದ್ಯುತ್ ವ್ಯವಸ್ಥೆಗಳು",
+    "title": "ಸ್ಮಾರ್ಟ್ ಭವಿಷ್ಯಕ್ಕೆ ವಿದ್ಯುತ್.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2095.webp",
+        "position": "center 55%"
+      }
+    ]
+  },
+  "kn/solutions": {
+    "eyebrow": "ಸೇವೆಗಳು",
+    "title": "ಕರ್ನಾಟಕದಲ್ಲಿ ನಿಮ್ಮ ಮನೆ, ಅಪಾರ್ಟ್‌ಮೆಂಟ್ ಅಥವಾ ವ್ಯಾಪಾರಕ್ಕೆ ಸೋಲಾರ್.",
+    "accent": "ಕರ್ನಾಟಕದಲ್ಲಿ",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2006.webp",
+        "position": "center 42%"
+      },
+      {
+        "src": "/images/projects/ie-2100.webp",
+        "position": "center 50%"
+      },
+      {
+        "src": "/images/projects/ie-2159.webp",
+        "position": "left 37%",
+        "zoom": 1.35
+      }
+    ]
+  },
+  "kn/solutions-home": {
+    "eyebrow": "ಮನೆ ಮಾಲೀಕರಿಗಾಗಿ",
+    "title": "ಕರ್ನಾಟಕದಲ್ಲಿ ನಿಮ್ಮ ಮನೆಗೆ ಸೋಲಾರ್ — ಆರಂಭದಿಂದ ಕೊನೆಯವರೆಗೆ ನಾವು ವಿನ್ಯಾಸ ಮಾಡುತ್ತೇವೆ.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2006.webp",
+        "position": "center 42%"
+      }
+    ]
+  },
+  "kn/solutions-housing-society": {
+    "eyebrow": "ನಿವಾಸಿಗಳ ಸಂಘ ಮತ್ತು ಸಮಿತಿಗಳಿಗಾಗಿ",
+    "title": "ಕರ್ನಾಟಕದಲ್ಲಿ ನಿಮ್ಮ ಸಂಘದ ಕಾಮನ್ ಏರಿಯಾ ವಿದ್ಯುತ್ ಬಿಲ್ ಕಡಿಮೆ ಮಾಡಿ — ಎಲ್ಲರೂ ಸೇರಿ.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2100.webp",
+        "position": "center 50%"
+      }
+    ]
+  },
+  "kn/solutions-commercial": {
+    "eyebrow": "ವ್ಯಾಪಾರ ಮತ್ತು ಉದ್ಯಮಗಳಿಗಾಗಿ",
+    "title": "ಕರ್ನಾಟಕದಲ್ಲಿ ನಿಮ್ಮ ವ್ಯಾಪಾರಕ್ಕೆ ಸೋಲಾರ್ — ಮೊದಲೇ ತಿಳಿಯುವ ವಿದ್ಯುತ್ ವೆಚ್ಚ, ಕಡಿಮೆ ಬಿಲ್.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2159.webp",
+        "position": "left 37%",
+        "zoom": 1.35
+      }
+    ]
+  },
+  "kn/get-quote": {
+    "eyebrow": "ಸೋಲಾರ್ ಕ್ಯಾಲ್ಕುಲೇಟರ್",
+    "title": "ನಿಮ್ಮ ಮನೆ ಅಥವಾ ಕಟ್ಟಡಕ್ಕೆ ಸರಿಯಾದ ಸೋಲಾರ್ ವ್ಯವಸ್ಥೆಯ ಅಂದಾಜು ಪಡೆಯಿರಿ.",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2140.webp",
+        "position": "center 32%"
+      }
+    ]
+  },
+  "kn/about": {
+    "eyebrow": "ನಮ್ಮ ಧ್ಯೇಯ",
+    "title": "ಇನ್ನಷ್ಟು ಹಸಿರಾದ ನಾಳೆಗೆ ಶಕ್ತಿ",
+    "accent": "ಇನ್ನಷ್ಟು ಹಸಿರಾದ ನಾಳೆಗೆ",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2006.webp",
+        "position": "center 34%"
+      }
+    ]
+  },
+  "kn/contact": {
+    "eyebrow": "ಸಂಪರ್ಕಿಸಿ",
+    "title": "ನಿಮ್ಮ ಚಾವಣಿಯ ಬಗ್ಗೆ ನಮ್ಮೊಂದಿಗೆ ಮಾತನಾಡಿ.",
+    "accent": "ನಿಮ್ಮ ಚಾವಣಿಯ ಬಗ್ಗೆ",
+    "domain": "irradiantenergy.in",
+    "photos": [
+      {
+        "src": "/images/projects/ie-2100.webp",
+        "position": "center 44%"
+      }
+    ]
+  }
+}

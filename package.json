@@ -15,6 +15,7 @@
     "icons": "node --experimental-strip-types scripts/generate-icons.ts",
     "build:kn": "node --experimental-strip-types scripts/build-kn-content.ts",
     "check:kn": "node --experimental-strip-types scripts/build-kn-content.ts --check",
+    "build:share": "node --experimental-strip-types scripts/build-share-images.ts",
     "check:client-content": "node --experimental-strip-types scripts/check-client-content.ts"
   },
   "dependencies": {
