@@ -1,9 +1,10 @@
 # Lead register (Google Sheet)
 
-Every enquiry from the website — the quote popup, the site-visit popup and the calculator form — is
-added as one row to a Google Sheet in the company's Google Workspace, right after the sales alert
-email goes out. The team works from the Sheet: the **Status** column starts as "New" and the
-**Notes** column is theirs. The website never changes either.
+Every enquiry from the website — the quote popup, the site-visit popup, the quote form on the home
+page and the calculator form — is added as one row to a Google Sheet in the company's Google
+Workspace, right after the sales alert email goes out. The team works from the Sheet: the
+**Status** column starts as "New" and the **Notes** column is theirs. The website never changes
+either.
 
 It is optional. Until the two settings below exist in Vercel, the website simply skips this step;
 enquiries still arrive by email exactly as before.
@@ -12,9 +13,10 @@ enquiries still arrive by email exactly as before.
 Property · Monthly bill · Sanctioned load (kW) · Estimated system (kWp) · WhatsApp OK · Source ·
 Medium · Campaign · Landing page · Enquiry page · Status · Notes
 
-- **Form** is Popup, Site visit or Calculator.
-- **Email** is empty for a popup enquiry until the visitor asks for the breakdown by email; the
-  same row is then filled in.
+- **Form** is Popup, Site visit, Home page or Calculator. "Home page" is the same short form as the
+  popup, shown open on the home page.
+- **Email** is empty for a popup or home page enquiry until the visitor asks for the breakdown by
+  email; the same row is then filled in.
 - **Source / Medium / Campaign** come from the link's campaign tags (utm_source, utm_medium,
   utm_campaign). Without tags they show the referring website ("referral"), or "direct or unknown".
   **Landing page** and the referring site are known only when the visitor allowed analytics.

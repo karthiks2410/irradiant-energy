@@ -55,7 +55,7 @@ export interface LeadEmailContext {
   /** The language the form was filled in; it decides the customer email's language only. */
   locale: Locale;
   /** Which form the lead came from, for the consent line. Defaults to the estimate form. */
-  source?: "estimate form" | "quick quote popup";
+  source?: LeadFormSource;
   /**
    * Quick-quote leads give a bill range, not a bill. When set, it replaces the monthly-bill value
    * and the estimate is labelled as worked out at `representativeBillInr`, never as their bill.
@@ -63,7 +63,7 @@ export interface LeadEmailContext {
    * whose figures are a floor rather than a middle.
    */
   billRange?: { label: string; representativeBillInr: number; openEnded: boolean };
-  /** Popup only: whether the visitor opened it to ask for a quote or for a free site visit. */
+  /** Quick-quote forms only: whether the visitor asked for a quote or for a free site visit. */
   request?: "quote" | "site-visit";
   /**
    * How the visitor found us, already validated (src/lib/leads/source.ts). Internal alert and lead
@@ -72,10 +72,22 @@ export interface LeadEmailContext {
   leadSource?: LeadSource;
 }
 
+/**
+ * The form an enquiry was sent from, as the sales alert words it ("Sent automatically by the …").
+ * The quick-quote form has two surfaces (components/quote/QuickQuote.tsx): the popup, and the same
+ * form always open on the home page. They share everything but this name.
+ */
+export type LeadFormSource = "estimate form" | "quick quote popup" | "home page form";
+
+/** The two quick-quote surfaces: a range lead, no email until the visitor asks for the breakdown. */
+export const isQuickQuoteSource = (source: LeadFormSource | undefined): boolean =>
+  source === "quick quote popup" || source === "home page form";
+
 /** Which form an enquiry came through, in the lead register's and the analytics event's terms. */
-export type LeadFormKind = "calculator" | "popup" | "site_visit";
+export type LeadFormKind = "calculator" | "popup" | "site_visit" | "home";
 
 export function leadFormKind(ctx: Pick<LeadEmailContext, "source" | "request">): LeadFormKind {
+  if (ctx.source === "home page form") return "home";
   if (ctx.source !== "quick quote popup") return "calculator";
   return ctx.request === "site-visit" ? "site_visit" : "popup";
 }
@@ -85,6 +97,7 @@ const FORM_NAME: Record<LeadFormKind, string> = {
   calculator: "Estimate form on the calculator page",
   popup: "Quote popup",
   site_visit: "Site-visit popup (asked for a free site visit)",
+  home: "Quote form on the home page",
 };
 
 /**
@@ -366,7 +379,7 @@ export function renderCustomerQuotation(ctx: LeadEmailContext): EmailContent {
     : fill(copy.subjectLine, { reference });
   const heading = fill(estimate ? copy.headingEstimate : copy.heading, { firstName });
   const intro = fill(estimate ? copy.introEstimate : copy.intro, { segment });
-  const footer = ctx.source === "quick quote popup" ? copy.footerPopup : copy.footer;
+  const footer = isQuickQuoteSource(ctx.source) ? copy.footerPopup : copy.footer;
 
   /**
    * "Call {phone} or email {email}." names both routes in one sentence, so it needs both. If
@@ -473,7 +486,12 @@ export function customerWhatsappHref(reference: string, locale: Locale = DEFAULT
  * alert had no address; this one carries it, matched by reference, and replying reaches them.
  * English, like every internal email.
  */
-export function renderQuickEmailNote(reference: string, name: string, email: string): EmailContent {
+export function renderQuickEmailNote(
+  reference: string,
+  name: string,
+  email: string,
+  source: LeadFormSource = "quick quote popup",
+): EmailContent {
   const subject = `Email added to ${reference}`;
   const line = `${name} asked for their estimate by email. Their address is below; replying to this email goes to them.`;
   const pairs: ReadonlyArray<readonly [string, string]> = [
@@ -486,8 +504,8 @@ export function renderQuickEmailNote(reference: string, name: string, email: str
     `<h1 style="margin:0 0 8px;font-size:22px;line-height:1.3;color:${COLOR.teal};">Email added to ${escapeHtml(reference)}</h1>
 <p style="margin:0 0 12px;">${escapeHtml(line)}</p>
 ${rows(pairs)}`,
-    `Sent automatically by the quick quote popup on ${escapeHtml(siteUrl)}.`,
+    `Sent automatically by the ${source} on ${escapeHtml(siteUrl)}.`,
   );
-  const text = [subject, "", line, "", textRows(pairs), "", `Sent automatically by the quick quote popup on ${siteUrl}.`].join("\n");
+  const text = [subject, "", line, "", textRows(pairs), "", `Sent automatically by the ${source} on ${siteUrl}.`].join("\n");
   return { subject, html, text };
 }

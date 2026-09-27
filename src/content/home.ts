@@ -358,27 +358,30 @@ const brands = {
   ],
 } as const satisfies { copy: SectionCopy; items: readonly Brand[] };
 
-// PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (CTA phrasing). The band now carries a working
-// estimate, so the site-wide "Get a free estimate" would point at what the visitor just used;
-// this CTA names what /get-quote adds instead. Destination unchanged (site.ts primaryCta).
-const calculatorCta = {
-  label: "Get a proposal for your site",
+/**
+ * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-27). The home page's quote form asks for a
+ * name and a WhatsApp number before it shows figures; this link is the way round it for anyone who
+ * would rather work the numbers out first. /get-quote shows every figure without asking for
+ * anything, and asks for details only to email them.
+ */
+const calculatorLink = {
+  label: "Prefer the detailed calculator?",
   href: primaryCta.href,
-  source: "site.ts primaryCta (href) · label proposed",
+  source: "home quote band, owner decision 2026-09-27 · label proposed",
   status: "proposed",
 } as const satisfies Cta;
 
 /**
- * The calculator band, which runs the real estimate engine (src/lib/solar) inline.
+ * The quote band (components/home/HomeQuote.tsx), which took the calculator band's place on
+ * 2026-09-27: the header popup's form, always open, under the old band's heading.
  *
- * Field and result labels are the prototype's, which the owner approved (D-009), with two
- * departures, both because the engine will not support the prototype's version:
- * - the prototype's "System type" and "Daytime energy use" selects fed invented factors
- *   (a 0.35/0.55/0.75 daytime multiplier); the engine models neither, so they are not asked for.
- * - "Lifetime savings" became "Projected savings": the engine projects
- *   PROJECTION_HORIZON_YEARS (15) years and names the horizon beside the figure.
- * Hints are new UX copy; none of them is a claim, and every figure the panel prints carries the
- * engine's own assumptions and sources with it.
+ * The heading is the prototype's calculator heading, which the owner approved (D-009); the section
+ * keeps its `#calculator` anchor. The form's own words are the popup's (`ui.quickQuote`), and the
+ * reassurance line is the audience pages' closing lead, so neither is repeated here.
+ *
+ * Removed with the calculator band: its four "why use it" bullets, the field and result labels,
+ * the assumptions label, the disclaimer and the "Get a proposal for your site" CTA. /get-quote has
+ * its own copy for all of them (src/content/quote.ts).
  */
 const calculator = {
   copy: {
@@ -388,47 +391,8 @@ const calculator = {
     source: "prototype calc",
     status: "owner-approved-template",
   },
-  // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (2026-09-21). The prototype's bullets were the
-  // labels of the result tiles sitting beside them. These say why to use it instead, each true
-  // of the engine: the bill is the only input it needs, it applies Karnataka tariffs and the
-  // PM Surya Ghar subsidy where it applies, it recalculates live, and every assumption is listed
-  // with its source.
-  bullets: [
-    // Corrected 2026-09-26 (owner-approved): the redesign (#14) made the sanctioned load required too.
-    "Just your monthly bill and sanctioned load, both on your electricity bill",
-    "Karnataka tariffs and the PM Surya Ghar subsidy, where it applies",
-    "Figures update as you type",
-    "Every assumption listed with its source",
-  ],
-  fields: {
-    segment: { label: "Customer type" },
-    location: { label: "PIN code", hint: "Confirms which supplier serves you." },
-    bill: { label: "Monthly electricity bill (₹)", hint: "A typical month, before any solar." },
-    tariff: { label: "Average tariff (₹ / unit)", hint: "Leave it blank to use the tariff listed under the assumptions." },
-    load: { label: "Sanctioned load (kW)", hint: "From your electricity bill." },
-    houses: { label: "Homes in the society", hint: "Sets the ceiling the subsidy estimate can use." },
-  },
-  results: {
-    title: "Your estimate",
-    size: "Recommended system",
-    savings: "Monthly savings",
-    payback: "Indicative payback",
-    subsidy: "PM Surya Ghar subsidy",
-    cost: "Indicative cost",
-  },
-  assumptionsLabel: "What this estimate assumes",
-  disclaimer:
-    "Indicative only. Final figures and eligibility depend on site assessment, design and current policy checks.",
-  cta: calculatorCta,
-} as const satisfies {
-  copy: SectionCopy;
-  bullets: readonly string[];
-  fields: Readonly<Record<"segment" | "location" | "bill" | "tariff" | "load" | "houses", { label: string; hint?: string }>>;
-  results: { title: string; size: string; savings: string; payback: string; subsidy: string; cost: string };
-  assumptionsLabel: string;
-  disclaimer: string;
-  cta: Cta;
-};
+  detailedLink: calculatorLink,
+} as const satisfies { copy: SectionCopy; detailedLink: Cta };
 
 const finalCta = {
   copy: {

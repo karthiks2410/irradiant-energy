@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BILL_BOUNDS, SEGMENTS } from "@/lib/solar/constants";
-import { BILL_BUCKETS, billBandFor, bucketLabel, findBucket, formatRange, labelFor, quickEstimate, representativeBill, summarise } from "./quick";
+import { BILL_BUCKETS, billBandFor, bucketForBill, bucketLabel, findBucket, formatRange, labelFor, quickEstimate, representativeBill, summarise } from "./quick";
 
 describe("bill buckets", () => {
   it.each(SEGMENTS)("%s buckets are contiguous, ascending and inside the engine's limits", (segment) => {
@@ -88,6 +88,39 @@ describe("billBandFor", () => {
   it("says unknown when there is no usable bill", () => {
     for (const bill of [null, undefined, 0, -5, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(billBandFor("home", bill)).toBe("unknown");
+    }
+  });
+});
+
+describe("bucketForBill (the hero's bill, pre-selected in the home page form)", () => {
+  it("finds the range the bill falls in, for the property type in the form", () => {
+    expect(bucketForBill("home", 9_000)?.id).toBe("home-5");
+    expect(bucketForBill("home", 3_500)?.id).toBe("home-3");
+    // The same bill is a small one for a society or a business.
+    expect(bucketForBill("housing-society", 9_000)?.id).toBe("society-1");
+    expect(bucketForBill("commercial", 9_000)?.id).toBe("business-1");
+    expect(bucketForBill("commercial", 2_00_000)?.id).toBe("business-3");
+  });
+
+  it("puts an edge in the range it opens, and clamps to the first and last ranges", () => {
+    expect(bucketForBill("home", 1_500)?.id).toBe("home-2");
+    expect(bucketForBill("home", 1_499)?.id).toBe("home-1");
+    expect(bucketForBill("home", 1)?.id).toBe("home-1");
+    expect(bucketForBill("home", 99_99_999)?.id).toBe("home-5");
+  });
+
+  it("every range it returns is one the form offers for that property type", () => {
+    for (const segment of SEGMENTS) {
+      for (const bill of [1, 1_000, 5_000, 25_000, 1_00_000, 5_00_000, 50_00_000]) {
+        const bucket = bucketForBill(segment, bill);
+        expect(bucket && findBucket(segment, bucket.id)).toBe(bucket);
+      }
+    }
+  });
+
+  it("pre-selects nothing when there is no usable bill", () => {
+    for (const bill of [null, undefined, 0, -5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(bucketForBill("home", bill)).toBeNull();
     }
   });
 });

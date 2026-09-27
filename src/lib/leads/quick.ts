@@ -90,14 +90,25 @@ export function bucketLabel(bucket: BillBucket, first: boolean, words: RangeWord
 }
 
 /**
- * The bucket a typed bill falls in, for analytics: the calculator reports its bill as this id, never
- * as the amount. A bill below the first bucket counts as the first, one above the last as the last;
- * no usable bill (empty, zero, not a number) is "unknown".
+ * The bucket a typed bill falls in. A bill below the first bucket counts as the first, one above the
+ * last as the last; an edge belongs to the bucket it opens ("₹1,500" is "₹1,500–2,500"). No usable
+ * bill (empty, zero, negative, not a number) has no bucket.
+ *
+ * Two callers: the home page's hero, whose typed bill pre-selects the range in the quote form
+ * below it, and analytics (`billBandFor`).
+ */
+export function bucketForBill(segment: Segment, bill: number | null | undefined): BillBucket | null {
+  if (typeof bill !== "number" || !Number.isFinite(bill) || bill <= 0) return null;
+  const list = BILL_BUCKETS[segment];
+  return list.find((bucket) => bucket.max === null || bill < bucket.max) ?? list[list.length - 1];
+}
+
+/**
+ * The bucket id a typed bill falls in, for analytics: the calculator reports its bill as this id,
+ * never as the amount. No usable bill is "unknown".
  */
 export function billBandFor(segment: Segment, bill: number | null | undefined): string {
-  if (typeof bill !== "number" || !Number.isFinite(bill) || bill <= 0) return "unknown";
-  const list = BILL_BUCKETS[segment];
-  return (list.find((bucket) => bucket.max === null || bill < bucket.max) ?? list[list.length - 1]).id;
+  return bucketForBill(segment, bill)?.id ?? "unknown";
 }
 
 export function labelFor(segment: Segment, id: string, words: RangeWords = ENGLISH_RANGE_WORDS): string | undefined {

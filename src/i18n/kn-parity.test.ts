@@ -39,8 +39,6 @@ const SAME_IN_BOTH: Readonly<Record<string, string>> = {
   "home.audiencePaths.items[1].tile": "legacy home-hero tile; no component renders `tile`",
   "home.audiencePaths.items[2].tile": "legacy home-hero tile; no component renders `tile`",
   "home.about.caption": "prototype caption; the rebuilt about band does not render it",
-  "home.calculator.fields.tariff.label": "input withdrawn at owner review round 2",
-  "home.calculator.fields.tariff.hint": "input withdrawn at owner review round 2",
   "images.duskSkyline.alt": 'hero slide 1: decoration behind fixed copy, rendered with alt=""',
   "socialPending[0].label": "the network's own name",
   "ui.meta.socialImageAlt":

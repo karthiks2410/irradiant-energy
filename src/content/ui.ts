@@ -220,7 +220,6 @@ export const ui = {
     heroPlay: "Play the hero slideshow",
     heroBillLabel: "Your monthly electricity bill",
     heroSubmit: "See my estimate",
-    heroNoSignup: "No phone number, no sign-up.",
     /** Link line on an audience card; `{segment}` is the card's own title, lower-cased. */
     audienceCardCta: "See solar for {segment}",
     /** Link line on the one system card that links out (Generate). */
@@ -228,23 +227,12 @@ export const ui = {
     finalCtaCall: "Call {phone}",
   },
 
+  /**
+   * Units, property-type labels and the engine's flag wording for /get-quote and the emails. The
+   * home page's calculator band had five more keys here (PIN placeholder and error, subsidy note,
+   * roof area, sanctioned-load prompt); they went with the band on 2026-09-27.
+   */
   calculator: {
-    pincodePlaceholder: "e.g. 560001",
-    /**
-     * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL. Validation microcopy: it describes what the
-     * calculator needs, and makes no claim about solar, tariffs or the business.
-     */
-    pincodeError: "Enter a 6-digit PIN code, for example 560001.",
-    /** Under the payback tile when a subsidy is counted in it. */
-    subsidyNote: "After the estimated subsidy",
-    /** Under the recommended system size (redesign #14). */
-    roofNeeded: "~{sqft} sq ft of roof",
-    /**
-     * Shown where the figures go until a sanctioned load is entered: the estimate needs it (#14), and
-     * without a word the tiles read as a broken ₹0 (found by the e2e rework, 2026-09-26).
-     * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (owner approved the fix, 2026-09-26).
-     */
-    loadPrompt: "Enter your sanctioned load to see your figures. It is on your electricity bill.",
     yearsUnit: "years",
     kwpUnit: "kWp",
     kwhUnit: "kWh",

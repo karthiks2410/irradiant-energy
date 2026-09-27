@@ -1,37 +1,29 @@
 "use client";
 
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { useCalculatorUse } from "@/components/analytics/useCalculatorUse";
-import { billBounds, type Segment } from "@/lib/solar/calc";
+import type { QuickQuoteHandoff } from "@/components/quote/QuickQuote";
+import { billBounds } from "@/lib/solar/calc";
 
 /**
- * The three inputs the home page's estimate rests on, shared between the hero and the calculator
- * band so the hero can start the estimate and the calculator can finish it.
+ * The hero's bill, handed to the quote form further down the home page.
  *
- * It exists because those two are six sections apart in the DOM and cannot hold the state between
- * them any other way. Children are passed through, so everything between the two stays a Server
- * Component and only the two islands that read this hydrate.
+ * The hero's "See my estimate" does not compute anything: it takes the visitor to the quote form
+ * (components/home/HomeQuote.tsx) with the range their bill falls in already chosen and the cursor
+ * in the first field. The two are six sections apart in the DOM and cannot share state any other
+ * way. Children are passed through, so everything between them stays a Server Component and only
+ * the two islands that read this hydrate.
  *
- * Only the inputs live here. The estimate itself is derived where it is shown, so nothing
- * recomputes for a section that is not displaying a figure.
+ * It used to carry the whole home calculator's inputs (property type, PIN, the sanctioned-load
+ * focus request). The calculator band is gone (owner decision, 2026-09-27: the figures now come
+ * after the contact details, as in the popup), so only the bill and the hand-off are left.
  */
 interface HomeEstimateValue {
-  segment: Segment;
-  setSegment: (segment: Segment) => void;
-  /** Raw text, because it is typed: the engine only sees it once it parses to a positive number. */
+  /** Raw text, because it is typed: it only becomes a range once it parses to a positive number. */
   bill: string;
   setBill: (bill: string) => void;
-  /** Raw text as typed; a PIN code is extracted from it, so "560001" and "Anekal 562106" both work. */
-  location: string;
-  setLocation: (location: string) => void;
-  /**
-   * Analytics: the visitor changed an input that lives outside this provider (the calculator
-   * band's sanctioned load and home count). The setters above call it themselves.
-   */
-  markUsed: () => void;
-  /** Bumped by the hero's "See my estimate": the calculator moves focus to the sanctioned load. */
-  loadRequest: number;
-  requestLoad: () => void;
+  /** What the quote form is asked to take; `request` goes up with every "See my estimate". */
+  handoff: QuickQuoteHandoff;
+  requestEstimate: () => void;
 }
 
 const HomeEstimateContext = createContext<HomeEstimateValue | null>(null);
@@ -42,40 +34,24 @@ export function useHomeEstimate(): HomeEstimateValue {
   return value;
 }
 
+const positive = (value: string): number | null => {
+  const parsed = Number(value);
+  return value !== "" && Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
 export function HomeEstimateProvider({ children }: { children: ReactNode }) {
-  const [segment, setSegmentState] = useState<Segment>("home");
+  // The hero opens on a typical home bill, as it always has; the visitor sees it and can change it.
   const [bill, setBill] = useState(() => String(billBounds("home").default));
-  const [location, setLocation] = useState("");
-  const [loadRequest, setLoadRequest] = useState(0);
-  // The first change to any input counts as using the calculator: once per page view, consent
-  // only, with the bill reported as a range id (components/analytics/useCalculatorUse.ts).
-  const billNumber = Number(bill);
-  const markUsed = useCalculatorUse(segment, Number.isFinite(billNumber) && billNumber > 0 ? billNumber : null);
+  const [handoff, setHandoff] = useState<QuickQuoteHandoff>({ bill: null, request: 0 });
 
   const value = useMemo<HomeEstimateValue>(
     () => ({
-      segment,
-      // Bill ranges differ per segment, so the bill restarts at the new segment's typical value.
-      setSegment: (next) => {
-        setSegmentState(next);
-        setBill(String(billBounds(next).default));
-        markUsed();
-      },
       bill,
-      setBill: (next) => {
-        setBill(next);
-        markUsed();
-      },
-      location,
-      setLocation: (next) => {
-        setLocation(next);
-        markUsed();
-      },
-      markUsed,
-      loadRequest,
-      requestLoad: () => setLoadRequest((n) => n + 1),
+      setBill,
+      handoff,
+      requestEstimate: () => setHandoff((prev) => ({ bill: positive(bill), request: prev.request + 1 })),
     }),
-    [segment, bill, location, markUsed, loadRequest],
+    [bill, handoff],
   );
 
   return <HomeEstimateContext.Provider value={value}>{children}</HomeEstimateContext.Provider>;

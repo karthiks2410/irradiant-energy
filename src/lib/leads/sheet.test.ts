@@ -95,6 +95,14 @@ describe("sheetRowFor", () => {
     expect(Object.keys(row)).toEqual(SHEET_COLUMNS.filter((c) => c !== "Status" && c !== "Notes"));
   });
 
+  it("names each form in the Form column", () => {
+    const form = (ctx: Partial<LeadEmailContext>) => sheetRowFor({ ...popupContext, ...ctx }).Form;
+    expect(form({ source: "quick quote popup", request: "quote" })).toBe("Popup");
+    expect(form({ source: "quick quote popup", request: "site-visit" })).toBe("Site visit");
+    expect(form({ source: "home page form", request: "quote" })).toBe("Home page");
+    expect(form({ source: "estimate form", request: undefined })).toBe("Calculator");
+  });
+
   it("names the calculator form and says 'direct or unknown' without a source", () => {
     const row = sheetRowFor({
       ...popupContext,

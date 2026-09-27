@@ -111,7 +111,12 @@ export function istTimestamp(date: Date): string {
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
 }
 
-const FORM_COLUMN: Record<LeadFormKind, string> = { calculator: "Calculator", popup: "Popup", site_visit: "Site visit" };
+const FORM_COLUMN: Record<LeadFormKind, string> = {
+  calculator: "Calculator",
+  popup: "Popup",
+  site_visit: "Site visit",
+  home: "Home page",
+};
 
 /**
  * One enquiry as a register row, from the same context the alert email is written from, so the
@@ -132,7 +137,7 @@ export function sheetRowFor(ctx: LeadEmailContext): SheetLeadRow {
     Email: lead.email ?? "",
     "PIN code": lead.pincode ?? "",
     Property: SEGMENT_LABELS[lead.segment],
-    // A popup lead gives a range, never a figure; the register shows the range as given.
+    // A quick-quote lead (popup or home page) gives a range, never a figure; the register shows it as given.
     "Monthly bill": ctx.billRange ? ctx.billRange.label : lead.monthlyBill === undefined ? "" : formatInr(lead.monthlyBill),
     "Sanctioned load (kW)": lead.sanctionedLoadKw === undefined ? "" : String(lead.sanctionedLoadKw),
     "Estimated system (kWp)": estimate ? String(estimate.systemKwp) : "",

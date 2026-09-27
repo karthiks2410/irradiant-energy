@@ -1,10 +1,10 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { dismissConsent, headerNav, scrollDown, watchForErrors } from "./helpers";
 
 /*
- * The calculators since the redesign (#14): nothing is computed until the sanctioned load from the
- * electricity bill is in. It caps the system size and there is no fallback without it, so until
- * then every tile reads ₹0. The PIN code stays optional. A rupee figure of five or more characters
+ * The calculator (/get-quote) since the redesign (#14): nothing is computed until the sanctioned
+ * load from the electricity bill is in. It caps the system size and there is no fallback without
+ * it, so until then every tile reads ₹0. The PIN code stays optional. A rupee figure of five or more characters
  * ("₹3,063") is how these tests tell a real estimate from those placeholders.
  */
 const REAL_FIGURE = /₹[\d,]{5,}/;
@@ -265,58 +265,214 @@ test.describe("the estimate counts to its new value", () => {
   });
 });
 
+/*
+ * The home page's quote band (owner decision, 2026-09-27): the header popup's form, always open,
+ * where the calculator band used to hand out every figure before asking for anything. It must be
+ * the popup's form — same fields, same order, same checks — and the hero's bill must arrive in it.
+ * /get-quote keeps the ungated calculator (the "estimator" tests above).
+ */
+const quoteBand = (page: Page) => page.locator("#calculator");
+
+/** The live hero form: the hero reserves its tallest scene with a hidden, inert copy of the markup. */
+const heroForm = (page: Page) => page.locator("form").filter({ has: page.locator('input[name="bill"]') }).last();
+
+/** The names of a quick-quote form's visible questions, in order (the honeypot is not one). */
+const questions = (form: Locator) =>
+  form
+    .locator("input:not([type=hidden])")
+    .evaluateAll((inputs) =>
+      [...new Set(inputs.map((input) => (input as HTMLInputElement).name))].filter((name) => name !== "website"),
+    );
+
+/** The fields a quick-quote form has marked invalid, in order. */
+const invalid = (form: Locator) =>
+  form.evaluate((f) =>
+    [...f.querySelectorAll("[aria-invalid='true']")].map(
+      (el) => (el as HTMLInputElement).name || el.querySelector("input")?.name || "",
+    ),
+  );
+
+test.describe("the home page quote form", () => {
+  test("is the popup's form, open on the page, beside its pitch", async ({ page }, info) => {
+    const errors = watchForErrors(page);
+    await page.goto("/en", { waitUntil: "networkidle" });
+    await dismissConsent(page);
+    const band = quoteBand(page);
+    await band.scrollIntoViewIfNeeded();
+
+    const form = band.locator("form");
+    await expect(form).toBeVisible();
+    await expect(band.getByRole("heading", { level: 2 })).toHaveText("Estimate the right solar system for your site.");
+
+    // The same questions in the same order as the popup, which is in the DOM (closed) on every page.
+    const popup = page.locator("dialog form").first();
+    const asked = await questions(form);
+    expect(asked).toEqual(["name", "phone", "pincode", "segment", "billBucket", "consent"]);
+    expect(asked).toEqual(await questions(popup));
+    await expect(form.getByRole("button", { name: "See my estimate" })).toBeVisible();
+
+    // A section, not a dialog: nothing to close, and the page still scrolls.
+    await expect(band.locator("dialog")).toHaveCount(0);
+    await expect(band.getByRole("button", { name: "Close" })).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.hasAttribute("data-scroll-locked"))).toBe(false);
+    // The old band's calculator is gone: no figures before details, no sanctioned-load field.
+    await expect(band.getByLabel(/sanctioned load/i)).toHaveCount(0);
+
+    // The way round it, for anyone who wants every figure first.
+    await expect(band.getByRole("link", { name: "Prefer the detailed calculator?" })).toHaveAttribute("href", "/en/get-quote");
+
+    // Two copies of one form on a page: no id may be shared, or a label would work the other form.
+    const duplicates = await page.evaluate(() => {
+      const ids = [...document.querySelectorAll("[id]")].map((el) => el.id);
+      return [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
+    });
+    expect(duplicates).toEqual([]);
+
+    // Side by side on a desktop, stacked on a phone.
+    const pitch = (await band.locator("h2").boundingBox())!;
+    const fields = (await form.boundingBox())!;
+    if (info.project.name === "mobile") expect(fields.y, "the form should sit under the pitch").toBeGreaterThan(pitch.y + pitch.height);
+    else expect(fields.x, "the form should sit beside the pitch").toBeGreaterThan(pitch.x + pitch.width);
+    expect(errors).toEqual([]);
+  });
+
+  test("checks its fields exactly as the popup does, and sends nothing until they pass", async ({ page }) => {
+    await page.goto("/en", { waitUntil: "networkidle" });
+    await dismissConsent(page);
+    const posts: string[] = [];
+    page.on("request", (request) => {
+      if (request.method() === "POST" && request.headers()["next-action"]) posts.push(request.url());
+    });
+
+    // The popup first, for the reference answer.
+    const inBar = page.getByRole("button", { name: "Get a free quote" }).filter({ visible: true });
+    if ((await inBar.count()) === 0) await page.locator("[data-menu-toggle]:visible").first().click();
+    await page.getByRole("button", { name: "Get a free quote" }).filter({ visible: true }).first().click();
+    const dialog = page.locator("dialog[open]");
+    await dialog.locator('button[type="submit"]').click();
+    const popupSays = await invalid(dialog.locator("form"));
+    expect(popupSays).toEqual(["name", "phone", "pincode", "billBucket", "consent"]);
+    await dialog.getByRole("button", { name: "Close" }).click();
+    await expect(dialog).toHaveCount(0);
+
+    const form = quoteBand(page).locator("form");
+    await form.scrollIntoViewIfNeeded();
+    await form.locator('button[type="submit"]').click();
+    expect(await invalid(form)).toEqual(popupSays);
+    // The cursor goes to the first field that needs attention, and it says why.
+    await expect(form.locator('input[name="name"]')).toBeFocused();
+    await expect(form.getByText("Enter your name").first()).toBeVisible();
+
+    // Errors clear as the visitor fixes them, one by one, never on blur.
+    await form.locator('input[name="name"]').fill("Asha Rao");
+    await form.locator('input[name="pincode"]').fill("5600");
+    await form.locator('button[type="submit"]').click();
+    expect(await invalid(form)).toEqual(["phone", "pincode", "billBucket", "consent"]);
+    await expect(form.locator('input[name="phone"]')).toBeFocused();
+
+    expect(posts, "an invalid form reached the server").toEqual([]);
+  });
+});
+
 test.describe("the hero starts the estimate", () => {
-  test("the hero form seeds the calculator, which gives figures for that bill", async ({ page }) => {
+  test("the hero's bill picks its range in the quote form, for the property chosen there, and the cursor goes to Name", async ({ page }) => {
     test.slow();
     await page.goto("/en", { waitUntil: "networkidle" });
     await dismissConsent(page);
+    const band = quoteBand(page);
+    const form = band.locator("form");
+    const chosen = form.locator('input[name="billBucket"]:checked');
 
-    // `.last()` because the hero reserves its tallest scene with a hidden, inert copy of the
-    // same markup; the live form is the second one in the DOM.
-    const form = page.locator("form").filter({ has: page.getByRole("button", { name: /see my estimate/i }) }).last();
-    await form.getByLabel(/monthly electricity bill/i).fill("9000");
-    await form.getByRole("button", { name: /see my estimate/i }).click();
+    await heroForm(page).getByLabel(/monthly electricity bill/i).fill("9000");
+    await heroForm(page).getByRole("button", { name: /see my estimate/i }).click();
 
-    await expect(page).toHaveURL(/#calculator/);
+    await expect(page).toHaveURL(/#calculator$/);
+    await expect(chosen).toHaveValue("home-5");
+    await expect(form.locator('input[name="name"]')).toBeFocused();
+    // It lands on the band, clear of the fixed header.
+    await expect.poll(async () => Math.round((await band.boundingBox())!.y)).toBeLessThan(200);
 
-    // The bill typed in the hero must be the bill the calculator uses, so the figures are the
-    // visitor's own rather than the default.
-    const calculator = page.locator("#calculator");
-    const bill = calculator.getByLabel(/monthly electricity bill/i);
-    await expect(bill).toHaveValue("9000");
+    // The range belongs to the property type: a society's ₹45,000 is its third range.
+    await form.locator('input[name="segment"][value="housing-society"]').evaluate((el: HTMLElement) => el.click());
+    await expect(chosen).toHaveCount(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(600);
+    await heroForm(page).getByLabel(/monthly electricity bill/i).fill("45000");
+    // The address already ends in #calculator, so this press has to move the page itself.
+    await heroForm(page).getByRole("button", { name: /see my estimate/i }).click();
+    await expect(chosen).toHaveValue("society-3");
+    await expect.poll(async () => Math.round((await band.boundingBox())!.y)).toBeLessThan(200);
+    await expect(form.locator('input[name="name"]')).toBeFocused();
 
-    // The hero asks for the bill only; the sanctioned load is the one more thing the figures need.
-    await calculator.getByLabel(/sanctioned load/i).fill(AMPLE_LOAD_KW);
-    const savings = calculator.locator("li").filter({ hasText: "Monthly savings" });
-    await expect(savings, "the calculator is still showing its empty state").toContainText(REAL_FIGURE, {
-      timeout: 8_000,
-    });
+    // What the visitor typed stays; a choice made in the form sticks until the hero asks again.
+    await form.locator('input[name="name"]').fill("Asha Rao");
+    await form.locator('input[name="billBucket"][value="society-1"]').evaluate((el: HTMLElement) => el.click());
+    await expect(chosen).toHaveValue("society-1");
+    await expect(form.locator('input[name="name"]')).toHaveValue("Asha Rao");
+  });
+});
 
-    // And they are that bill's figures: the default bill gives different ones. Read the settled
-    // value, not the digits that count towards it.
-    const settled = () => savings.evaluate((tile) => (tile.querySelector(".sr-only") ?? tile).textContent ?? "");
-    const forHeroBill = await settled();
-    await bill.fill("3500");
-    await expect.poll(settled, { message: "the figures ignored the bill the hero seeded" }).not.toBe(forHeroBill);
+/*
+ * A submission, end to end. Only against a LOCAL dev server with LEAD_DRY_RUN=1, which shows the
+ * result and records nothing and sends nothing: `E2E_LEAD_DRY_RUN=1 E2E_BASE_URL=http://localhost:3072`.
+ * Never against the live site. A production build without mail keys answers with the "could not
+ * send" message instead, so the suite skips this there.
+ */
+test.describe("a home page enquiry, on a local dry run", () => {
+  test.skip(process.env.E2E_LEAD_DRY_RUN !== "1", "needs a local dev server with LEAD_DRY_RUN=1");
+  test.skip(!/^http:\/\/localhost:\d+$/.test(process.env.E2E_BASE_URL ?? ""), "local servers only");
+
+  test("shows the estimate, then offers the breakdown by email", async ({ page }, info) => {
+    test.slow();
+    await page.goto("/en", { waitUntil: "networkidle" });
+    await dismissConsent(page);
+    const band = quoteBand(page);
+    const form = band.locator("form");
+    await form.scrollIntoViewIfNeeded();
+    await form.locator('input[name="name"]').fill("Asha Rao");
+    await form.locator('input[name="phone"]').fill("9845012345");
+    await form.locator('input[name="pincode"]').fill("560001");
+    await form.locator('input[name="billBucket"][value="home-3"]').evaluate((el: HTMLElement) => el.click());
+    await form.locator('input[name="consent"]').evaluate((el: HTMLElement) => el.click());
+    // The bot check refuses a submit within three seconds of the page loading.
+    await page.waitForTimeout(3500);
+    await form.getByRole("button", { name: "See my estimate" }).click();
+
+    const result = band.locator("[data-track-location='result']");
+    await expect(result.getByRole("heading", { name: "Your estimate" })).toBeFocused({ timeout: 15_000 });
+    await expect(result).toContainText("For a home with a bill of ₹2,500–4,000 a month");
+    for (const tile of ["System size", "Monthly savings", "Subsidy"]) await expect(result.locator("dt", { hasText: tile })).toBeVisible();
+    await expect(result).toContainText(/kWp/);
+    await expect(result).toContainText(/Reference IE-[A-Z0-9]{6}/);
+    await expect(result.getByRole("link", { name: "Talk to us on WhatsApp" })).toHaveAttribute("href", /wa\.me|whatsapp/);
+    await expect(result.getByRole("link", { name: "See the full breakdown" })).toHaveAttribute("href", "/en/get-quote?segment=home");
+    // The popup was never opened: this form is its own.
+    await expect(page.locator("dialog[open]")).toHaveCount(0);
+
+    const email = result.getByLabel("Email me the full breakdown");
+    await expect(email).toBeVisible();
+    // The email step once per run: the dry run shares the per-visitor rate limit (5 at once) with the
+    // Kannada enquiry in i18n.spec.ts, and every step counts against it.
+    if (info.project.name !== "desktop") return;
+    await email.fill("asha@example.com");
+    await result.getByRole("button", { name: "Send" }).click();
+    await expect(result.getByRole("status")).toContainText("Sent to asha@example.com");
   });
 });
 
 test.describe("the estimate does not wait for a PIN code", () => {
   // The PIN used to gate the figures on the grounds that it decided the tariffs. It does not:
-  // every tariff and yield constant is statewide, so it only narrows the caveat. Both
-  // calculators must behave the same way about it. What they do wait for, since the redesign
+  // every tariff and yield constant is statewide, so it only narrows the caveat. What they do wait for, since the redesign
   // (#14), is the sanctioned load.
-  for (const [where, path] of [
-    ["the calculator page", "/en/get-quote"],
-    ["the home page band", "/en#calculator"],
-  ] as const) {
+  // The home page's calculator band used to be tested here too; it became the quote form
+  // (2026-09-27), so /get-quote is the one calculator left.
+  for (const [where, path] of [["the calculator page", "/en/get-quote"]] as const) {
     test(`${where} shows figures from the bill and sanctioned load, and names the tariff it assumed`, async ({ page }) => {
       await page.goto(path, { waitUntil: "networkidle" });
       await dismissConsent(page);
 
-      const home = path.includes("#");
-      const controls = page.locator(home ? "#calculator" : "main");
-      const results = home ? page.locator("#calculator") : quoteResults(page);
+      const controls = page.locator("main");
+      const results = quoteResults(page);
 
       // Nothing is computed until the sanctioned load is in: the tiles hold their ₹0 placeholders.
       await expect(results).not.toContainText(REAL_FIGURE);

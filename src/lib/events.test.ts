@@ -31,6 +31,19 @@ describe("scrubParams", () => {
     });
   });
 
+  it("knows every form an enquiry can come through, the home page form included", () => {
+    for (const form of ["popup", "site_visit", "home", "calculator"]) {
+      expect(scrubParams("generate_lead", { form, property_type: "home", bill_band: "home-2", site_language: "en" }), form).toEqual({
+        form,
+        property_type: "home",
+        bill_band: "home-2",
+        site_language: "en",
+      });
+    }
+    // Only our own names: a form label someone makes up is dropped.
+    expect(scrubParams("generate_lead", { form: "home_page", site_language: "en" })).toEqual({ site_language: "en" });
+  });
+
   it("drops keys the event does not declare, whatever they hold", () => {
     expect(
       scrubParams("click_call", { location: "header", site_language: "en", language: "en", name: "Asha Rao", phone: "9845012345", email: "a@b.in" }),

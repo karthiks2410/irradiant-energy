@@ -185,6 +185,69 @@ test.describe("the EN / ಕನ್ನಡ switch", () => {
   });
 });
 
+test.describe("the home page quote form speaks Kannada on /kn", () => {
+  test("its questions, its link and its checks are in Kannada", async ({ page }, info) => {
+    const errors = watchForErrors(page);
+    await page.goto("/kn", { waitUntil: "networkidle" });
+    await dismissConsent(page);
+    const band = page.locator("#calculator");
+    const form = band.locator("form");
+    await form.scrollIntoViewIfNeeded();
+
+    await expect(band.locator("h2")).toHaveText("ನಿಮ್ಮ ಮನೆ ಅಥವಾ ಕಟ್ಟಡಕ್ಕೆ ಸರಿಯಾದ ಸೋಲಾರ್ ವ್ಯವಸ್ಥೆಯ ಅಂದಾಜು ಪಡೆಯಿರಿ.");
+    await expect(band).toContainText("ಉಚಿತ ಸ್ಥಳ ಭೇಟಿ. ಉಚಿತ ಕೊಟೇಷನ್. ಯಾವುದೇ ಒತ್ತಾಯವಿಲ್ಲ.");
+    await expect(band.getByRole("link", { name: "ವಿವರವಾದ ಕ್ಯಾಲ್ಕುಲೇಟರ್ ಬೇಕೇ?" })).toHaveAttribute("href", "/kn/get-quote");
+    // The popup's own Kannada labels: one copy of the words for both surfaces.
+    await expect(form.getByLabel("ಹೆಸರು")).toBeVisible();
+    await expect(form.getByLabel("WhatsApp ಸಂಖ್ಯೆ")).toBeVisible();
+    await expect(form.getByText("ತಿಂಗಳ ವಿದ್ಯುತ್ ಬಿಲ್")).toBeVisible();
+    // The property chip is a house, not "Homepage" (the COLLISIONS entry in build-kn-content.ts).
+    await expect(form.locator("label", { has: page.locator('input[value="home"]') })).toHaveText("ಮನೆ");
+
+    // The checks answer in Kannada too, and nothing is posted.
+    await form.getByRole("button", { name: "ನನ್ನ ಅಂದಾಜು ತೋರಿಸಿ" }).click();
+    await expect(form.locator('input[name="name"]')).toBeFocused();
+    await expect(form.locator('[aria-invalid="true"]').first()).toBeVisible();
+    await expect(form.getByText("ನಿಮ್ಮ ಹೆಸರು ನಮೂದಿಸಿ")).toBeVisible();
+    const said = await form.locator("p.text-error").allInnerTexts();
+    expect(said, "one message per unanswered question").toHaveLength(5);
+    expect(said.join(" "), "an error message is still in English").not.toMatch(/[A-Za-z]{4,}/);
+
+    // No sideways scroll from Kannada-length chips or labels at this width.
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, `${info.project.name}: horizontal overflow`).toBeLessThanOrEqual(1);
+    expect(errors).toEqual([]);
+  });
+
+  // Local dry run only (see journeys.spec.ts, "a home page enquiry, on a local dry run").
+  test("a dry-run enquiry answers in Kannada", async ({ page }, info) => {
+    test.skip(process.env.E2E_LEAD_DRY_RUN !== "1", "needs a local dev server with LEAD_DRY_RUN=1");
+    test.skip(!/^http:\/\/localhost:\d+$/.test(process.env.E2E_BASE_URL ?? ""), "local servers only");
+    // One submission is enough for the language; the dry run shares the per-visitor rate limit.
+    test.skip(info.project.name !== "desktop", "desktop only, to stay inside the rate limit");
+    test.slow();
+    await page.goto("/kn", { waitUntil: "networkidle" });
+    await dismissConsent(page);
+    const band = page.locator("#calculator");
+    const form = band.locator("form");
+    await form.scrollIntoViewIfNeeded();
+    await form.locator('input[name="name"]').fill("ಆಶಾ ರಾವ್");
+    await form.locator('input[name="phone"]').fill("9845012345");
+    await form.locator('input[name="pincode"]').fill("560001");
+    await form.locator('input[name="segment"][value="commercial"]').evaluate((el: HTMLElement) => el.click());
+    await form.locator('input[name="billBucket"][value="business-2"]').evaluate((el: HTMLElement) => el.click());
+    await form.locator('input[name="consent"]').evaluate((el: HTMLElement) => el.click());
+    await page.waitForTimeout(3500);
+    await form.getByRole("button", { name: "ನನ್ನ ಅಂದಾಜು ತೋರಿಸಿ" }).click();
+
+    const result = band.locator("[data-track-location='result']");
+    await expect(result.getByRole("heading", { name: "ನಿಮ್ಮ ಅಂದಾಜು" })).toBeVisible({ timeout: 15_000 });
+    // Businesses get no PM Surya Ghar subsidy, said in Kannada, not as ₹0.
+    await expect(result).toContainText("ವ್ಯಾಪಾರ ಸಂಸ್ಥೆಗಳಿಗೆ ಇಲ್ಲ");
+    await expect(result.getByLabel("ಪೂರ್ತಿ ಲೆಕ್ಕವನ್ನು ನನಗೆ ಇಮೇಲ್ ಮಾಡಿ")).toBeVisible();
+  });
+});
+
 test.describe("Kannada costs English nothing", () => {
   for (const route of ["/en", "/en/about", "/en/get-quote"]) {
     test(`${route} downloads no Kannada font`, async ({ page }) => {

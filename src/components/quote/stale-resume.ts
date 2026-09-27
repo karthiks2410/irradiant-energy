@@ -9,7 +9,10 @@
  *
  * So the forms catch it, as the Next guide advises ("surface the error as a retry path in the UI
  * rather than a hard failure", node_modules/next/dist/docs/01-app/02-guides/server-actions.md):
- * the popup keeps what the visitor typed, reloads onto the new build and reopens itself filled in.
+ * the quick-quote form keeps what the visitor typed, reloads onto the new build and comes back
+ * filled in where it was sent from. That is one of two surfaces (QuickQuote.tsx): the popup, which
+ * reopens itself, or the form on the home page, which is refilled in place and scrolled back into
+ * view. The record names its surface, so a home-page enquiry never comes back as a popup.
  *
  * The consent tick is NOT carried over: consent boxes are never pre-ticked (CheckboxField, DPDP), so
  * the visitor ticks it again and the notice says so.
@@ -31,9 +34,15 @@ const MAX_AGE_MS = 10 * 60 * 1000;
 
 export type ResumeIntent = "quote" | "site-visit";
 
+/** Where the quick-quote form was sent from: the popup, or the form on the home page. */
+export const QUICK_QUOTE_SURFACES = ["popup", "home"] as const;
+export type QuickQuoteSurface = (typeof QUICK_QUOTE_SURFACES)[number];
+
 export interface QuickQuoteResume {
   /** The page it was filled in on; it reopens only there. */
   path: string;
+  /** Which form it was filled in; only that form takes it back. */
+  surface: QuickQuoteSurface;
   intent: ResumeIntent;
   segment: Segment;
   name: string;
@@ -60,15 +69,29 @@ export function saveQuickQuoteResume(record: Omit<QuickQuoteResume, "savedAt">):
  * What this page load took, kept for the life of the page. React runs a mount effect twice in
  * development (StrictMode), and a remount could do the same: the second run must get the same
  * record back, not the empty storage the first run left, or the popup reopens and shuts again.
+ * It is also what lets the two surfaces share one record on the home page: whichever mounts first
+ * reads and removes it, and the other still gets the answer from here.
  */
 let taken: { path: string; record: QuickQuoteResume | null } | undefined;
 
-/** Reads and removes the record; null unless it was saved on this page in the last ten minutes. */
-export function takeQuickQuoteResume(path: string): QuickQuoteResume | null {
-  if (taken) return taken.path === path ? taken.record : null;
-  const record = readOnce(path);
-  taken = { path, record };
-  return record;
+/**
+ * Reads and removes the record; null unless it was saved on this page in the last ten minutes by
+ * this surface. The record is removed whichever surface asks, so it is still used at most once.
+ */
+export function takeQuickQuoteResume(path: string, surface: QuickQuoteSurface): QuickQuoteResume | null {
+  if (!taken) taken = { path, record: readOnce(path) };
+  if (taken.path !== path) return null;
+  return taken.record?.surface === surface ? taken.record : null;
+}
+
+/**
+ * The recovered enquiry has gone through: a later mount in this page load starts empty. The popup
+ * never needs this (it keeps its own one-shot flag); the home page form does, because leaving the
+ * home page and coming back remounts it, and it would otherwise be refilled with an enquiry that
+ * was already sent, inviting a second one.
+ */
+export function forgetQuickQuoteResume(surface: QuickQuoteSurface): void {
+  if (taken?.record?.surface === surface) taken = { path: taken.path, record: null };
 }
 
 function readOnce(path: string): QuickQuoteResume | null {
@@ -77,9 +100,12 @@ function readOnce(path: string): QuickQuoteResume | null {
     if (!raw) return null;
     sessionStorage.removeItem(KEY);
     const r = JSON.parse(raw) as Partial<QuickQuoteResume>;
+    // A record saved by the build before the home-page form existed has no surface: it was the popup's.
+    r.surface ??= "popup";
     const fresh = typeof r.savedAt === "number" && Date.now() - r.savedAt < MAX_AGE_MS;
     const valid =
       r.path === path &&
+      QUICK_QUOTE_SURFACES.includes(r.surface) &&
       (r.intent === "quote" || r.intent === "site-visit") &&
       SEGMENTS.includes(r.segment as Segment) &&
       [r.name, r.phone, r.pincode, r.billBucket].every((v) => typeof v === "string") &&
