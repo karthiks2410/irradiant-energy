@@ -4,10 +4,6 @@
       "type": "http",
       "url": "https://mcp.vercel.com"
     },
-    "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp?read_only=true&features=docs,account,database,debugging,development,functions"
-    },
     "filesystem": {
       "command": "npx",
       "args": [
