@@ -27,8 +27,13 @@ import { leadFormKind, type LeadEmailContext, type LeadFormKind } from "./emails
 import { logLeadEvent } from "./log";
 import { summariseLeadSource } from "./source";
 
-/** Apps Script usually answers in one to three seconds; a cold start can take longer. */
-export const SHEET_TIMEOUT_MS = 4_000;
+/**
+ * Apps Script answers in one to three seconds when warm, but a script that has not run for a while
+ * starts cold: on the live site the first attempt at 4 s timed out and the retry succeeded
+ * (IE-QA3LVT, 2026-09-27). With a few leads a day it is usually cold, so wait long enough for that.
+ * Nobody waits on this: it runs in `after()`, well inside the function's time limit.
+ */
+export const SHEET_TIMEOUT_MS = 10_000;
 
 /**
  * The register's columns, in order, exactly as the Apps Script writes its header row. Status and
