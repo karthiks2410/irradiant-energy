@@ -1,11 +1,11 @@
 import { AboutBand } from "@/components/home/AboutBand";
 import { AudiencePathsBand } from "@/components/home/AudiencePathsBand";
-import { HomeCalculator } from "@/components/home/HomeCalculator";
 import { FinalCtaBand } from "@/components/home/FinalCtaBand";
 import { HomeFaqBand } from "@/components/home/HomeFaqBand";
 import { HomeHero } from "@/components/home/HomeHero";
 import { BrandRailBand } from "@/components/home/BrandRailBand";
 import { HomeEstimateProvider } from "@/components/home/HomeEstimateProvider";
+import { HomeQuote } from "@/components/home/HomeQuote";
 import { ProjectsBand } from "@/components/home/ProjectsBand";
 import { SystemBand } from "@/components/home/SystemBand";
 import { WhyBand } from "@/components/home/WhyBand";
@@ -32,7 +32,7 @@ export async function generateMetadata() {
 }
 
 // Surfaces alternate canvas → white → dark for rhythm (report §6.9). The projects band is
-// canvas, which is the only value that alternates on both sides of it: the calculator above
+// canvas, which is the only value that alternates on both sides of it: the quote band above
 // paints itself dark and the closing band below is dark.
 export default async function HomePage() {
   // One read of the merged content for the whole page. Every band below takes what it needs from
@@ -48,7 +48,8 @@ export default async function HomePage() {
       <SystemBand content={content} />
       <WhyBand content={content} />
       <BrandRailBand content={content} />
-      <HomeCalculator content={content} />
+      {/* The quote popup's form, always open (owner decision, 2026-09-27): components/home/HomeQuote.tsx. */}
+      <HomeQuote content={content} />
       <ProjectsBand content={content} />
       <HomeFaqBand content={content} />
       <FinalCtaBand content={content} />

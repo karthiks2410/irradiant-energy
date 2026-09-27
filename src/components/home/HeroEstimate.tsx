@@ -3,50 +3,42 @@
 import { useId, type FormEvent } from "react";
 import { ArrowRightIcon } from "@/components/ui";
 import { useHomeEstimate } from "./HomeEstimateProvider";
+import { QUOTE_SECTION_ID } from "./quote-section";
 
 /**
  * One field and a button, in the hero: the monthly bill.
  *
- * This is the site's one real advantage put where people can find it. Every competitor compared
- * (Tata Power, Arka, Atria, EcoSoch) puts its number behind a name, a mobile and an SMS code, or
- * has no estimator at all. Ours needs no name, no email, no phone and no verification — and it
- * was sitting four screens down where nothing above the fold hinted it existed.
+ * It does not compute here. "See my estimate" takes the visitor to the quote form further down
+ * the page (components/home/HomeQuote.tsx) — the same short form as the header's popup — with the
+ * range their bill falls in already chosen for the property type selected there, and the cursor
+ * in Name. The figures show as soon as that form is sent.
  *
- * One field: the bill. The figures also need the sanctioned load (redesign #14), which is on the
- * same bill but is a number most visitors have to look up, so it is asked for in the calculator,
- * and "See my estimate" puts the cursor straight into it. The PIN code used to be
- * asked for here too, until measuring showed it changes nothing the visitor sees: at the same
- * bill, a Bengaluru PIN, a Mysuru PIN, a Delhi PIN and no PIN all return the same system size,
- * generation, saving and payback. It narrows the tariff caveat, which is worth offering in the
- * calculator and not worth a second field in the hero.
- *
- * It does not compute here. It seeds the shared bill and sends the visitor to the calculator
- * band, which shows the figures and, just as importantly, the assumptions behind them. Putting
- * a bare number in the hero with its caveats four sections away would be the wrong trade.
+ * History: this used to seed a calculator band that showed every figure with no details asked.
+ * The owner moved the home page to the popup's order on 2026-09-27 (the figures come after a name
+ * and a WhatsApp number), so the note under this field, "No phone number, no sign-up.", was
+ * removed with it: the next step asks for a phone number, and the note would have said otherwise.
+ * The ungated calculator stays on /get-quote.
  *
  * PROPOSED CONTENT — REQUIRES CLIENT APPROVAL: every string it renders is new UX copy (see
- * `ui.home` in src/content/ui.ts). None of it states a fact about the business; the promise it
- * makes ("no phone number") is about this form. The strings arrive as props because this is a
- * client island: importing them would ship both languages to the browser.
+ * `ui.home` in src/content/ui.ts). None of it states a fact about the business. The strings
+ * arrive as props because this is a client island: importing them would ship both languages to
+ * the browser.
  */
-export function HeroEstimate({
-  billLabel,
-  submitLabel,
-  note,
-}: {
-  billLabel: string;
-  submitLabel: string;
-  note: string;
-}) {
-  const { bill, setBill, requestLoad } = useHomeEstimate();
+export function HeroEstimate({ billLabel, submitLabel }: { billLabel: string; submitLabel: string }) {
+  const { bill, setBill, requestEstimate } = useHomeEstimate();
   const billId = useId();
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    requestLoad();
-    // A plain hash jump rather than scrollIntoView, so Lenis applies the header offset the same
-    // way it does for every other in-page link (ui-kit README § Motion islands).
-    window.location.hash = "calculator";
+    requestEstimate();
+    // A plain hash jump, like every other in-page link: the page's scroll-padding keeps the section
+    // clear of the fixed header. A second press finds the hash already set, which jumps nowhere,
+    // so that one scrolls the section into view itself (the same padding applies).
+    if (window.location.hash === `#${QUOTE_SECTION_ID}`) {
+      document.getElementById(QUOTE_SECTION_ID)?.scrollIntoView({ block: "start" });
+    } else {
+      window.location.hash = QUOTE_SECTION_ID;
+    }
   };
 
   return (
@@ -88,8 +80,6 @@ export function HeroEstimate({
           </span>
         </button>
       </div>
-
-      <p className="mt-2.5 text-small text-white/80">{note}</p>
     </form>
   );
 }

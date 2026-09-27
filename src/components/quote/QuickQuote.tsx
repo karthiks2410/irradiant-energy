@@ -4,6 +4,15 @@
  * The one-tap quote popup: a header button on every page opens a short form (name, WhatsApp number,
  * PIN, bill range, one consent tick), and submitting it shows the estimate straight away.
  *
+ * The same form, always open, is also on the home page (owner decision, 2026-09-27: "same system,
+ * two places they can't miss"). The home page used to hand out the whole estimate from a calculator
+ * band before anyone left a number, so a visitor who never pressed the popup button was never
+ * asked. `<QuickQuoteInline>` renders the very same form and result — same fields, validation,
+ * Server Actions, copy and email step — as a section rather than a dialog: no scroll lock, nothing
+ * to close. The two are one implementation with a `surface` ("popup" | "home"), which only changes
+ * element ids, the padding, analytics' `form` name and the form named in the sales alert and the
+ * lead register. /get-quote keeps its full, ungated calculator.
+ *
  * Why it exists (owner, 2026-09-25): the market leader converts through a form that is always one
  * tap away, not by hiding its calculator — theirs is open, and so is ours. This adds the tap-away
  * form without taking anything off /get-quote, which keeps the full breakdown.
@@ -35,7 +44,19 @@
  */
 
 import { usePathname } from "next/navigation";
-import { createContext, useActionState, useCallback, useContext, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import {
+  createContext,
+  useActionState,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { useFormStatus } from "react-dom";
 import { Link, useLocale } from "@/components/i18n/LocaleLink";
 import type { QuotePage } from "@/content/quote";
@@ -45,11 +66,17 @@ import { LEAD_ERROR_PARAMS, type LeadFieldErrorCode } from "@/lib/leads/errors";
 import { emailQuickQuote, submitQuickQuote } from "@/lib/leads/submit-lead";
 import { Button, CheckboxField, controlClass, FieldError, TextField } from "@/components/ui";
 import { ChoiceChips } from "@/components/ui/fields/ChoiceChips";
-import { BILL_BUCKETS, bucketLabel } from "@/lib/leads/quick";
+import { BILL_BUCKETS, bucketForBill, bucketLabel } from "@/lib/leads/quick";
 import { checkEmail, checkName, checkPhone, checkPincode } from "@/lib/leads/rules";
 import type { QuickLeadField } from "@/lib/leads/schema";
 import { initialQuickEmailState, initialQuickQuoteState, type QuickEmailState, type QuickQuoteState } from "@/lib/leads/state";
-import { saveQuickQuoteResume, takeQuickQuoteResume, type QuickQuoteResume } from "./stale-resume";
+import {
+  forgetQuickQuoteResume,
+  saveQuickQuoteResume,
+  takeQuickQuoteResume,
+  type QuickQuoteResume,
+  type QuickQuoteSurface,
+} from "./stale-resume";
 import { SEGMENTS, type Segment } from "@/lib/solar/constants";
 import { intentParam, languageOf, type QuotePlacement } from "@/lib/events";
 import { track } from "@/lib/gtag";
@@ -86,9 +113,19 @@ const CopyContext = createContext<QuickQuoteCopy | null>(null);
 
 function useCopy(): QuickQuoteCopy {
   const copy = useContext(CopyContext);
-  if (!copy) throw new Error("QuickQuote copy is missing: mount <QuickQuoteDialog copy={…}>.");
+  if (!copy) throw new Error("QuickQuote copy is missing: mount <QuickQuoteDialog copy={…}> or <QuickQuoteInline copy={…}>.");
   return copy;
 }
+
+/**
+ * What differs between the two surfaces, and nothing else. Ids differ because both forms are in the
+ * home page's DOM at once (the popup is mounted, closed, in the layout): two `id="qq-name"` would
+ * send a label's click, or a `getElementById`, to the other form.
+ */
+const SURFACE = {
+  popup: { ids: "qq", padding: "px-5 pt-4 pb-5" },
+  home: { ids: "hq", padding: "px-4 py-5 sm:p-6 lg:p-7" },
+} as const satisfies Record<QuickQuoteSurface, { ids: string; padding: string }>;
 
 const intentCopy = (c: QuickQuoteCopy, intent: QuickQuoteIntent) => (intent === "site-visit" ? c.siteVisit : c.quote);
 
@@ -184,7 +221,7 @@ export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
   // Declared after the effect above on purpose: effects run in order, and that one closes the
   // dialog on mount, so running first it would shut the popup this one has just reopened.
   useEffect(() => {
-    const saved = takeQuickQuoteResume(window.location.pathname);
+    const saved = takeQuickQuoteResume(window.location.pathname, "popup");
     if (!saved) return;
     pendingResume.current = saved;
     openQuickQuote(saved.intent, null);
@@ -223,6 +260,7 @@ export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
       <CopyContext.Provider value={c}>
       <QuickQuoteBody
         key={session}
+        surface="popup"
         resume={resume}
         intent={intent}
         segment={segment}
@@ -237,23 +275,127 @@ export function QuickQuoteDialog({ copy: c }: { copy: QuickQuoteCopy }) {
   );
 }
 
+/** The home page's hero asks the form to take a bill: `request` goes up by one each time. */
+export interface QuickQuoteHandoff {
+  /** The bill typed in the hero, or null when it is empty or not a number. */
+  bill: number | null;
+  request: number;
+}
+
+/** What the form is asked to take: the range to pre-select, and the ask it answers. */
+interface QuickQuotePreset {
+  billBucket: string | null;
+  request: number;
+}
+
+const subscribeNothing = () => () => {};
+
+/**
+ * A deploy-recovery record for the home page form, read once per page load (stale-resume.ts). An
+ * external store rather than an effect: it is sessionStorage, which the server cannot see, so the
+ * server snapshot is "nothing" and React swaps in the record straight after hydration.
+ */
+const homeResume = () => takeQuickQuoteResume(window.location.pathname, "home");
+const noResume = () => null;
+/** Sent: coming back to the home page later in this page load shows an empty form. */
+const forgetHomeResume = () => forgetQuickQuoteResume("home");
+/** The scroll back to the form happens once per page load, not on every return to the home page. */
+let scrolledBack = false;
+
+/**
+ * When the form was on offer from, for the bot check (a submit within three seconds is refused):
+ * the start of this page load. The server renders 0, which the check reads as long ago.
+ */
+const pageStart = () => Math.round(performance.timeOrigin);
+const noPageStart = () => 0;
+
+/**
+ * The quick-quote form as a section of a page: the home page's quote band (components/home/
+ * HomeQuote.tsx). It is the popup's body — the same form, result, email step and Server Actions —
+ * without the dialog around it.
+ *
+ * - It is always open, so no open_quote is counted; generate_lead reports `form: "home"`.
+ * - The hero's bill (`handoff`) pre-selects the range it falls in for the property type chosen
+ *   here, then the cursor goes to Name.
+ * - After a deploy caught a submit, the reload refills it here, not in the popup, and scrolls back.
+ */
+export function QuickQuoteInline({
+  copy: c,
+  handoff,
+  className = "",
+}: {
+  copy: QuickQuoteCopy;
+  handoff?: QuickQuoteHandoff;
+  className?: string;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [segment, setSegment] = useState<Segment>("home");
+  const recovered = useSyncExternalStore(subscribeNothing, homeResume, noResume);
+  const loadedAt = useSyncExternalStore(subscribeNothing, pageStart, noPageStart);
+
+  // A recovered enquiry is kept for the life of this form, with its property type (adjusted during
+  // render, not in an effect). Kept in state rather than read from the store each render, so that
+  // forgetting it once sent cannot swap the result on screen for an empty form.
+  const [resume, setResume] = useState<QuickQuoteResume | null>(null);
+  if (recovered && !resume) {
+    setResume(recovered);
+    setSegment(recovered.segment);
+  }
+
+  // Back to where the visitor was. The page reloaded at the top or wherever the browser restored it.
+  useEffect(() => {
+    if (!resume || scrolledBack) return;
+    scrolledBack = true;
+    rootRef.current?.scrollIntoView({ block: "start" });
+  }, [resume]);
+
+  const preset: QuickQuotePreset | null = handoff
+    ? { billBucket: bucketForBill(segment, handoff.bill)?.id ?? null, request: handoff.request }
+    : null;
+
+  return (
+    <div ref={rootRef} className={className}>
+      <CopyContext.Provider value={c}>
+        <QuickQuoteBody
+          // The recovered fields are the body's starting state, so it starts again once they arrive.
+          key={resume ? "resumed" : "fresh"}
+          surface="home"
+          resume={resume}
+          intent="quote"
+          segment={segment}
+          onSegmentChange={setSegment}
+          startedAt={resume?.startedAt ?? loadedAt}
+          onFinished={forgetHomeResume}
+          preset={preset}
+        />
+      </CopyContext.Provider>
+    </div>
+  );
+}
+
 function QuickQuoteBody({
+  surface,
   resume,
   intent,
   segment,
   onSegmentChange,
   startedAt,
   onFinished,
+  preset = null,
 }: {
+  surface: QuickQuoteSurface;
   resume: QuickQuoteResume | null;
   intent: QuickQuoteIntent;
   segment: Segment;
   onSegmentChange: (segment: Segment) => void;
   startedAt: number;
   onFinished: () => void;
+  /** Home page only: a range to pre-select, asked for by the hero. */
+  preset?: QuickQuotePreset | null;
 }) {
   const c = useCopy();
   const locale = useLocale();
+  const { ids, padding } = SURFACE[surface];
   const [state, formAction] = useActionState(
     async (previous: QuickQuoteState, data: FormData): Promise<QuickQuoteState> => {
       try {
@@ -264,6 +406,7 @@ function QuickQuoteBody({
         const text = (key: string) => String(data.get(key) ?? "");
         const saved = saveQuickQuoteResume({
           path: window.location.pathname,
+          surface,
           intent,
           segment,
           name: text("name"),
@@ -284,6 +427,24 @@ function QuickQuoteBody({
   const [pincode, setPincode] = useState(resume?.pincode ?? "");
   const [errors, setErrors] = useState<Partial<Record<QuickLeadField, LeadFieldErrorCode>>>({});
   const errorSummaryRef = useRef<HTMLParagraphElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  // The hero's bill, taken as the range it falls in. Only a new ask changes the choice, so picking
+  // another range here afterwards sticks; a bill with no range (empty) leaves the choice alone.
+  const presetRequest = preset?.request ?? 0;
+  const [presetSeen, setPresetSeen] = useState(presetRequest);
+  if (preset && presetRequest !== presetSeen) {
+    setPresetSeen(presetRequest);
+    if (preset.billBucket) {
+      setBucket(preset.billBucket);
+      setErrors((prev) => ({ ...prev, billBucket: undefined }));
+    }
+  }
+  // …and the cursor goes to the first field. preventScroll: the hero's jump to the section owns the
+  // scroll. Nothing happens on mount, only on a new ask.
+  useEffect(() => {
+    if (presetRequest > 0) nameRef.current?.focus({ preventScroll: true });
+  }, [presetRequest]);
 
   // A new result from the server replaces the field errors. Adjusting during render rather than in
   // an effect avoids a second render pass (react.dev "you might not need an effect").
@@ -293,24 +454,28 @@ function QuickQuoteBody({
     if (state.ok === false && state.fieldErrors) setErrors(state.fieldErrors);
   }
 
-  // Side effects only: tell the dialog this enquiry is done, count it once (a remount or Strict
-  // Mode can run this twice for the same result), and move focus to a failure message.
+  // Side effects only: tell the dialog this enquiry is done and count it once (a remount or Strict
+  // Mode can run this twice for the same result, and a new `onFinished` from a parent re-render runs
+  // it again).
   const counted = useRef<string | null>(null);
   useEffect(() => {
-    if (state.ok === true) {
-      onFinished();
-      if (counted.current !== state.reference) {
-        counted.current = state.reference;
-        track("generate_lead", {
-          form: intent === "site-visit" ? "site_visit" : "popup",
-          property_type: segment,
-          bill_band: bucket || "unknown",
-          site_language: locale,
-        });
-      }
-    }
+    if (state.ok !== true) return;
+    onFinished();
+    if (counted.current === state.reference) return;
+    counted.current = state.reference;
+    track("generate_lead", {
+      form: surface === "home" ? "home" : intent === "site-visit" ? "site_visit" : "popup",
+      property_type: segment,
+      bill_band: bucket || "unknown",
+      site_language: locale,
+    });
+  }, [state, onFinished, surface, intent, segment, bucket, locale]);
+
+  // Move focus to a failure message: once per answer from the server, never on a later re-render
+  // (a new property type, the hero's hand-off), which would pull the cursor out of a field.
+  useEffect(() => {
     if (state.ok === false) errorSummaryRef.current?.focus();
-  }, [state, onFinished, intent, segment, bucket, locale]);
+  }, [state]);
 
   // The bill ranges belong to the property type, so changing one clears the other.
   const buckets = BILL_BUCKETS[segment];
@@ -358,6 +523,7 @@ function QuickQuoteBody({
   if (state.ok === true) {
     return (
       <QuickQuoteResult
+        surface={surface}
         state={state}
         segment={segment}
         name={name}
@@ -368,7 +534,7 @@ function QuickQuoteBody({
   }
 
   return (
-    <form action={formAction} onSubmit={onSubmit} noValidate className="grid gap-4 px-5 pt-4 pb-5">
+    <form action={formAction} onSubmit={onSubmit} noValidate className={`grid gap-4 ${padding}`}>
       {resume && state.ok === null && (
         <p role="status" className="rounded-md bg-soft-green p-4 text-small text-carbon">
           {c.resumed}
@@ -387,16 +553,18 @@ function QuickQuoteBody({
 
       <input type="hidden" name="startedAt" value={String(startedAt)} />
       <input type="hidden" name="locale" value={locale} />
-      {/* Quote or site visit, for the sales alert and the lead register. */}
+      {/* Quote or site visit, and popup or home page, for the sales alert and the lead register. */}
       <input type="hidden" name="intent" value={intent} />
+      <input type="hidden" name="surface" value={surface} />
       <div aria-hidden="true" className="absolute -left-[9999px] size-px overflow-hidden">
-        <label htmlFor="qq-website">Website</label>
-        <input id="qq-website" name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
+        <label htmlFor={`${ids}-website`}>Website</label>
+        <input id={`${ids}-website`} name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
       <TextField
-        id="qq-name"
+        ref={nameRef}
+        id={`${ids}-name`}
         name="name"
         label={c.nameLabel}
         autoComplete="name"
@@ -409,7 +577,7 @@ function QuickQuoteBody({
         error={errors.name && message(c, errors.name)}
       />
       <TextField
-        id="qq-phone"
+        id={`${ids}-phone`}
         name="phone"
         type="tel"
         label={c.phone}
@@ -425,7 +593,7 @@ function QuickQuoteBody({
 
       <div className="grid gap-4 sm:grid-cols-[9rem_1fr] sm:items-start">
       <TextField
-        id="qq-pincode"
+        id={`${ids}-pincode`}
         name="pincode"
         label={c.pincode}
         inputMode="numeric"
@@ -443,6 +611,7 @@ function QuickQuoteBody({
 
       <ChoiceChips
         name="segment"
+        idPrefix={`${ids}-segment`}
         legend={c.segment}
         size="sm"
         options={segmentOptions}
@@ -455,6 +624,7 @@ function QuickQuoteBody({
       </div>
       <ChoiceChips
         name="billBucket"
+        idPrefix={`${ids}-billBucket`}
         legend={c.bill}
         size="sm"
         options={bucketOptions}
@@ -468,7 +638,7 @@ function QuickQuoteBody({
       />
 
       <CheckboxField
-        id="qq-consent"
+        id={`${ids}-consent`}
         name="consent"
         required
         error={errors.consent && message(c, errors.consent)}
@@ -502,12 +672,14 @@ function SubmitButton({ label }: { label: string }) {
 }
 
 function QuickQuoteResult({
+  surface,
   state,
   segment,
   name,
   pincode,
   billBucket,
 }: {
+  surface: QuickQuoteSurface;
   state: Extract<Awaited<ReturnType<typeof submitQuickQuote>>, { ok: true }>;
   segment: Segment;
   name: string;
@@ -533,6 +705,8 @@ function QuickQuoteResult({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const statusId = useId();
   const { summary } = state;
+  const { ids, padding } = SURFACE[surface];
+  const emailId = `${ids}-email`;
 
   // Move focus to the result, so a screen-reader user hears what changed.
   useEffect(() => headingRef.current?.focus(), []);
@@ -557,7 +731,7 @@ function QuickQuoteResult({
   ];
 
   return (
-    <div data-track-location="result" className="grid gap-4 px-5 pt-4 pb-5">
+    <div data-track-location="result" className={`grid gap-4 ${padding}`}>
       <div>
         <h3 ref={headingRef} tabIndex={-1} className="font-display text-ui font-bold text-carbon outline-none">
           {c.resultTitle}
@@ -616,12 +790,14 @@ function QuickQuoteResult({
             <input type="hidden" name="segment" value={segment} />
             <input type="hidden" name="pincode" value={pincode} />
             <input type="hidden" name="billBucket" value={billBucket} />
-            <label htmlFor="qq-email" className="text-small font-semibold text-carbon">
+            {/* Names the form in the note to sales that carries the address. */}
+            <input type="hidden" name="surface" value={surface} />
+            <label htmlFor={emailId} className="text-small font-semibold text-carbon">
               {c.emailLabel}
             </label>
             <div className="flex gap-2">
               <input
-                id="qq-email"
+                id={emailId}
                 name="email"
                 type="email"
                 autoComplete="email"
@@ -632,16 +808,16 @@ function QuickQuoteResult({
                   if (emailError && !checkEmail(event.target.value)) setEmailError(undefined);
                 }}
                 aria-invalid={emailError ? true : undefined}
-                aria-describedby={emailError ? "qq-email-error" : "qq-email-hint"}
+                aria-describedby={emailError ? `${emailId}-error` : `${emailId}-hint`}
                 placeholder={c.emailPlaceholder}
                 className={`${controlClass} min-h-11 flex-1`}
               />
               <EmailButton />
             </div>
             {emailError ? (
-              <FieldError id="qq-email-error">{message(c, emailError)}</FieldError>
+              <FieldError id={`${emailId}-error`}>{message(c, emailError)}</FieldError>
             ) : (
-              <p id="qq-email-hint" className="text-small text-grey-600">
+              <p id={`${emailId}-hint`} className="text-small text-grey-600">
                 {c.emailHint}
               </p>
             )}

@@ -7,6 +7,7 @@ import { ConsentManager } from "@/components/consent";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { WhatsAppBubble } from "@/components/ui/WhatsAppBubble";
 import { QuickQuoteDialog } from "@/components/quote/QuickQuote";
+import { quickQuoteCopy } from "@/components/quote/quick-quote-copy";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { UiProvider } from "@/components/i18n/UiProvider";
@@ -131,14 +132,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
           <SiteFooter content={content} />
           {/* Consent UI mounts last: it renders nothing until a choice is needed. */}
           <WhatsAppBubble label={content.ui.whatsappBubble.srLabel} />
-          <QuickQuoteDialog
-            copy={{
-              ...content.ui.quickQuote,
-              fieldErrors: content.quote.form.fieldErrors,
-              formErrors: content.quote.form.formErrors,
-              segmentNames: content.ui.calculator.segments,
-            }}
-          />
+          <QuickQuoteDialog copy={quickQuoteCopy(content)} />
           <ScrollReveal />
           <ConsentManager />
           {/* Only in a build with a measurement ID, and even then it loads nothing until the

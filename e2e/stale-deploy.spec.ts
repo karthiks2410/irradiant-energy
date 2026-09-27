@@ -10,8 +10,8 @@ import { dismissConsent } from "./helpers";
  * faithfully: the first action request goes out with an ID no build has, exactly what an old page
  * sends to a new one, and the real server answers "Failed to find Server Action".
  *
- * No mail is sent: without RESEND_API_KEY the popup action runs its dry run outside production,
- * and the calculator form is only ever answered with the stale-ID refusal.
+ * No mail is sent: every quick-quote submit here (the popup and the home page form) is answered with
+ * the stale-ID refusal and not sent again after the reload, and so is the calculator form.
  */
 
 const STALE_ACTION_ID = `00${"ab".repeat(20)}`;
@@ -69,6 +69,50 @@ test.describe("a deploy lands while a form is open", () => {
     // Consent boxes are never pre-ticked (DPDP), not even after a recovery.
     await expect(reopened.locator('input[name="consent"]')).not.toBeChecked();
     // The record is used once and removed.
+    expect(await page.evaluate(() => sessionStorage.getItem("ie:quick-quote-resume"))).toBeNull();
+  });
+
+  test("the home page quote form reloads and comes back filled in, in place, not as the popup", async ({ page }) => {
+    await staleActions(page);
+    await page.goto("/en", { waitUntil: "networkidle" });
+    await dismissConsent(page);
+
+    const band = page.locator("#calculator");
+    const form = band.locator("form");
+    await form.scrollIntoViewIfNeeded();
+    await form.locator('input[name="name"]').fill("Asha Rao");
+    await form.locator('input[name="phone"]').fill("9845012345");
+    await form.locator('input[name="pincode"]').fill("560001");
+    const tap = (selector: string) => form.locator(selector).first().evaluate((el: HTMLElement) => el.click());
+    await tap('input[name="segment"][value="commercial"]');
+    await tap('input[name="billBucket"][value="business-2"]');
+    await tap('input[name="consent"]');
+    // The bot check refuses a submit within three seconds of the page loading.
+    await page.waitForTimeout(3500);
+
+    const reloaded = page.waitForEvent("load");
+    await form.locator('button[type="submit"]').click();
+    await reloaded;
+
+    await expect(page.getByText(/didn.t load properly/)).toHaveCount(0);
+    // Back in the home page form, with the same notice the popup shows…
+    const again = page.locator("#calculator form");
+    await expect(again.getByRole("status")).toContainText("The website was just updated");
+    await expect(again.locator('input[name="name"]')).toHaveValue("Asha Rao");
+    await expect(again.locator('input[name="phone"]')).toHaveValue("9845012345");
+    await expect(again.locator('input[name="pincode"]')).toHaveValue("560001");
+    await expect(again.locator('input[name="segment"]:checked')).toHaveValue("commercial");
+    await expect(again.locator('input[name="billBucket"]:checked')).toHaveValue("business-2");
+    await expect(again.locator('input[name="consent"]')).not.toBeChecked();
+    // …scrolled back into view…
+    await expect.poll(async () => {
+      const box = await page.locator("#calculator").boundingBox();
+      const height = page.viewportSize()!.height;
+      return box !== null && box.y < height && box.y + box.height > 0;
+    }).toBe(true);
+    // …and the popup stays shut and empty: the enquiry was not made there.
+    await expect(page.locator("dialog[open]")).toHaveCount(0);
+    expect(await page.locator("dialog form input[name='name']").inputValue()).toBe("");
     expect(await page.evaluate(() => sessionStorage.getItem("ie:quick-quote-resume"))).toBeNull();
   });
 

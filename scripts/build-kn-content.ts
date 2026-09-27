@@ -273,8 +273,6 @@ const UNTRANSLATED: Readonly<Record<string, string>> = {
   "homePage.audiencePaths.items[1].tile": "legacy home-hero tile; no component renders `tile`",
   "homePage.audiencePaths.items[2].tile": "legacy home-hero tile; no component renders `tile`",
   "homePage.about.caption": "prototype caption; the rebuilt about band does not render it",
-  "homePage.calculator.fields.tariff.label": "input withdrawn at owner review round 2; kept for the engine's API",
-  "homePage.calculator.fields.tariff.hint": "input withdrawn at owner review round 2; kept for the engine's API",
   "projectImages.duskSkyline.alt": "hero slide 1: decoration behind fixed copy, rendered with alt=\"\"",
   "ui.calculator.flags.kwh-clamped": "the kWh input is not offered, so the engine cannot raise this flag here",
   "quotePage.assumptions.tariffEntered.value":

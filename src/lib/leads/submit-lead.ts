@@ -29,6 +29,7 @@ import {
   renderQuickEmailNote,
   type EmailLead,
   type LeadEmailContext,
+  type LeadFormSource,
 } from "@/lib/leads/emails";
 import { leadDryRun } from "@/lib/env.server";
 import { hashEmailDomain, logLeadEvent } from "@/lib/leads/log";
@@ -63,6 +64,15 @@ function localeOf(formData: FormData): Locale {
 /** Quote or site visit: which popup button the visitor used. Anything else reads as a quote. */
 function requestOf(formData: FormData): "quote" | "site-visit" {
   return formData.get("intent") === "site-visit" ? "site-visit" : "quote";
+}
+
+/**
+ * Which quick-quote surface posted: the popup, or the same form open on the home page. It names the
+ * form in the sales alert and the register and changes nothing else; anything unrecognised reads as
+ * the popup, which is what every enquiry was before the home page form existed.
+ */
+function quickSourceOf(formData: FormData): Extract<LeadFormSource, "quick quote popup" | "home page form"> {
+  return formData.get("surface") === "home" ? "home page form" : "quick quote popup";
 }
 
 /**
@@ -287,7 +297,8 @@ async function clientIp(): Promise<string> {
 
 
 /* ---------------------------------------------------------------------------
-   Quick quote popup
+   Quick quote: the popup, and the same form open on the home page (a hidden `surface` field says
+   which; it only names the form in the sales alert and the register)
 
    Same pipeline as the estimate form — validation, rate limit, the sales alert as the only record,
    PII-free logs, error CODES rather than sentences — with two differences: no email is collected,
@@ -312,6 +323,7 @@ async function handleQuickQuote(formData: FormData): Promise<QuickQuoteState> {
   const parsed = parseQuickLead(formData);
   const leadSource = parseLeadSource(formData.get(LEAD_SOURCE_FIELD));
   const request = requestOf(formData);
+  const source = quickSourceOf(formData);
   const reference = newReference();
 
   if (parsed.kind === "spam") {
@@ -356,7 +368,7 @@ async function handleQuickQuote(formData: FormData): Promise<QuickQuoteState> {
     submittedAt: new Date(),
     // The alert is English whatever the page language, so its bill range is written in English.
     locale,
-    source: "quick quote popup" as const,
+    source,
     billRange: {
       label: labelFor(quick.segment, quick.billBucket)!,
       representativeBillInr: estimate.representativeBillInr,
@@ -412,7 +424,7 @@ async function handleQuickQuote(formData: FormData): Promise<QuickQuoteState> {
 }
 
 /**
- * The popup's optional second step. Nothing stores the first step, so the visitor's own fields come
+ * The quick quote's optional second step, on either surface. Nothing stores the first step, so the visitor's own fields come
  * back with the reference; they are re-validated like any other input. Only the customer email, in
  * the visitor's language, and a short English note to sales are sent — both about this enquiry.
  */
@@ -433,6 +445,7 @@ export async function emailQuickQuote(_prev: QuickEmailState, formData: FormData
         : { ok: false, errorCode: "send" };
     }
     const request = parsed.data;
+    const source = quickSourceOf(formData);
 
     const decision = await checkLeadRateLimit(await clientIp());
     if (!decision.allowed) {
@@ -474,7 +487,7 @@ export async function emailQuickQuote(_prev: QuickEmailState, formData: FormData
       estimate: estimate.representative,
       submittedAt: new Date(),
       locale,
-      source: "quick quote popup" as const,
+      source,
       // The customer's email names the range in their own language.
       billRange: {
         label: labelFor(request.segment, request.billBucket, words)!,
@@ -503,7 +516,7 @@ export async function emailQuickQuote(_prev: QuickEmailState, formData: FormData
 
     // Sales already has the enquiry; this only adds the address. A failure here is logged, not shown.
     after(async () => {
-      const note = renderQuickEmailNote(request.reference, request.name, request.email);
+      const note = renderQuickEmailNote(request.reference, request.name, request.email, source);
       const result = await send(resend, {
         from: `${site.name} <${EMAIL_FROM}>`,
         to: LEAD_EMAIL,

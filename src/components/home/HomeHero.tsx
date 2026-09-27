@@ -92,11 +92,7 @@ export async function HomeHero({ content }: { content: Content }) {
            * as the quieter second path for someone not ready to type numbers.
            */
           <>
-            <HeroEstimate
-              billLabel={ui.heroBillLabel}
-              submitLabel={ui.heroSubmit}
-              note={ui.heroNoSignup}
-            />
+            <HeroEstimate billLabel={ui.heroBillLabel} submitLabel={ui.heroSubmit} />
             {hero.secondaryCta && (
               <a
                 href={localizePath(hero.secondaryCta.href, locale)}

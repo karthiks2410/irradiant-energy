@@ -17,7 +17,7 @@
  * None of that shows up on screen, so nothing else would catch it.
  *
  * The rule strings arrive as props from a Server Component instead. That is what
- * <HeroBackdrop>, <BrandRail>, <MobileMenu>, <SolutionsMenu> and <HomeCalculatorPanel> do.
+ * <HeroBackdrop>, <BrandRail>, <MobileMenu>, <SolutionsMenu> and <QuickQuoteInline> do.
  *
  * TYPE imports are allowed and are not a leak: `import type` is erased before bundling, so a
  * shape can be shared without a byte of copy crossing over.

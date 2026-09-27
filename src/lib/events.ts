@@ -25,7 +25,12 @@ export type LinkLocation = (typeof LINK_LOCATIONS)[number];
 export const QUOTE_PLACEMENTS = ["header", "hero", "segment", "closing", "menu", "other"] as const;
 export type QuotePlacement = (typeof QUOTE_PLACEMENTS)[number];
 
-export const LEAD_FORMS = ["popup", "site_visit", "calculator"] as const;
+/**
+ * Which form an enquiry came through: the quote popup, the popup opened for a site visit, the quote
+ * form on the home page (the same form as the popup, always open; owner decision 2026-09-27), and
+ * the estimate form on /get-quote.
+ */
+export const LEAD_FORMS = ["popup", "site_visit", "home", "calculator"] as const;
 export type LeadFormName = (typeof LEAD_FORMS)[number];
 
 export const QUOTE_INTENTS = ["quote", "site_visit"] as const;

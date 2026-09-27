@@ -14,6 +14,12 @@ type ChoiceChipsProps = {
   className?: string;
   /** "sm" for dense forms such as the quote popup: 40px tall, small text. */
   size?: "md" | "sm";
+  /**
+   * Starts each chip's id (`{idPrefix}-{value}`); defaults to `name`. Set it when the same question
+   * can be on the page twice — the quote popup and the home page's quote form — or a label's
+   * `for` finds the other form's radio, and tapping one chip selects a chip in the other form.
+   */
+  idPrefix?: string;
 };
 
 /**
@@ -23,13 +29,13 @@ type ChoiceChipsProps = {
  * because the whole pill is the target and the fill already says which one is chosen; the native
  * input keeps arrow-key navigation and the focus ring.
  */
-export function ChoiceChips({ name, legend, options, value, onChange, required, error, className, size = "md" }: ChoiceChipsProps) {
+export function ChoiceChips({ name, legend, options, value, onChange, required, error, className, size = "md", idPrefix = name }: ChoiceChipsProps) {
   const sizing = size === "sm" ? "min-h-10 px-3 text-small" : "min-h-11 px-4 text-ui";
   return (
     <Fieldset legend={legend} error={error} className={className}>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => {
-          const id = `${name}-${option.value}`;
+          const id = `${idPrefix}-${option.value}`;
           return (
             <label
               key={option.value}
