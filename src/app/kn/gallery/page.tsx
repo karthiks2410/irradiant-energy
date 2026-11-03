@@ -11,6 +11,7 @@ export const metadata = pageMetadata({
   description:
     "ಇರ್ರೇಡಿಯಂಟ್ ಎನರ್ಜಿ ಅಳವಡಿಸಿದ ಚಾವಣಿ ಸೌರ ವ್ಯವಸ್ಥೆಗಳ ಛಾಯಾಚಿತ್ರಗಳು — ಕರ್ನಾಟಕದಾದ್ಯಂತ ಮನೆಗಳು, ಗೃಹ ಸಂಕೀರ್ಣಗಳು ಮತ್ತು ವಾಣಿಜ್ಯ ಕಟ್ಟಡಗಳು.",
   path: "/kn/gallery",
+  locale: "kn",
 });
 
 const photos = galleryImageKeys.map((key) => projectImages[key]);

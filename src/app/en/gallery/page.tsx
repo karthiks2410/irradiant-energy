@@ -11,6 +11,7 @@ export const metadata = pageMetadata({
   description:
     "Photographs of rooftop solar systems installed by Irradiant Energy — homes, housing societies and commercial buildings across Karnataka.",
   path: "/en/gallery",
+  locale: "en",
 });
 
 const photos = galleryImageKeys.map((key) => projectImages[key]);
