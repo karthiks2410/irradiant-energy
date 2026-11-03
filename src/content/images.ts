@@ -123,5 +123,115 @@ export const projectImages = {
     // 65% instead: the old 40% cut his head in half at the bottom edge.
     focal: "center 46%",
   },
+
+  // Drone photographs supplied 2026-11-03. All 1400×1050 (4:3 landscape).
+  residentialSuburb: {
+    src: "/images/projects/ie-dji-0659.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of a standalone residential house with a rooftop solar array, surrounded by trees and a green suburb.",
+    subject: "Residential rooftop array, green suburban setting",
+    focal: "center 40%",
+  },
+  flatRoofDualArray: {
+    src: "/images/projects/ie-dji-0665.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of a large flat-roof home with two separate solar arrays and a solar water heater.",
+    subject: "Large residential flat roof with dual arrays",
+    focal: "center 35%",
+  },
+  flatRoofWithWorkers: {
+    src: "/images/projects/ie-dji-0672.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of a rooftop solar installation in progress, with workers visible on and around the building.",
+    subject: "Installation in progress, workers on site",
+    focal: "center 35%",
+  },
+  commercialTerrace: {
+    src: "/images/projects/ie-dji-0677.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of a multi-storey commercial building with a solar array on its rooftop terrace and a glass facade below.",
+    subject: "Commercial multi-storey terrace with glass facade",
+    focal: "center 30%",
+  },
+  tiledRoofVilla: {
+    src: "/images/projects/ie-dji-0685.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of a tiled-roof villa with a rooftop solar array, set in a tree-lined residential street.",
+    subject: "Tiled-roof villa in a leafy neighbourhood",
+    focal: "center 35%",
+  },
+  colouredNeighbourhood: {
+    src: "/images/projects/ie-dji-0687.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of a solar array on a rooftop surrounded by colourful neighbouring homes.",
+    subject: "Rooftop array in a colourful urban neighbourhood",
+    focal: "center 30%",
+  },
+  lakesideHome: {
+    src: "/images/projects/ie-dji-0688.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of a rooftop solar array on a home beside a lake, with coconut palms and green farmland beyond.",
+    subject: "Residential rooftop array beside a lake",
+    focal: "center 40%",
+  },
+  commercialWarehouseLarge: {
+    src: "/images/projects/ie-dji-0695.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of a large commercial warehouse building with a full-coverage solar array and a busy street below.",
+    subject: "Large commercial warehouse with full-roof array",
+    focal: "center 30%",
+  },
+  industrialWarehouse: {
+    src: "/images/projects/ie-dji-0697.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of an industrial warehouse rooftop almost fully covered by solar panels, with trucks parked alongside.",
+    subject: "Industrial warehouse with near-full-coverage array",
+    focal: "center 25%",
+  },
+  roadsideCommercial: {
+    src: "/images/projects/ie-dji-0700.webp",
+    width: 1400,
+    height: 1050,
+    alt: "Aerial view of a large commercial rooftop solar installation beside a main road with a petrol station visible.",
+    subject: "Large commercial installation on a roadside building",
+    focal: "center 25%",
+  },
 } as const satisfies Record<string, ProjectImage>;
+
+/**
+ * Ordered list of all project images for the gallery page.
+ *
+ * To add a new photo: add its entry to `projectImages` above, then append its key here.
+ * The homepage `ProjectsBand` uses its own curated subset in `src/content/home.ts`.
+ */
+export const galleryImageKeys = [
+  "installerAtWork",
+  "terraceArray",
+  "roadsideArray",
+  "metalRoofArray",
+  "palmRooftop",
+  "hillsideArray",
+  "duskSkyline",
+  "industrialRoofArray",
+  // Drone shots added 2026-11-03
+  "lakesideHome",
+  "tiledRoofVilla",
+  "residentialSuburb",
+  "flatRoofDualArray",
+  "flatRoofWithWorkers",
+  "commercialTerrace",
+  "colouredNeighbourhood",
+  "commercialWarehouseLarge",
+  "industrialWarehouse",
+  "roadsideCommercial",
+] as const satisfies readonly (keyof typeof projectImages)[];
 
