@@ -297,7 +297,7 @@ const projects: {
   ],
   viewAll: {
     label: "View all installations",
-    href: "/en/gallery",
+    href: "/gallery",
     source: "proposed",
     status: "proposed",
   },

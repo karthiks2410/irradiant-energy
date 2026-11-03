@@ -27,6 +27,7 @@ import { localizePath } from "./paths";
 export const ROUTE_KEYS = [
   "home",
   "about",
+  "gallery",
   "solutions",
   "solutions-home",
   "solutions-housing-society",
@@ -53,6 +54,7 @@ const published: Record<Locale, boolean> = { en: true, kn: true };
 export const ROUTES: readonly RouteEntry[] = [
   { key: "home", path: "/", publish: published },
   { key: "about", path: "/about", publish: published },
+  { key: "gallery", path: "/gallery", publish: published },
   { key: "solutions", path: "/solutions", publish: published },
   { key: "solutions-home", path: "/solutions/solar/home", publish: published },
   { key: "solutions-housing-society", path: "/solutions/solar/housing-society", publish: published },
