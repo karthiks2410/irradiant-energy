@@ -125,3 +125,20 @@ export const projectImages = {
   },
 } as const satisfies Record<string, ProjectImage>;
 
+/**
+ * Ordered list of all project images for the gallery page.
+ *
+ * To add a new photo: add its entry to `projectImages` above, then append its key here.
+ * The homepage `ProjectsBand` uses its own curated subset in `src/content/home.ts`.
+ */
+export const galleryImageKeys = [
+  "installerAtWork",
+  "terraceArray",
+  "roadsideArray",
+  "metalRoofArray",
+  "palmRooftop",
+  "hillsideArray",
+  "duskSkyline",
+  "industrialRoofArray",
+] as const satisfies readonly (keyof typeof projectImages)[];
+

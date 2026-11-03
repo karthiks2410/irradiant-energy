@@ -126,7 +126,12 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    return [canonicalHostRedirect, ...legacyRedirects];
+    return [
+      canonicalHostRedirect,
+      // Short URL for the gallery redirects to the English locale version.
+      { source: "/gallery", destination: "/en/gallery", permanent: false },
+      ...legacyRedirects,
+    ];
   },
 };
 

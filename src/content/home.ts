@@ -263,7 +263,11 @@ const why = {
  * `photos` names entries in `projectImages`, so the pictures have one home and the alt text
  * cannot drift from the file that owns it.
  */
-const projects = {
+const projects: {
+  copy: SectionCopy;
+  photos: readonly (keyof typeof projectImages)[];
+  viewAll: { label: string; href: string; source: string; status: string };
+} = {
   // PROPOSED CONTENT — REQUIRES CLIENT APPROVAL (eyebrow, title and lead). The approved
   // "Featured projects · Projects for homes, societies and commercial energy." headed a band of
   // case studies: "featured" implies a curated selection out of a larger set, which is a count,
@@ -290,7 +294,13 @@ const projects = {
     "palmRooftop",
     "hillsideArray",
   ],
-} as const satisfies { copy: SectionCopy; photos: readonly (keyof typeof projectImages)[] };
+  viewAll: {
+    label: "View all installations",
+    href: "/en/gallery",
+    source: "proposed",
+    status: "proposed",
+  },
+};
 
 /**
  * The equipment rail.

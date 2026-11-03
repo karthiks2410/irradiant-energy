@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { Section, SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
@@ -72,6 +73,16 @@ export function ProjectsBand({ content }: { content: Content }) {
             </li>
           ))}
         </ul>
+
+        <div className="mt-8 flex justify-center">
+          <Link
+            href={projects.viewAll.href}
+            className="inline-flex items-center gap-2 font-mono text-label font-medium text-green-700 uppercase tracking-wide hover:text-green-600 transition-colors"
+          >
+            {projects.viewAll.label}
+            <span aria-hidden="true">→</span>
+          </Link>
+        </div>
       </Reveal>
     </Section>
   );
