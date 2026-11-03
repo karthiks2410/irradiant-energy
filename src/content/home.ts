@@ -279,6 +279,7 @@ const projects: {
     eyebrow: "Our work",
     title: "Rooftop systems we have installed.",
     accent: "have installed.",
+    lead: "Every photograph is a real installation completed by our team.",
     source: "photographs src/content/images.ts (owner-supplied 2026-09-20) · copy proposed",
     status: "proposed",
   },

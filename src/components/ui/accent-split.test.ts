@@ -48,7 +48,7 @@ const HEADINGS: readonly { where: string; title: string; accent: string; words: 
     { where: "solutions/closingCta", ...solutionsShared.closingCta, words: 2 },
     // /solutions renders the same audiencePaths title through <AccentedTitle tail={1}>, whose
     // last word is "Karnataka." — a different split from the home page's "in Karnataka.".
-  ].map(({ where, title, accent, words }) => ({ where, title, accent, words }));
+  ].map(({ where, title, accent, words }) => ({ where, title, accent: accent!, words }));
 })();
 
 describe("splitOnAccent", () => {
