@@ -46,7 +46,7 @@ export function ProjectsBand({ content }: { content: Content }) {
           {/* The frame with a person in it, given the room to be looked at. `focal` is tuned so
               his head, shoulder and both hands stay in the crop with the terraces behind him. */}
           <li className="lg:col-span-2 lg:row-span-2">
-            <div className="relative aspect-4/5 overflow-hidden rounded-lg ring-1 ring-carbon/10 lg:aspect-auto lg:h-full">
+            <div className="relative aspect-4/5 overflow-hidden rounded-lg ring-1 ring-carbon/10 lg:aspect-square lg:h-full">
               <Image
                 src={lead.src}
                 alt={lead.alt}
@@ -60,7 +60,7 @@ export function ProjectsBand({ content }: { content: Content }) {
 
           {rest.map((photo) => (
             <li key={photo.src}>
-              <div className="relative aspect-4/5 overflow-hidden rounded-lg ring-1 ring-carbon/10">
+              <div className="relative aspect-4/5 overflow-hidden rounded-lg ring-1 ring-carbon/10 lg:aspect-square">
                 <Image
                   src={photo.src}
                   alt={photo.alt}
