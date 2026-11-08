@@ -20,6 +20,7 @@
 import { aboutPage as enAboutPage } from "@/content/about";
 import { contactPage as enContactPage } from "@/content/contact";
 import { homeFaq as enHomeFaq } from "@/content/faq-home";
+import { galleryPage as enGalleryPage } from "@/content/gallery";
 import { homePage as enHomePage } from "@/content/home";
 import { projectImages as enProjectImages } from "@/content/images";
 import { cookieNotice as enCookieNotice } from "@/content/legal/cookies";
@@ -59,6 +60,8 @@ export interface Content {
   readonly about: typeof enAboutPage;
   /** /contact, top to bottom. */
   readonly contact: typeof enContactPage;
+  /** /gallery: the page copy; the photographs and their alt text are `images`. */
+  readonly gallery: typeof enGalleryPage;
   /** The three audience pages, by slug. */
   readonly segments: typeof enSegments;
   /** Copy the /solutions hub and the three audience pages share. */
@@ -101,6 +104,7 @@ function build(locale: Locale): Content {
     faqCardLabels: overlay ? localize(enFaqCardLabels, kn.faqCardLabels, "faqCardLabels") : enFaqCardLabels,
     about: overlay ? localize(enAboutPage, kn.aboutPage, "about") : enAboutPage,
     contact: overlay ? localize(enContactPage, kn.contactPage, "contact") : enContactPage,
+    gallery: overlay ? localize(enGalleryPage, kn.galleryPage, "gallery") : enGalleryPage,
     segments: overlay ? localize(enSegments, kn.segments, "segments") : enSegments,
     solutionsShared: overlay ? localize(enSolutionsShared, kn.solutionsShared, "solutionsShared") : enSolutionsShared,
     quote: overlay ? localize(enQuotePage, kn.quotePage, "quotePage") : enQuotePage,

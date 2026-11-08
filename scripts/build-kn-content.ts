@@ -185,6 +185,13 @@ const MODULES: readonly ModuleSpec[] = [
     why: "/about, top to bottom. Team members' names are English-owned (FIXED_KEYS `name`).",
   },
   {
+    file: "gallery.ts",
+    from: "@/content/gallery",
+    en: "galleryPage",
+    kn: "galleryPage",
+    why: "/gallery. The photographs and their alt text are images.ts.",
+  },
+  {
     file: "contact.ts",
     from: "@/content/contact",
     en: "contactPage",
