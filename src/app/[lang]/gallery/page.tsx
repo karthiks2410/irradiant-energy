@@ -3,57 +3,30 @@ import { PageHero } from "@/components/pages/PageHero";
 import { Section } from "@/components/ui";
 import { Reveal } from "@/components/motion/Reveal";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { projectImages, galleryImageKeys } from "@/content/images";
+import { galleryImageKeys } from "@/content/images";
+import { getContent } from "@/i18n/content";
 import { getLocale } from "@/i18n/server";
 import { langParams } from "@/i18n/registry";
 import { pageMetadata } from "@/lib/seo";
 
 export const generateStaticParams = () => langParams("gallery");
 
-const content = {
-  en: {
-    breadcrumb: "Gallery",
-    eyebrow: "Our work",
-    title: "Rooftop systems we have installed.",
-    lead: "Every photograph is a real installation completed by our team — homes, housing societies and commercial rooftops across Karnataka.",
-    heading: "Installation photographs",
-    meta: {
-      title: "Installation gallery",
-      description:
-        "Photographs of rooftop solar systems installed by Irradiant Energy — homes, housing societies and commercial buildings across Karnataka.",
-    },
-  },
-  kn: {
-    breadcrumb: "ಗ್ಯಾಲರಿ",
-    eyebrow: "ನಮ್ಮ ಕೆಲಸ",
-    title: "ನಾವು ಅಳವಡಿಸಿದ ಚಾವಣಿ ವ್ಯವಸ್ಥೆಗಳು.",
-    lead: "ಪ್ರತಿಯೊಂದು ಛಾಯಾಚಿತ್ರವೂ ನಮ್ಮ ತಂಡ ಪೂರ್ಣಗೊಳಿಸಿದ ನೈಜ ಅಳವಡಿಕೆ — ಕರ್ನಾಟಕದಾದ್ಯಂತ ಮನೆಗಳು, ಗೃಹ ಸಂಕೀರ್ಣಗಳು ಮತ್ತು ವಾಣಿಜ್ಯ ಚಾವಣಿಗಳು.",
-    heading: "ಅಳವಡಿಕೆ ಛಾಯಾಚಿತ್ರಗಳು",
-    meta: {
-      title: "ಅಳವಡಿಕೆ ಗ್ಯಾಲರಿ",
-      description:
-        "ಇರ್ರೇಡಿಯಂಟ್ ಎನರ್ಜಿ ಅಳವಡಿಸಿದ ಚಾವಣಿ ಸೌರ ವ್ಯವಸ್ಥೆಗಳ ಛಾಯಾಚಿತ್ರಗಳು — ಕರ್ನಾಟಕದಾದ್ಯಂತ ಮನೆಗಳು, ಗೃಹ ಸಂಕೀರ್ಣಗಳು ಮತ್ತು ವಾಣಿಜ್ಯ ಕಟ್ಟಡಗಳು.",
-    },
-  },
-} as const;
-
-const photos = galleryImageKeys.map((key) => projectImages[key]);
-
 export async function generateMetadata() {
   const locale = await getLocale();
-  const { meta } = content[locale];
+  const { meta } = getContent(locale).gallery;
   return pageMetadata({ title: meta.title, description: meta.description, path: "/gallery", locale });
 }
 
 export default async function GalleryPage() {
-  const locale = await getLocale();
-  const { breadcrumb, eyebrow, title, lead, heading } = content[locale];
+  const { gallery, images } = getContent(await getLocale());
+  const { breadcrumb, hero, heading } = gallery;
+  const photos = galleryImageKeys.map((key) => images[key]);
 
   return (
     <>
       <BreadcrumbJsonLd items={[{ name: breadcrumb, path: "/gallery" }]} />
 
-      <PageHero current={breadcrumb} eyebrow={eyebrow} title={title} lead={lead} />
+      <PageHero current={breadcrumb} eyebrow={hero.eyebrow} title={hero.title} lead={hero.lead} />
 
       <Section aria-labelledby="gallery-heading">
         <h2 id="gallery-heading" className="sr-only">
